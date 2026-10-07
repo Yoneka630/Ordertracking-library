@@ -3,7 +3,7 @@
  * - CACHE_VERSION 由 deploy.mjs 在每次发布时自动 bump，新版本原子替换旧缓存（缓存破坏）。
  * - S3 同步流量：放行，永远走网络（不缓存远端快照/附件），保证云端数据实时。
  */
-const CACHE_VERSION = 'v0.28';
+const CACHE_VERSION = 'v0.46';
 const APP_SHELL = [
   './',
   './index.html',

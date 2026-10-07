@@ -1,13 +1,13 @@
 {
-  "name": "订单追踪工作台",
+  "name": "订单追踪台",
   "short_name": "订单追踪",
   "description": "B2B 定制订单全链路追踪：订单 / 排产 / 回款 / 预警，支持 S3 多端加密同步",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "any",
-  "background_color": "#f6f8fb",
-  "theme_color": "#4b77cb",
+  "background_color": "#f2f2f7",
+  "theme_color": "#007aff",
   "lang": "zh-CN",
   "icons": [
     { "src": "./icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
