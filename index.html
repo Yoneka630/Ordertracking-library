@@ -3,7 +3,7 @@
 <head data-page-node-id="tB8joMdTgw5XU4U8A6S7i2">
 <meta charset="utf-8" data-page-node-id="iTOrAHcHmC5x6FNHHjD886">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" data-page-node-id="Ja1BDKMDLVRzLRExrICqlT">
-<title>订单追踪台 · v0.46</title>
+<title>订单追踪台 · v0.56</title>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#007aff">
 <link rel="icon" href="icon-192.png">
@@ -109,7 +109,8 @@ table,.num,.kpi .vl,.calcbox .v,.odetop .k b,.mc-kv .kv,.vno,.vdate,.planbar .it
 .sb-logo{padding:14px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:9px}
 .sb-logo .mark{width:28px;height:28px;border-radius:6px;overflow:hidden;flex:none;
   display:flex;align-items:center;justify-content:center}
-.sb-logo .t{font-size:14px;font-weight:700;color:var(--text);line-height:1.2}
+.sb-logo .t{font-size:14px;font-weight:700;color:var(--text);line-height:1.2;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sb-logo .s{font-size:10.5px;color:var(--faint)}
 .sb-nav{flex:1;overflow-y:auto;padding:10px}
 .sb-nav .grp{color:var(--faint);font-size:10.5px;padding:12px 10px 5px;letter-spacing:.8px;font-weight:600}
@@ -162,7 +163,11 @@ header.stick{position:sticky;top:0;z-index:60;background:var(--panel);border-bot
 
 /* ---------- 布局 ---------- */
 /* v0.31：内容区是唯一滚动容器 —— 侧栏 / 顶栏 / 筛选栏永远在屏幕上，切页不再整页回滚 */
-#page{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:16px 20px 40px;max-width:1920px;width:100%}
+/* v0.51：scrollbar-gutter:stable —— 列表长/短切换时纵向滚动条会出现或消失，
+   不预留位置的话内容区宽度会跳 15~17px（表格跟着「一会儿宽一会儿窄」）。
+   预留后无论有无滚动条，内容区宽度恒定。 */
+#page{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;scrollbar-gutter:stable;
+  padding:16px 20px 40px;max-width:1920px;width:100%}
 .grid{display:grid;gap:12px}
 .kpi{grid-template-columns:repeat(auto-fit,minmax(165px,1fr))}
 .c2{grid-template-columns:repeat(auto-fit,minmax(370px,1fr))}
@@ -266,6 +271,10 @@ tbody tr:hover{background:#f7f9fc}
 #sheet .hd,#dpane .hd{background:var(--panel);padding:13px 18px;border-bottom:1px solid var(--line);
   display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:2}
 #sheet .bd,#dpane .bd{padding:15px 18px 26px}
+/* v0.53 · 题头承载操作按钮（编辑 / 删除 / 保存 / 取消）
+   —— 标题让位给按钮：长标题省略号收尾，按钮一律不压缩，窄屏也不会把按钮挤出可视区 */
+#sheet .hd h3,#dpane .hd h3{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#sheet .hd>.btn,#dpane .hd>.btn,#sheet .hd>.close,#dpane .hd>.close,#sheet .hd>.tag,#dpane .hd>.tag{flex:none}
 /* 拖宽把手：独立挂在 #mask 下、贴卡片左缘 —— 在卡片外，不随卡片内容滚动 */
 .dz{position:absolute;top:0;bottom:0;right:calc(var(--sheet-w) - 7px);width:14px;z-index:3;
   cursor:col-resize;display:none;touch-action:none}
@@ -659,6 +668,23 @@ tbody tr.sel,tbody tr.sel:hover{background:var(--primary-soft)}
   #main.split .dvh{display:none}
   #gfilter .inner{overflow-x:auto;flex-wrap:nowrap;align-items:flex-start}
   #gfilter .gf{min-width:auto}
+  /* v0.47 · 顶栏标题：窄屏下右侧按钮区吃掉宽度，标题容器被压到 22px 宽 → 逐字竖排
+     （实测 430px 视口 titleW=22 / titleH=122）。标题区自己 nowrap + 省略号，别让字换行。 */
+  #topbar > div:nth-child(2){flex:1 1 auto;min-width:0}
+  #topbar .spacer{flex:0 0 0}
+  #topbar .ttl,#topbar .sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+}
+/* v0.47 · 超窄屏：顶栏三个按钮吃掉 286px，430px 机身只剩 22px 给标题（连一个字都放不下）。
+   按钮瘦身（内边距 + 字号），把宽度还给标题区。 */
+@media(max-width:560px){
+  #topbar{padding:0 10px;gap:6px}
+  #topbar .btn.sm{padding:4px 8px;font-size:11.5px;white-space:nowrap}
+  #topbar > div:nth-child(2){flex:1 1 96px;min-width:0}
+  /* 「重新载入」文字最长、又在窄屏最不常用（关掉重开一样刷新）→ 收成一个 ↻ 图标。
+     用 font-size:0 把文字藏掉、靠 ::before 出声，按钮仍是同一个节点（aria/点击不受影响）。 */
+  #topbar #btnRefresh{font-size:0;padding:4px 9px}
+  #topbar #btnRefresh::before{content:"↻";font-size:14px;line-height:1}
+  #topbar .sub{display:none}
 }
 
 /* ---------- v0.35 · 可拖列宽 / 分页 / 可直接编辑属性面板 ---------- */
@@ -893,6 +919,153 @@ textarea#nlIn:focus{outline:none;background:var(--panel);box-shadow:0 0 0 3.5px 
 .pp-v .mo-jump{cursor:pointer;color:var(--primary);font-weight:600}
 .pp-v .mo-jump:hover{text-decoration:underline}
 
+/* ==========================================================================
+   v0.47 · 产品库：列表缩略图 / 详情画廊 / 表单图片网格
+   ========================================================================== */
+.pth{cursor:pointer;user-select:none;white-space:nowrap}
+.pth .sarrow{display:inline-block;min-width:9px;color:var(--faint);font-size:10px;margin-left:2px}
+.pth.on,.pth.on .sarrow{color:var(--accent-fill)}
+/* 产品图列：宽度必须钉死 —— table-layout 是 auto，只给 width 会被内容挤扁，
+   表现成「无图」两个字被压成竖排。min/max 一起写才能稳住。 */
+.pcell{width:56px;min-width:56px;max-width:56px;padding:6px 4px 6px 10px !important}
+.pthumb{width:40px;height:40px;flex:none;border-radius:8px;overflow:hidden;background:var(--fill-3);
+  display:flex;align-items:center;justify-content:center}
+.pthumb img{width:100%;height:100%;object-fit:cover;display:block}
+.pthumb .pnoimg{font-size:9px;line-height:1;color:var(--decor);white-space:nowrap}
+.pnm{font-size:11px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pmdl{font-variant-numeric:tabular-nums}
+.punit{font-size:11px;margin-left:3px}
+/* 详情画廊：左侧主图 + 右侧缩略图条 */
+.pgallery{display:flex;gap:14px;margin-bottom:14px;align-items:flex-start}
+.pmain{width:240px;height:240px;border-radius:var(--radius);overflow:hidden;background:var(--fill-3);
+  display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.pmain img{width:100%;height:100%;object-fit:contain;display:block}
+.pnoimg.big{font-size:12px;color:var(--faint);text-align:center;line-height:1.7}
+.pstrip{display:flex;gap:8px;flex-wrap:wrap;align-content:flex-start;max-width:440px}
+.pstrip-i{width:56px;height:56px;border-radius:8px;overflow:hidden;border:2px solid transparent;
+  background:var(--fill-3);padding:0;cursor:pointer}
+.pstrip-i.on{border-color:var(--accent-fill)}
+.pstrip-i img{width:100%;height:100%;object-fit:cover;display:block}
+/* 表单图片网格 */
+.pimgrid{display:flex;flex-wrap:wrap;gap:8px}
+.pimg{position:relative;width:88px;height:88px;border-radius:10px;overflow:hidden;
+  background:var(--fill-3);border:1px solid var(--line-2)}
+.pimg img{width:100%;height:100%;object-fit:cover;display:block}
+.pmainbadge{position:absolute;left:0;bottom:0;background:var(--accent-fill);color:var(--on-accent);
+  font-size:10px;padding:1px 6px;border-radius:0 6px 0 6px}
+.pimgx{position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;border:0;
+  background:rgba(0,0,0,.55);color:#fff;font-size:12px;line-height:1;cursor:pointer;padding:0}
+.pimgx:hover{background:var(--red)}
+.pimgup{position:absolute;left:0;bottom:0;width:100%;border:0;background:rgba(0,0,0,.5);color:#fff;
+  font-size:10px;padding:2px 0;cursor:pointer;opacity:0;transition:opacity .15s}
+.pimg:hover .pimgup{opacity:1}
+.pimgadd{width:88px;height:88px;border-radius:10px;border:1px dashed var(--line);background:transparent;
+  color:var(--faint);font-size:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:2px;cursor:pointer;padding:0}
+.pimgadd span{font-size:11px}
+.pimgadd:hover{border-color:var(--accent-fill);color:var(--accent-fill)}
+.pimg-broken{opacity:.25}
+.pkbox{display:flex;flex-direction:column;gap:8px}
+.fhint-s{font-weight:400;color:var(--faint);font-size:11px;margin-left:4px}
+
+/* ---------- v0.48 · 产品表文字对齐（左 / 中 / 右，整表切换并记忆） ----------
+   特异性 (0,1,2) 高于 .num 的 (0,1,0)，所以数字列也会跟着对齐走 —— 用户手动选的
+   对齐方式优先于「数字默认右对齐」这条历史约定。缩略图是 flex 子项，text-align
+   管不到，单独补 margin。 */
+table[data-al] th,table[data-al] td{text-align:left}
+table[data-al="center"] th,table[data-al="center"] td{text-align:center}
+table[data-al="right"] th,table[data-al="right"] td{text-align:right}
+table[data-al="center"] .pcell .pthumb{margin:0 auto}
+table[data-al="right"] .pcell .pthumb{margin-left:auto}
+/* 导入 / 导出下拉：工具栏里只占一个按钮位 */
+.iomenu{position:relative;display:inline-block}
+.iomenu-bd{position:absolute;right:0;top:calc(100% + 4px);z-index:40;min-width:248px;
+  background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:4px;
+  box-shadow:0 10px 28px rgba(0,0,0,.16);display:flex;flex-direction:column;gap:1px}
+.iomenu-bd[hidden]{display:none}
+.iomenu-bd button{display:block;width:100%;text-align:left;border:0;background:transparent;
+  padding:7px 10px;border-radius:5px;font-size:12.5px;color:var(--text);cursor:pointer}
+.iomenu-bd button:hover{background:var(--fill-2)}
+.iomenu-bd .io-tip{padding:7px 10px 3px;font-size:11px;color:var(--faint);
+  border-top:1px solid var(--line-2);margin-top:2px;line-height:1.5}
+/* 产品图网格接收拖拽时的高亮；add 按钮里补一行小字说明可拖入 / 粘贴 */
+.pimgrid.dz{outline:2px dashed var(--accent-fill);outline-offset:3px;border-radius:var(--radius)}
+.pimgadd em{font-style:normal;font-size:10px;color:var(--faint);line-height:1.25}
+
+/* ---------- v0.51 · 产品图放大预览 ----------
+   遮罩用 position:fixed + 高层级，不被 .tw / .card 的 overflow 裁掉。
+   可点的三处只给「图片本身」上放大镜光标 —— 列表里没图的那格是 span，不该暗示能点。
+   点击判定走【捕获阶段】：列表行自己绑了 tr.onclick=打开详情，冒泡阶段再拦已经晚了。 */
+.pthumb img,.pmain img,.pimg img{cursor:zoom-in}
+body.zooming{cursor:zoom-out}
+#imgZoom{position:fixed;inset:0;z-index:120;background:rgba(10,15,24,.86);
+  display:none;align-items:center;justify-content:center;padding:32px 24px 56px}
+#imgZoom.on{display:flex}
+#imgZoom img{max-width:92vw;max-height:calc(100dvh - 112px);object-fit:contain;
+  background:var(--panel);border-radius:8px;box-shadow:0 24px 64px rgba(0,0,0,.46);cursor:zoom-out}
+#imgZoom .iz-x{position:absolute;top:16px;right:18px;width:32px;height:32px;border:0;
+  border-radius:50%;background:rgba(255,255,255,.16);color:#fff;font-size:18px;line-height:1;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
+#imgZoom .iz-x:hover{background:rgba(255,255,255,.3)}
+#imgZoom .iz-tip{position:absolute;left:0;right:0;bottom:18px;text-align:center;
+  font-size:12px;color:rgba(255,255,255,.66);pointer-events:none;letter-spacing:.2px}
+
+/* --- v0.54 · 顶栏当日日期（星期） --- */
+#topbar .today{display:inline-flex;align-items:center;gap:6px;flex:none;
+  padding:5px 10px;border-radius:999px;background:var(--fill-2);color:var(--muted);
+  font-size:11.5px;font-weight:600;white-space:nowrap;letter-spacing:.2px}
+#topbar .today .dt-dow{color:var(--faint);font-weight:500}
+#topbar .today .dt-short,#topbar .today .dt-min{display:none}
+#topbar .today.today-red .dt-dow,#topbar .today.today-red .dt-min{color:var(--red-600)}
+@media (max-width:1080px){
+  #topbar .today{padding:4px 8px;font-size:11px;gap:4px}
+  #topbar .today .dt-long{display:none}
+  #topbar .today .dt-short{display:inline}
+}
+/* 430px 级别的手机上「10-20 周二」会挤掉页面标题（实测只剩一个字），再收一档只留星期 */
+@media (max-width:600px){
+  #topbar .today{padding:3px 6px;font-size:10.5px;gap:0}
+  #topbar .today .dt-short{display:none}
+  #topbar .today .dt-min{display:inline}
+  /* 日期胶囊占的位置只能从别处省：智能录入收成图标（与 btnRefresh 同一招，title 已带说明），
+     否则 375px 下标题容器会被压到 0 宽、一个字都看不见 */
+  #topbar #btnAssist{font-size:0;padding:4px 9px}
+  #topbar #btnAssist::before{content:"✨";font-size:13px;line-height:1}
+  #topbar #btnNew{padding:4px 10px;font-size:12px}
+}
+/* 375px（iPhone SE 级别）标题只剩 75px，19px 四个字差一点点 → 降一档字号，保住完整页名 */
+@media (max-width:400px){
+  #topbar .ttl{font-size:16px}
+}
+
+/* --- v0.54 · 侧栏工作台名：可重命名 --- */
+.sb-logo .sb-name{flex:1 1 auto;min-width:0}
+.sb-logo .sb-ren{flex:none;border:0;background:transparent;color:var(--faint);
+  width:24px;height:24px;border-radius:var(--radius-ctl);cursor:pointer;
+  font-size:13px;line-height:1;padding:0;display:flex;align-items:center;justify-content:center;
+  opacity:0;transition:opacity .15s,background .15s}
+.sb-logo:hover .sb-ren,.sb-logo .sb-ren:focus-visible{opacity:1}
+.sb-logo .sb-ren:hover{background:var(--fill-2);color:var(--text)}
+.sb-logo .t[data-ren]{cursor:text}
+@media (hover:none), (max-width:820px){ .sb-logo .sb-ren{opacity:.55} }
+/* --- v0.55 · 回款流水（汇总条 / 明细列表 / 发货进度） --- */
+.payhd{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;padding:10px 12px;margin-bottom:12px;
+  border:1px solid var(--line-2);border-radius:var(--radius);background:var(--fill-3)}
+.payhd .pk{display:inline-flex;align-items:baseline;gap:6px;font-size:12.5px;color:var(--muted);white-space:nowrap}
+.payhd .pk em{font-style:normal;font-size:11.5px;color:var(--faint)}
+.payhd .pk b{font-size:14px;color:var(--text);font-variant-numeric:tabular-nums}
+.payhd .pk b.green{color:var(--green-600)}
+.payhd .pk b.red{color:var(--red-600)}
+.paylist{max-height:38vh;overflow:auto;border:1px solid var(--line-2);border-radius:var(--radius);padding:2px 12px}
+.paylist .empty{padding:16px 0}
+/* 发货进度条：与排产进度同形，超发时用琥珀色告警 */
+.shipsum{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;padding:8px 10px;margin-bottom:8px;
+  border-radius:var(--radius-ctl);background:var(--fill-3);font-size:12px;color:var(--muted)}
+.shipsum b{color:var(--text);font-variant-numeric:tabular-nums}
+.shipsum .pbar{flex:1;min-width:80px}
+.shipsum.over{background:var(--amber-soft)}
+.shipsum.over b{color:var(--amber-600)}
+
 </style>
 </head>
 <body data-page-node-id="iN68ACaq0BuwCUMgsu3KFv">
@@ -900,7 +1073,8 @@ textarea#nlIn:focus{outline:none;background:var(--panel);box-shadow:0 0 0 3.5px 
 <aside id="sidebar" data-page-node-id="mOHG7ZovWQTFY89nDh3RpA">
   <div class="sb-logo" data-page-node-id="CItXgwA9E43rFqjh1jkPjK">
     <div class="mark" data-page-node-id="UZtmztULGLZ5gKgPjaSoN0"><svg width="28" height="28" viewBox="0 0 512 512" aria-hidden="true"><defs><linearGradient id="sbMarkBg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5b86d6"/><stop offset="1" stop-color="#3d8f89"/></linearGradient></defs><rect width="512" height="512" rx="116" fill="url(#sbMarkBg)"/><path d="M144 100 H252 L310 158 V322 A26 26 0 0 1 284 348 H144 A26 26 0 0 1 118 322 V126 A26 26 0 0 1 144 100 Z" fill="#ffffff"/><path d="M252 100 L310 158 L252 158 Z" fill="#cfe0f7"/><rect x="146" y="196" width="136" height="18" rx="9" fill="#d7e2f3"/><rect x="146" y="236" width="136" height="18" rx="9" fill="#d7e2f3"/><rect x="146" y="276" width="90" height="18" rx="9" fill="#d7e2f3"/><circle cx="396" cy="390" r="76" fill="#ffffff"/><path d="M362 390 L386 414 L430 362" fill="none" stroke="#3d8a5c" stroke-width="23" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-    <div data-page-node-id="qJfiMtI7jd53xaMaRs2OfN"><div class="t" data-page-node-id="vxtJJYpJxW7saZcUyfaE3M">订单追踪台</div><div class="s" data-page-node-id="ufakbTeCG3rPiVsiEX5UML">v0.46</div></div>
+    <div class="sb-name" data-page-node-id="qJfiMtI7jd53xaMaRs2OfN"><div class="t" data-page-node-id="vxtJJYpJxW7saZcUyfaE3M" title="双击可重命名">订单追踪台</div><div class="s" data-page-node-id="ufakbTeCG3rPiVsiEX5UML">v0.56</div></div>
+    <button class="sb-ren" id="btnRename" type="button" title="重命名工作台" aria-label="重命名工作台">✎</button>
   </div>
   <nav class="sb-nav" id="sbNav" data-page-node-id="y58haCHcKQU8HJVk0gDYWN"></nav>
   <div class="sb-foot" data-page-node-id="aYIl2JwHHZlvyCXEx9VwGG">
@@ -918,6 +1092,11 @@ textarea#nlIn:focus{outline:none;background:var(--panel);box-shadow:0 0 0 3.5px 
         <div class="sub" id="pgSub" data-page-node-id="TOrAYcPDfMTElajY5vXYvr">销售汇总 · 客户维度 · 全局筛选联动</div>
       </div>
       <div class="spacer" data-page-node-id="JNa1oqdBJDEnCTK20bPd1Z"></div>
+      <div class="today" id="todayChip" title="今天">
+        <span class="dt-long" id="todayLong"></span>
+        <span class="dt-short" id="todayShort"></span>
+        <span class="dt-min" id="todayMin"></span>
+      </div>
       <button class="btn sm" id="btnRefresh" data-page-node-id="ZAPIt249tNvL5pXISUBQEr" title="从当前数据源重新读取全部数据并刷新界面（只读，不会改动数据）">↻ 重新载入</button>
       <button class="btn" id="btnAssist" title="用一句话说清订单信息，助手解析出字段后由你确认再录入">✨ 智能录入</button>
       <button class="btn primary" id="btnNew" data-page-node-id="BAOxRK3gBhMo7cME74ypTq">+ 新增订单</button>
@@ -980,7 +1159,31 @@ const SCHEMA = {
                'balanceReceived','balanceSettled','sortKey'],
   production: ['id','orderId','moNo','workshop','planStart','planFinish','actualStart','actualFinish','qty','doneQty','progressPct','opStatus'],
   shipments : ['id','orderId','shipNo','shipDate','qty','amount','logisticsNo','carrier','signDate'],
-  followups : ['id','orderId','date','channel','content','nextAction','nextDate']
+  /* ---------- v0.55 · 分次回款流水 ----------
+     回款从「订单上订金 + 尾款两笔固定字段」升级为**多笔流水**：一笔到账一条记录，
+     日期 / 金额 / 类型 / 方式 / 流水号 / 备注各自独立。订金与尾款降级成 kind 标签
+     （合同条款仍留在订单的 depositAmount 上），未收 = 订单金额 − 流水合计。
+     ★ 老数据零迁移成本：没有 payments 行的订单，receivedOf / isFullyPaid 仍然走
+       原来的订单字段口径（见「订单级回款统计算子」那段），历史订单数字一个不变；
+       第一次给它登记流水时才把「订金付款日 / 尾款付款日」自动补成两笔流水。 */
+  payments  : ['id','orderId','payDate','amount','kind','method','ref','note'],
+  followups : ['id','orderId','date','channel','content','nextAction','nextDate'],
+  /* ---------- v0.47 · 产品库与供应商档案 ----------
+     customers / custProducts / suppliers / supplierProducts 是四条独立实体：
+     客户产品挂 customerId，供应商产品挂 supplierId；客户产品可选地挂一条
+     supplierProductId 作「对应供应商产品」软链接（一个客户型号对多个工厂时拆成多条供应商产品，
+     不做多对多关联表 —— 单用户 <200 单/年的体量撑不起中间表的维护成本）。
+     pack* 是包装资料的结构化字段，packingFiles 存 FileStore 的文件元数据数组。 */
+  suppliers : ['id','code','name','shortName','category','contact','phone','email','address',
+               'settleDays','leadTime','rating','active','remark','createdAt'],
+  custProducts : ['id','sku','name','custModel','factoryModel','customerId','supplierProductId',
+                  'price','currency','moq','unit','orderStatus','statusAt','images',
+                  'packMethod','packQty','packSize','packNet','packGross','packCbm','packMaterial','packMark','packNote',
+                  'packingFiles','remark','createdAt','updatedAt'],
+  supplierProducts : ['id','sku','name','custModel','factoryModel','supplierId',
+                      'price','currency','moq','unit','orderStatus','statusAt','images',
+                      'packMethod','packQty','packSize','packNet','packGross','packCbm','packMaterial','packMark','packNote',
+                      'packingFiles','remark','createdAt','updatedAt']
 };
 const STATUS = ['01 已签约','02 已排产','03 已完工待发货','04 已发货','05 已收款','06 已完结'];
 const FLOW = STATUS.slice();
@@ -1390,16 +1593,33 @@ async function histRestore(snapId, reason){
 }
 
 /* ---------- 回收站 ---------- */
-const RES_LABEL = { orders:'订单', production:'排产', shipments:'发货', followups:'跟进', customers:'客户', owners:'业务员' };
+const RES_LABEL = { orders:'订单', production:'排产', shipments:'发货', payments:'回款', followups:'跟进', customers:'客户', owners:'业务员',
+  suppliers:'供应商', custProducts:'客户产品', supplierProducts:'供应商产品' };
 function rowTitle(res, row){
   row = row || {};
   if(res === 'orders')     return '订单 ' + (row.orderNo || row.id);
   if(res === 'production') return '排产 ' + (row.moNo || row.id);
   if(res === 'shipments')  return '发货 ' + (row.shipNo || row.id);
+  if(res === 'payments')   return '回款 ' + (row.payDate || '') + (row.amount != null ? ' · ' + row.amount : '');
   if(res === 'followups')  return '跟进 ' + (row.date || row.id);
   if(res === 'customers')  return '客户 ' + (row.name || row.id);
   if(res === 'owners')     return '业务员 ' + (row.name || row.id);
+  if(res === 'suppliers')  return '供应商 ' + (row.name || row.id);
+  if(res === 'custProducts')     return '客户产品 ' + (row.sku || row.name || row.id);
+  if(res === 'supplierProducts') return '供应商产品 ' + (row.sku || row.name || row.id);
   return (RES_LABEL[res] || res) + ' ' + row.id;
+}
+/* v0.47：一行记录上挂的**全部**文件 id。
+   以前只有订单有附件（attachments），回收站与 S3 快照都把 attachments 写死；
+   产品库上来之后图片（images）与包装文件（packingFiles）也是 FileStore 里的二进制，
+   漏掉就意味着「换设备后产品图全裂 / 删产品不回收文件」—— 统一从这一个出口取。 */
+function rowFileIds(row){
+  if(!row) return [];
+  const out = [];
+  (row.attachments || []).forEach(a => { if(a && a.id) out.push(a.id); });
+  (row.images || []).forEach(id => { if(id) out.push(id); });
+  (row.packingFiles || []).forEach(f => { if(f && f.id) out.push(f.id); });
+  return out;
 }
 function pushTrash(db, items, label, files){
   db[TRASH_KEY] = db[TRASH_KEY] || [];
@@ -1492,7 +1712,7 @@ class LocalDataSource extends DataSource {
     const row = (db[res]||[]).find(x => x.id === id);
     if(!row) return true;
     /* 移入回收站而非物理删除（详见模块 3.5）——附件二进制先留着，还原时还在 */
-    pushTrash(db, [{ res, row }], rowTitle(res, row), (row.attachments||[]).map(a => a.id));
+    pushTrash(db, [{ res, row }], rowTitle(res, row), rowFileIds(row));
     db[res] = (db[res]||[]).filter(x => x.id !== id);
     this._write(db, '删除' + (RES_LABEL[res] || res)); return true;
   }
@@ -1505,7 +1725,7 @@ class LocalDataSource extends DataSource {
       const cur = (db[it.res]||[]).find(x => x.id === it.row.id);
       if(!cur) return;
       kept.push({ res: it.res, row: cur });
-      (cur.attachments || []).forEach(a => files.push(a.id));
+      rowFileIds(cur).forEach(id => files.push(id));
     });
     if(!kept.length) return { ok:false, n:0 };
     pushTrash(db, kept, label, files);
@@ -2334,7 +2554,8 @@ const Store = (() => {
     dsCfg: { siyuan: { baseUrl:'http://127.0.0.1:6806', token:'',
       avIds:{ orders:'', customers:'' }, defaultView:'', allowWrite:false } },
     source: null,
-    data: { owners:[], customers:[], orders:[], production:[], shipments:[], followups:[] },
+    data: { owners:[], customers:[], orders:[], production:[], shipments:[], payments:[], followups:[],
+            suppliers:[], custProducts:[], supplierProducts:[] },
     loading:false, error:null, health:null,
     filters: blankFilter(),
     /* 排产页独立的筛选（订单页/看板共用上面的 filters；两者互不影响） */
@@ -2453,6 +2674,9 @@ function basisDateOf(o, basis){
   if(!o) return '';
   if(basis === 'delivery') return o.contractDelivery || '';
   if(basis === 'pay'){
+    /* v0.55：有回款流水的单取「最后一笔到账日」（多笔可能跨月，仍只落 1 个月） */
+    const agg = payAggOf(o);
+    if(agg && agg.n) return agg.last ? String(agg.last).slice(0, 10) : '';
     const ds = [o.depositPaidDate, o.balancePaidDate].filter(Boolean).sort();
     return ds.length ? ds[ds.length - 1] : '';
   }
@@ -2878,15 +3102,114 @@ const Chart = (() => {
    —— 单一事实来源：界面标题 / 侧栏 / 「系统版本」页全部取自 APP_VERSION。
    新增一个版本时只需改两处：APP_VERSION / APP_UPDATED，并在 CHANGELOG 头部插一条。
    ========================================================================== */
-const APP_VERSION = 'v0.46';
-const APP_UPDATED = '2026-09-30';
-const APP_NAME    = '订单追踪台';
+const APP_VERSION = 'v0.56';
+const APP_UPDATED = '2026-10-21';
+let   APP_NAME    = '订单追踪台';
+/* v0.54：工作台名支持用户重命名 —— APP_NAME_DEFAULT 是出厂默认，真实名从 localStorage 读。
+   ★ 用 let 而不是继续 const：改名后要能被 document.title / 侧栏 / 桌面通知 / 思源库说明
+     同时读到新值（它们全引用 APP_NAME，所以改完只要调 applyVersion() 就全同步）。 */
+const APP_NAME_DEFAULT = APP_NAME;
+const APP_NAME_KEY     = 'ot.appname.v1';
+const APP_NAME_MAX     = 24;
+/* 清洗：控制字符（含 \n \t）换成空格再压成一个 —— 直接删掉会把「甲\n乙」挤成「甲乙」；
+   换行留在标题栏会让侧栏塌成两行，所以必须处理；限长 24 字。 */
+function nameClean(v){
+  return String(v == null ? '' : v)
+    .replace(/[\u0000-\u001f\u007f]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, APP_NAME_MAX);
+}
+function nameRead(){
+  try{ const v = nameClean(localStorage.getItem(APP_NAME_KEY)); if(v) return v; }catch(e){}
+  return APP_NAME_DEFAULT;
+}
+APP_NAME = nameRead();   /* 启动即用记住的名字（没改过 / 读不到 → 出厂默认） */
 /* v0.39：侧栏下方**只显示版本号**，不再显示这条「一句话」（详细说明请到「系统版本」页看）。
    APP_TAG 仍作为单点定义保留（更新日志 / 回归脚本引用它），只是不再渲染到侧栏。 */
-const APP_TAG     = '进度由状态决定 · 提示栏去跳转按钮';
+const APP_TAG     = '回款口径只留一处 · 超收与单号补防';
 
 const CHANGELOG = [
-  { v:'v0.46', date:'2026-09-30', cat:'进度由状态决定 · 提示栏去跳转按钮', cur:true, items:[
+  { v:'v0.56', date:'2026-10-21', cat:'回款口径只留一处 · 超收与单号补防', cur:true, items:[
+    '★ <b>修掉「一半生效一半不生效」的回款表单</b>：订单编辑表单里原来还有「订金付款日 / 尾款付款日 / 实收尾款金额 / 差额已结清」四个老字段。v0.55 起回款以<b>流水</b>为准，改前三个对已收<b>毫无影响</b>，可「差额已结清」偏偏仍会动未收 —— 同一组控件一半灵的、一半是摆设。现在<b>只要该单已有流水，这四个字段就整组收起</b>，分组标题改成「本单已有 N 笔流水 · 请到「回款」页逐笔登记」；<b>「订金金额」作为合同条款保留</b>（它影响尾款金额与回款率，与流水无关）。',
+    '★ <b>顺带堵住一个会改数的坑</b>：保存订单时原来无条件回写这四个字段。表单收起它们之后，<code>values</code> 里读到的就是空值 —— 一保存就会把<b>镜像付款日抹掉</b>、把「差额已结清」<b>重置成未结清</b>，未收金额凭空跳高（实测「订金金额 = 0 但记过订金流水」的单必中）。现在有流水的单保存时<b>完全不碰这四个键</b>。',
+    '★ <b>表单顶部的回款预览条跟着换口径</b>：有流水的单显示「已收 / 未收 / N 笔流水」，不再显示「订金 未付 / 尾款 未付」—— 否则回款页明明收到钱了，表单上却说一分没收。',
+    '★ <b>登记回款时超收要确认</b>：累计到账超过订单金额（预收下批货款、客户抹零补款都合法）不会被硬拦，但会先弹确认框写明「已收 + 本次 = 合计 > 订单金额（超 X）」。与发货的「超发确认」对齐 —— 分次回款最容易犯的错就是多打一位数。',
+    '★ <b>自动出货单号不再自己撞自己</b>：单号留空时由系统生成，原来生成撞号后直接弹「单号已被占用」—— 号是系统起的，却要用户自己想一个。现在<b>生成时就循环避开已占用号段</b>，留空连开两单也不会互相打架。',
+    '★ <b>云端同步的表清单补上「回款」</b>：<code>includePayments</code> 这个开关早就在配置里默认开着，但设置页一直没有对应的勾选框 —— 想单独关掉回款同步无处可点。现在「同步设置 → 参与同步的表」里有「回款」了。',
+  ]},
+  { v:'v0.55', date:'2026-10-20', cat:'分次回款流水 · 分批发货多单号', cur:false, items:[
+    '★ <b>回款可以分次数登记</b>：原来是订单上「订金一笔 + 尾款一笔」两个固定字段，装不下第三笔。现在改成<b>回款流水</b>——一笔到账一条记录，各自记 <b>日期 / 金额 / 款项类型 / 回款方式 / 流水号 / 备注</b>。已收 = 各笔合计，未收 = 订单金额 − 已收，回款率按笔推进。分批出货、多次汇款的标准场景终于对得上了。',
+    '★ <b>回款中心与详情页都换成流水口径</b>：回款中心的表格由「订金 / 订金付款日 / 尾款 / 尾款付款日 / 实收尾款」改为 <b>已收 / 未收 / 笔数 / 最近回款 / 回款率 / 状态</b>（状态新增「部分回款 N%」）；订单详情新增「回款流水」分组，逐笔列出、可单独删除，点「＋ 登记回款」进的弹层里能连着登记多笔，关掉还回到原详情。',
+    '★ <b>老订单零迁移、金额一分不变</b>：没有流水的订单仍按原来的「订金 / 尾款 / 差额结清」四字段算，历史数字与既有回归断言完全不受影响；<b>第一次</b>给它登记新流水时，系统自动把「订金付款日 / 尾款付款日」补成两笔流水（备注写「由原…自动补录」），所以不会出现「一登记就少了一笔钱」。删除最后一笔流水则回到「未收」。',
+    '★ <b>支持分批出货、多个出货单号</b>：一个订单可以挂任意多条发货记录、各自一个出货单号（单号全局唯一，重复会被拦下）。发货表单默认金额改为<b>剩余未发金额</b>（原来默认整单金额，最容易把分批记成整单），抬头直接给出「订单 / 已发 / 剩余可发 / 已登记单号」。',
+    '★ <b>累计超发只提示、不硬拦</b>：改单加量、赠品、运费都会让累计发货金额与订单金额对不上，所以超发时弹确认框（确认后照存），详情页把「超发」标成红色；发过但没发完时订单头变成「部分发货」，发货分组有「已发 / 订单 / 出货单号数 / 剩余未发 + 进度条」。',
+    '★ 回款流水进 S3 快照、回收站与整组删除：删订单时它的流水跟着进回收站，可整组还原；清空业务数据时一并清掉，不留孤儿记录。',
+  ]},
+  { v:'v0.54', date:'2026-10-20', cat:'工作台可重命名 · 顶栏当日日期星期', cur:false, items:[
+    '★ <b>工作台可以重命名</b>：侧栏左上角标题旁边出现<b>铅笔</b>（鼠标移上去才显形），双击标题也行 —— 弹层里改名，保存后<b>侧栏标题、浏览器标签页、桌面通知标题、思源同步库说明</b>一起变（它们引用同一个常量 <code>APP_NAME</code>）。名字存 <code>ot.appname.v1</code>，刷新 / 换页都还记得，清空保存即恢复默认「订单追踪台」。',
+    '★ <b>改名不动任何技术标识</b>：导出文件的 <code>_format</code> 盐值、IndexedDB 库名、<code>ot.*</code> 存储键全都与名字无关 —— 改名不会让已有订单 / 产品 / 图片「对不上」，也不会让 S3 同步失败。',
+    '★ <b>名字做了清洗与限长</b>：控制字符（换行、Tab）一律剔除 —— 否则侧栏标题会塌成两行、<code>document.title</code> 也会折行；连续空格压成一个，最长 24 字，超长用省略号收尾。',
+    '★ <b>顶栏显示当日日期与星期</b>：如「<code>2026年10月20日 星期二</code>」，周末把星期标红；窄屏自动收成「<code>10-20 周二</code>」不挤占按钮。日期取<b>本地时区</b>（不走 UTC，东八区早上 8 点前不会显示成前一天）；跨零点由<b>任意操作 / 切回标签页 / 页面重渲染</b>自动校准，同一日只短路比较、不碰 DOM。',
+  ]},
+  { v:'v0.53', date:'2026-10-20', cat:'操作按钮固定在题头 · 长表单不用滚到底', cur:false, items:[
+    '★ <b>「保存」「取消」搬到表单题头</b>：产品库的编辑表单字段多（基础信息 + 包装资料 + 产品图 + 包装文件），原来按钮压在最底部，<b>每次保存都得先滚到底</b>。现在和「编辑」「删除」放在同一行 —— 题头是<b>吸顶</b>的，内容滚多远按钮都在。',
+    '★ <b>产品详情题头的「编辑」「删除」本来就在吸顶行</b>（<code>.hd</code> 一直是 <code>position:sticky</code>），这次一并核对过遮罩模式与分屏模式两种形态，滚动时都不跑。',
+    '★ <b>标题给按钮让位</b>：<code>.hd</code> 里标题过长时用省略号收尾，按钮与关闭键标了 <code>flex:none</code> —— 420px 窄屏也不会因为标题长把「保存」挤出可视区。',
+    '★ <b>底部那行「保存 / 取消」直接删掉</b>，不做两处重复按钮 —— 同一表单两个保存键，误点哪个都容易懵。'
+  ]},
+  { v:'v0.52', date:'2026-10-20', cat:'供应商 SKU 可重复 · 产品库排序记忆', cur:false, items:[
+    '★ <b>供应商产品库允许 SKU 重复</b>：新增 / 编辑供应商产品时不再拦「SKU 已存在」，同一个 SKU 可以建多条（对应不同工厂型号、不同报价、不同批次）。<b>客户产品库仍要求 SKU 唯一</b> —— 客户侧 SKU 是对客报价编码，重复了报价单和订单就指不清。',
+    '★ <b>导入的定位口径跟着一起改</b>：客户产品按 SKU 命中即更新（老行为不变）；供应商产品改成按「<b>SKU + 归属供应商</b>」定位，且<b>只有唯一命中才更新</b>。同一组合已有两三条时（说明你是有意重复录入的），本次一律<b>追加</b>，不去猜该覆盖哪一条 —— 宁可多一行，也不静默改错价格。',
+    '★ <b>同 SKU 排序不再随机换位</b>：原来排序打平时只拿 SKU 兜底，重复 SKU 的行每次排序顺序都可能变；现在补了一级 <code>id</code> 兜底，同样的数据每次打开顺序完全一致。',
+    '★ <b>产品库排序有记忆了</b>：点列头排「价格降序」，刷新页面、关掉重开、切到别的页再回来，<b>还是价格降序</b> —— 客户产品库和供应商产品库各记各的，互不覆盖。存 <code>localStorage</code> 的 <code>ot.psort.v1</code>。',
+    '★ <b>排序记忆不复用 <code>ot.sort.v1</code></b>：那个键由订单 / 排产两页整体重写，产品库混进去会被下一次点订单页列头顺手抹掉。字段表校验照旧 —— 脏数据或旧版本写进去的键，一律退回「按更新时间倒序」。'
+  ]},
+  { v:'v0.51', date:'2026-10-20', cat:'产品图放大预览 · 表格宽度摊平', cur:false, items:[
+    '★ <b>产品图可以点开看大图</b>：列表缩略图、产品详情的主图、编辑表单里的图片，点一下弹出全屏预览（等比缩放到视口内，小图不会被强行放大）。<b>点任意处 / 右上「×」/ Esc</b> 关闭。',
+    '★ <b>点缩略图不会再顺带打开详情</b>：列表整行绑着「点行开详情」，放大监听走<b>捕获阶段</b>并截住事件 —— 看大图就只看大图，要详情照旧点行里别的位置。',
+    '★ <b>修「搜索只剩两三个产品时页面变窄」</b>：根因是列宽总和小于容器宽时，表格就只占那么宽（<code>table-layout:fixed</code> 按列宽走），右边空出一大片 —— 搜索结果越少越明显，拖过列宽之后更容易出现。现在<b>列宽总和不足容器时按比例摊回</b>，表格始终撑满。',
+    '★ <b>摊平只做加法</b>：列宽总和超过容器时一个字都不动（该出现的横向滚动条照旧出现），绝不压缩你拖好的列；产品图列宽被 CSS 钉死 56px，不参与分摊；四舍五入的余数补给最宽的一列，避免差 1px 又冒出横向滚动条。',
+    '★ <b>摊平值不写进记忆</b>：拖动列宽存的是你亲手拖出来的值，摊平只是渲染时的补足 —— 换设备 / 重开页面不会把「补宽的列」当成你的偏好。',
+    '★ <b>搜索后列表卡片不再往下塌</b>：结果从 20 条筛到 2 条时，表格高度取刷新前的值作下限，页面不会「缩一下」再弹回来；清空搜索自然长回去，缩小窗口由下一次渲染复位。'
+  ]},
+  { v:'v0.50', date:'2026-10-20', cat:'滚动位置保持 · 重渲染不再跳回顶部', cur:false, items:[
+    '★ <b>修「改个数据页面就弹回最上面」</b>。原来每次重渲染都用 <code>innerHTML</code> 整块换掉内容区：内容在一瞬间变空 → <code>scrollHeight</code> 归零 → 浏览器把 <code>scrollTop</code> 钳成 0，新内容填回来也不会自己回到原处。所以<b>改订购状态、点「重新载入」、切排序、在筛选里敲一个字</b>，都会把人踢回顶部。',
+    '★ <b>做法</b>：重建前先记下「已经滚过的容器」及其 <code>scrollTop / scrollLeft</code>，重建后按 <b>DOM 路径</b>找回来写回。只记滚过的（正常也就 1~3 处），开销可以忽略；路径认节点位置不认节点本身，所以重建多少次都命中。',
+    '★ <b>恢复排在高度自适应之后</b>：内容区高度是实测回写的，提前写 <code>scrollTop</code> 会被那一瞬间的中间高度钳住；再补一帧兜住缩略图 / 字体晚一帧才撑开的高度。补帧只补「还是 0」的位置，<b>不会覆盖你正在进行的滚动</b>。',
+    '★ <b>卡片内表格也一起保</b>：产品库 / 客户 / 供应商这类卡片里的表（<code>.tw.tscroll</code>）换 <code>thead</code> / <code>tbody</code> 时同样会被钳到 0，现在一并恢复 —— 筛选、排序、改状态后停在原处。',
+    '★ <b>该跳的地方还跳</b>：点侧栏切页仍然回到顶部 —— 那是主动换视图，继承上一页的位置反而莫名其妙。滚动位置<b>只在你主动操作时改变</b>：滚轮 / 拖滚动条 / 点右下角「回到顶部」。',
+    '★ <b>结构真变了就不动</b>：列表被筛短、区块增删导致路径对不上时直接放弃恢复 —— 宁可停在浏览器算出来的合法位置，也不乱滚到别处。'
+  ]},
+  { v:'v0.49', date:'2026-10-19', cat:'导入编码修复 · 泰文 / UTF-16 / 粘贴导入', cur:false, items:[
+    '★ <b>修「导入后泰文变问号」</b>。两种成因，分开处理：① 文件其实是 <b>TIS-620 / Windows-874</b>（Excel 泰文版的默认 ANSI），原来一律按 GBK 解 → 得到一串乱码汉字，看着像「不认识泰文」；② 更常见的是<b>字在保存那一步就丢了</b> —— Excel「CSV(逗号分隔)」用系统 ANSI 写文件时，泰文/中文无法表示，直接写成 <code>?</code>，此时文件里就是问号，任何解码器都还原不了。',
+    '★ <b>编码探测重写</b>：BOM（UTF-8 / UTF-16LE / UTF-16BE）→ UTF-8 严格解码 → 无 BOM 的 UTF-16（看 `0x00` 分布）→ GBK / BIG5 / Windows-874 按「替换符 + 控制字符最少、泰文最多」打分挑选。**编码可手动指定**（自动 / UTF-8 / GBK / BIG5 / TIS-620 / UTF-16），选过就记住（`ot.impenv.v1`）—— 做泰文业务只需选一次。',
+    '★ <b>导入前先看预览</b>：选完文件不再直接落库，先弹预览层 —— <b>前 4 行原文 + 识别到的数据行数 + 分隔符 + 编码</b>。切编码即时重解、预览跟着变，乱码一眼就能看出来。<b>表头缺 SKU / 归属列、没有数据行时「导入」按钮直接禁用</b>。',
+    '★ <b>新增「粘贴表格导入」</b>（本次泰文问题的根治方案）：在 Excel 里选中区域 <b>Ctrl+C</b>，粘进弹层 —— <b>走剪贴板（UTF-16），不经过任何文件编码，泰文一个字都不会丢</b>，也不用管另存为什么格式。',
+    '★ <b>文本体检</b>：预览层会统计「连续问号」与「替换符 �」—— 前者直接判定「源文件已丢字，换编码没用，请改用粘贴导入」，后者提示「编码选错了，换一个编码再看」。',
+    '★ 顺带支持 <b>制表符分隔（TSV）</b>：按首行自动判断逗号还是制表符，`.csv` / `.txt` / `.tsv` 都能导 —— Excel「另存为 Unicode 文本」出来的就是 UTF-16 + Tab，现在可以直接导。',
+    '菜单与提示文案改口径：<b>「Excel 填完请另存为 CSV UTF-8」</b>，并明确写着问号的成因与替代路径 —— 免得下次又以为是系统不认识泰文。'
+  ]},
+  { v:'v0.48', date:'2026-10-19', cat:'产品库交互 · 粘贴拖拽 / 列宽记忆 / 对齐 / CSV 导入导出', cur:false, items:[
+    '★ <b>产品图支持拖拽与粘贴</b>：产品图区整个网格都是投放区（拖进去虚线高亮），也可以直接 <b>Ctrl+V 粘贴截图</b>；剪贴板里没有扩展名的图会被自动补名（`粘贴-时间戳.png`），不会因为「格式不支持」白丢。',
+    '★ <b>包装文件同样三种来源</b>：点选 / 拖入 / <b>Ctrl+V 粘贴</b>。粘贴去向按「鼠标最后停在哪块」判断 —— 停在包装文件区就全进包装文件；否则图片进产品图、Excel / Word / PDF / ZIP 进包装文件。<b>纯文字粘贴一律放过</b>，不会抢备注、箱唛输入框的 Ctrl+V。',
+    '★ <b>产品库列宽可拖动并记忆</b>：拖列头右边缘实时改宽，松手写 `ot.colw.v1`；<b>客户产品 / 供应商产品各存一套</b>（`cprod` / `sprod`），互不覆盖，排序或搜索重绘后不丢。产品图列宽度是缩略图 + 内边距钉死的，不给把手（免得「拖了没反应」）。',
+    '★ <b>文字对齐左 / 中 / 右</b>：工具栏三段切换，整表生效并记忆（`ot.palign.v1`）。只影响产品库两张表；数字列原本默认右对齐，手动切过之后以你的选择为准。',
+    '★ <b>产品列表导入导出</b>：导出<b>导入模版</b>（20 列表头 + 1 行示例）、导出<b>当前列表</b>（与页面同排序、同筛选结果）、<b>导入 CSV</b>。导入按 <b>SKU upsert</b>：同库内 SKU 相同 → 更新，不同 → 新增；归属按 名称 / 简称 / 编码 匹配，<b>匹配不到整行跳过并报行号</b>，不造孤儿产品。',
+    '导入的<b>状态时间口径与表单一致</b>：订购状态没变就保留原 <code>statusAt</code>，变了才刷今天 —— 批量导入不会把整库的「订购状态更新时间」一次性刷平。中文 Excel 另存的 <b>GBK 编码 CSV 也能读</b>（UTF-8 解码失败自动改 GBK）。',
+    '导出的 CSV 带 BOM，Excel 双击打开中文不乱码；模版里那行示例是<b>真实可导入</b>的完整值，导入前删掉即可。'
+  ]},
+  { v:'v0.47', date:'2026-10-19', cat:'产品库 · 客户产品 / 供应商产品 / 供应商档案', cur:false, items:[
+    '★ <b>新增两张产品库</b>：<b>客户产品库</b>（挂客户，客户型号为主）与<b>供应商产品库</b>（挂供应商，工厂型号为主）。两张<b>独立表</b>，各自维护价格 / MOQ / 订购状态；客户产品详情里可以挂一条「对应供应商产品」软链接，一个客户型号对多个工厂时拆成多条供应商产品即可，不做多对多中间表。',
+    '★ <b>产品字段</b>：SKU、品名、<b>客户型号</b>、<b>工厂型号</b>、产品图（多张，首张为主图）、价格、币种、MOQ、单位、<b>订购状态</b>与<b>订购状态更新时间</b>。状态 4 档：在售 / 待定 / 停产 / 打样中 —— <b>状态一变就自动刷新更新时间</b>，不用手填。',
+    '★ <b>产品详情页</b>分三段：基础信息 + 产品图（大图 + 缩略图条）、<b>包装资料</b>（包装方式 / 装箱数 / 外箱尺寸 / 净重 / 毛重 / 单箱体积 / 包装材料 / 箱唛 / 备注）、<b>包装文件</b>（可上传 PDF / Excel / Word / CSV / ZIP / 图片，单个 ≤ 10MB，可预览可下载）。',
+    '★ <b>新增供应商档案</b>：编码、全称、简称、主营类别、联系人、电话、邮箱、地址、付款账期、常规交期、评级、合作状态、备注；列表带「产品数」汇总，详情页列出该供应商的全部产品。删除供应商 / 客户时若名下仍有产品会被拦下（先移产品或停用）。',
+    '★ <b>客户档案打通产品维度</b>：客户详情页新增「该客户产品」区块，直接看到产品的 SKU / 客户型号 / 价格 / MOQ / 订购状态，点击进产品详情。',
+    '★ <b>列表交互</b>：产品表 <b>点列头排序</b>（SKU / 客户型号 / 工厂型号 / 归属 / 价格 / MOQ / 更新时间），搜索覆盖 SKU / 品名 / 双型号 / 归属名称；汇总行统计各状态数量与<b>缺图产品数</b>。',
+    '★ 数据层：`suppliers` / `custProducts` / `supplierProducts` 三张新表进 SCHEMA，随数据源适配器一起读写；回收站与历史快照自动覆盖新表；附件白名单改为可选参数，订单附件仍只收 PDF / JPG / PNG。',
+    '★ <b>S3 多端同步补上产品库</b>：快照的表清单加了三张新表，<b>产品图与包装文件随附件一起加密上行</b>（原来只收订单附件 —— 不加的话换设备后产品一条都看不到、图全裂）。回收站的文件收集也从写死的 `attachments` 改成统一出口 `rowFileIds()`（订单附件 + 产品图 + 包装文件），删产品不再留孤儿文件。'
+  ]},
+  { v:'v0.46', date:'2026-09-30', cat:'进度由状态决定 · 提示栏去跳转按钮', cur:false, items:[
     '★ <b>进度改为按状态显示</b>：<b>待排产 0% · 生产中 30% · 已暂停 50% · 已完工 100%</b>。进度框变成<b>只读</b>（置灰、跟着状态自动变），不用再手填 —— 以前固定值只有「待排产 0% / 已完工 100%」两个，中间两档要手填，所以看来看去不是 0 就是 100。',
     '★ <b>老数据也统一按状态显示</b>：历史记录里用「生产数量」算出来的进度不再参与展示，一律以状态为准 —— 口径从此只有一处，表单 / 列表 / 详情 / 卡片 / 排序 / 筛选完全一致。数量字段仍原样留在老记录里，只是不再展示、不再参与计算。',
     '★ <b>提示栏去掉组级「跳转」按钮</b>：一组重复单号后面不再挂按钮，<b>点组里的订单号</b>就直接打开那条排产记录 —— 少一次点击。「忽略」与「恢复全部」保持不变。',
@@ -3225,6 +3548,10 @@ const PAGES = [
   { id:'prod',      ico:'🏭', name:'排产',     title:'排产与交期', sub:'工单进度与交期对比' },
   { id:'pay',       ico:'💰', name:'回款',     title:'回款中心', sub:'计划与实收登记' },
   { id:'cust',      ico:'🏢', name:'客户',     title:'客户档案', sub:'新增 / 编辑 / 删除 · 客户维度汇总' },
+  /* v0.47 · 产品库：客户产品与供应商产品是两张独立表，各自配一份档案页作归属维度 */
+  { id:'custprod',  ico:'📦', name:'客户产品', title:'客户产品库', sub:'SKU · 双型号 · 价格 MOQ · 包装资料' },
+  { id:'suppliers', ico:'🚚', name:'供应商',   title:'供应商档案', sub:'档案 · 产品数 · 账期与交期' },
+  { id:'supprod',   ico:'🏷️', name:'供应商产品', title:'供应商产品库', sub:'SKU · 工厂型号 · 采购价 · 包装' },
   { id:'owners',    ico:'👤', name:'业务员',   title:'业务员档案', sub:'新增 / 编辑 / 删除 · 业绩汇总' },
   { id:'source',    ico:'🔌', name:'数据源',   title:'数据访问层', sub:'适配器与对接配置' },
   { id:'sync',      ico:'☁️', name:'云端同步', title:'S3 多端同步', sub:'加密快照 · 增量 · 多设备一致' },
@@ -3241,6 +3568,9 @@ function renderSidebar(st){
     let cnt = '';
     if(p.id === 'orders') cnt = `<span class="cnt">${st.data.orders.length}</span>`;
     if(p.id === 'cust')   cnt = `<span class="cnt">${st.data.customers.length}</span>`;
+    if(p.id === 'custprod')  cnt = `<span class="cnt">${(st.data.custProducts||[]).length}</span>`;
+    if(p.id === 'suppliers') cnt = `<span class="cnt">${(st.data.suppliers||[]).length}</span>`;
+    if(p.id === 'supprod')   cnt = `<span class="cnt">${(st.data.supplierProducts||[]).length}</span>`;
     if(p.id === 'owners') cnt = `<span class="cnt">${st.data.owners.length}</span>`;
     if(p.id === 'pay')    cnt = `<span class="cnt">${st.data.orders.filter(o=>!isFullyPaid(o)).length}</span>`;
     if(p.id === 'alert'){
@@ -3256,7 +3586,13 @@ function renderSidebar(st){
   $('#dsMeta').textContent = st.source && st.source.capabilities.write ? '读写就绪' : '只读';
   $('#dsDot').className = 'dot' + (st.health && st.health.ok === false ? ' warn' : '');
 }
+/* ★ v0.50：切页标志。声明放在 goto 之前 —— 别让将来的启动流程在模块初始化阶段
+   调 goto 时踩 TDZ（render 里消费一次就复位）。 */
+let _scrollReset = false;
 function goto(pg){
+  /* ★ v0.50：主动切页 → 置位让 render 跳过滚动恢复。新页从顶部开始是本来的正确行为，
+     不加这一句的话旧页的 scrollTop 会被原样搬到新页上（一进产品库就停在半截）。 */
+  _scrollReset = true;
   cfgOpen = '';                    /* 切页收起浮层，免得留一个属于上一页的设置面板 */
   const _ms = document.getElementById('main'); if(_ms && _ms.classList.contains('split')) _ms.classList.remove('split');
   const _mk = $('#mask'); if(_mk) _mk.classList.remove('on');
@@ -3586,9 +3922,40 @@ function bindSortClicks(root){
    ========================================================================== */
 const COLW_KEY = 'ot.colw.v1';
 const COL_MIN = 56, COL_MAX = 900;
-const tblColW = { ord: [], prod: [] };
+/* v0.48：产品库两张表各记一套列宽（cprod / sprod）—— 客户产品列宽拖宽了，
+   切到供应商产品不该跟着变形；两表列数恰好都是 10，但含义不同，必须分开存。 */
+const tblColW = { ord: [], prod: [], cprod: [], sprod: [] };
 const _colw = (() => { try { return JSON.parse(localStorage.getItem(COLW_KEY) || '{}') || {}; } catch(e){ return {}; } })();
 function colwSave(kind){ _colw[kind] = { w: tblColW[kind].slice() }; try{ localStorage.setItem(COLW_KEY, JSON.stringify(_colw)); }catch(e){} }
+/* v0.51：列宽总和小于容器宽时，把差额按比例摊回去。
+   症状：搜索只剩两三条、或者用户把各列都拖窄过之后，表格只占容器一部分，右边空
+         一大片 —— 看起来像「页面变窄了」。
+   做法：只在 sum < 容器宽时动手（超了要保留横向滚动，绝不压缩）；产品图列宽度被
+         CSS 钉死在 56px，不参与分摊。差额按各列宽度等比分配，四舍五入的余数给最宽
+         的那一列 —— 必须严格等于容器宽，否则又会差 1px 冒出横向滚动条。
+   ★ 只改内存里的 tblColW 与 <col>，不写 localStorage：用户拖出来的值保持原样。 */
+function fitColToWrap(widths, wrapW, skip){
+  if(!wrapW || !widths.length) return widths;
+  const sum = widths.reduce((a, b) => a + b, 0);
+  if(sum >= wrapW) return widths;
+  const cand = widths.map((w, i) => i).filter(i => i !== skip);
+  if(!cand.length) return widths;
+  const base = cand.reduce((a, i) => a + widths[i], 0);
+  const need = wrapW - sum;
+  cand.forEach(i => {
+    const add = base > 0 ? Math.round(need * widths[i] / base) : Math.round(need / cand.length);
+    widths[i] += add;
+  });
+  const rest = wrapW - widths.reduce((a, b) => a + b, 0);
+  if(rest){
+    let m = cand[0];
+    cand.forEach(i => { if(widths[i] > widths[m]) m = i; });
+    /* 这里**不能**套 COL_MIN 下限：摊平是「加宽」，套下限会在宽度本就小于 56 的列上
+       把结果撑过容器宽（[56,13,13] + 余数 → 56 反而多出 43px）。 */
+    widths[m] += rest;
+  }
+  return widths;
+}
 function setupColResize(kind){
   const tbl = $('#page .tw.tscroll > table'); if(!tbl) return;
   const ths = $$('#page .tw.tscroll > table > thead > tr > th'); if(!ths.length) return;
@@ -3611,12 +3978,15 @@ function setupColResize(kind){
   const wrapW = tbl.parentElement ? Math.round(tbl.parentElement.clientWidth) : 0;
   if(!saved && wrapW > 0){
     const diff = widths.reduce((a, b) => a + b, 0) - wrapW;
-    if(diff !== 0){
+    if(diff > 0){
       let idx = 0;
       widths.forEach((w, i) => { if(w > widths[idx]) idx = i; });
       widths[idx] = Math.max(1, widths[idx] - diff);
     }
   }
+  /* v0.51：还窄就摊平到容器宽。有保存值时同样要摊 —— 这正是「搜索后只剩两个产品、
+     表格缩成一条、右边空一大片」的来源（用户拖过的列宽总和小于容器宽就会这样）。 */
+  fitColToWrap(widths, wrapW, ths.findIndex(th => th.classList.contains('pcell')));
   tblColW[kind] = widths.slice();
   /* 注入 <colgroup>（不是 <th>，不影响列数断言） */
   let cg = tbl.querySelector('colgroup');
@@ -3625,6 +3995,9 @@ function setupColResize(kind){
   tbl.classList.add('rz-ready');
   ths.forEach((th, i) => {
     th.classList.add('c-rz');
+    /* 产品图列（.pcell）宽度被 CSS 钉死在 56px（缩略图 40 + 内边距），拖了看不出变化，
+       干脆不给把手 —— 免得用户以为「拖不动 / 坏了」。 */
+    if(th.classList.contains('pcell')) return;
     if(th.querySelector('.rz')) return;
     const h = document.createElement('span');
     h.className = 'rz'; h.title = '拖动调整列宽';
@@ -4265,6 +4638,56 @@ function orderDelivered(o){
 function orderShipped(o){
   return !!(o && stCode(o.status) === '04');
 }
+/* ==========================================================================
+   v0.55 · 分批出货（一个订单 → N 个出货单号）
+   --------------------------------------------------------------------------
+   shipments 表本来就允许一个订单挂多条记录，缺的是「发完没」的语义：
+   统计累计已发金额 / 件数 / 最近发货日，剩下的就是「未发金额」。
+   ★ 累计 > 订单金额不硬拦（改单、赠品、运费都会让金额对不上），只提示；
+     是否超发由 shipOverOf 单独判，UI 用琥珀色标出。
+   ========================================================================== */
+function shipListOf(o){
+  const all = (Store.state && Store.state.data && Store.state.data.shipments) || [];
+  const id = o && o.id;
+  return id == null ? [] : all.filter(s => s && s.orderId === id);
+}
+function shipAggOf(o){
+  const list = shipListOf(o);
+  const amount = list.reduce((a, s) => a + (Number(s.amount) || 0), 0);
+  const qty    = list.reduce((a, s) => a + (Number(s.qty) || 0), 0);
+  const nos    = list.map(s => s.shipNo).filter(Boolean);
+  const dates  = list.map(s => s.shipDate).filter(Boolean).sort();
+  return { n:list.length, amount, qty, nos, last: dates.length ? dates[dates.length - 1] : '', list };
+}
+/* 未发金额：订单金额 − 累计已发（不低于 0） */
+function shipRemainOf(o){
+  const a = shipAggOf(o);
+  return Math.max(0, Number((o && o.amount) || 0) - a.amount);
+}
+/* 超发金额：累计已发 − 订单金额（> 0 才算超发） */
+function shipOverOf(o){
+  const a = shipAggOf(o);
+  return Math.max(0, a.amount - Number((o && o.amount) || 0));
+}
+/* 部分发货：发过但没发完（且不是超发） */
+function shipPartialOf(o){
+  const a = shipAggOf(o);
+  return a.n > 0 && a.amount + 0.005 < Number((o && o.amount) || 0);
+}
+/* 发货进度（金额口径，0~100） */
+function shipPctOf(o){
+  const amt = Number((o && o.amount) || 0), a = shipAggOf(o);
+  if(amt <= 0) return a.n ? 100 : 0;
+  return Math.max(0, Math.min(100, Math.round(a.amount / amt * 100)));
+}
+/* 出货单号查重（跨订单，大小写不敏感）：同一票货不能挂两个单号，
+   故意允许「同一订单多单号」，所以只在**全局**范围查重。 */
+function shipNoOwner(no, skipId){
+  const v = String(no || '').trim().toLowerCase();
+  if(!v) return null;
+  const all = (Store.state && Store.state.data && Store.state.data.shipments) || [];
+  return all.find(s => s.id !== skipId && String(s.shipNo || '').trim().toLowerCase() === v) || null;
+}
 /* 合同交期倒计时。已交付 / 已发货不再倒数，避免「货已发出却显示已逾期 3 天」 */
 function orderCountdown(o){
   if(orderDelivered(o))          return { txt:'已交付', cls:'ok' };
@@ -4571,6 +4994,7 @@ let payTab = 'todo';
 function viewPay(st){
   const ids = new Set(filteredOrders(st).map(o => o.id));
   const list0 = st.data.orders.filter(o => ids.has(o.id));
+  const payCnt = (st.data.payments || []).filter(p => ids.has(p.orderId)).length;   /* v0.55：回款流水笔数 */
   const amtSum  = list0.reduce((a,o)=>a+Number(o.amount||0),0);
   const recvSum = list0.reduce((a,o)=>a+receivedOf(o),0);   // 实收：真实到账，剔除手续费
   const wfSum   = list0.reduce((a,o)=>a+writeOffOf(o),0);   // 手续费/尾差核销（已结清）
@@ -4585,7 +5009,7 @@ function viewPay(st){
 
   let h = `<div class="grid kpi">
     <div class="card"><div class="lb">销售总额</div><div class="vl">${money(amtSum)}</div><div class="sb2">${list0.length} 笔订单 · 合同金额</div></div>
-    <div class="card"><div class="lb">实收金额</div><div class="vl good">${money(recvSum)}</div><div class="sb2">${done.length} 笔已收齐 · 实收率 ${rateSum}%</div></div>
+    <div class="card"><div class="lb">实收金额</div><div class="vl good">${money(recvSum)}</div><div class="sb2">${done.length} 笔已收齐 · ${payCnt} 笔回款流水 · 实收率 ${rateSum}%</div></div>
     <div class="card"><div class="lb">未收款</div><div class="vl ${unSum?'bad':''}">${money(unSum)}</div><div class="sb2">${todo.length} 笔待收</div></div>
     <div class="card"><div class="lb">手续费 · 尾差核销</div><div class="vl ${wfSum?'warn':''}">${money(wfSum)}</div><div class="sb2">已结清不追收 · 不计入实收</div></div>
     <div class="card"><div class="lb">已逾期未收</div><div class="vl ${ov?'bad':''}">${money(ov)}</div><div class="sb2">交期已过仍欠</div></div>
@@ -4594,69 +5018,140 @@ function viewPay(st){
   h += `<div class="card" style="margin-top:14px"><div class="hd">
       <button class="btn sm ${payTab==='todo'?'primary':''}" data-pt="todo">待收款 ${todo.length}</button>
       <button class="btn sm ${payTab==='done'?'primary':''}" data-pt="done">已收齐 ${done.length}</button>
-      ${infoI('登记尾款实付日期即视为已收；被扣手续费时填「实收尾款金额」并勾选「差额已结清」即可结案，不再计入未收。')}
+      ${infoI('<b>支持分次回款</b>：点「登记回款」进弹层，可以一笔一笔登记到账（日期 / 金额 / 类型 / 方式 / 流水号各记各的），已收 = 各笔合计，未收 = 订单金额 − 已收。<br>订金与尾款在这里只是<b>款项类型标签</b>；被扣手续费时勾「差额已结清」即可结案，不再计入未收。<br>老订单（只有「订金付款日 / 尾款付款日」两笔）在第一次登记新流水时会自动补成两笔记录，<b>历史金额不变</b>。')}
     </div><div class="bd np"><div class="tw tscroll"><table><thead><tr><th>订单号</th><th>客户</th><th class="num">金额</th>
-    <th class="num">订金</th><th>订金付款日</th>    <th class="num">尾款</th><th>尾款付款日</th><th class="num">实收尾款</th><th>状态</th><th>操作</th>
+    <th class="num">已收</th><th class="num">未收</th><th class="num">笔数</th><th>最近回款</th><th>回款率</th><th>状态</th><th>操作</th>
     </tr></thead><tbody>`;
   list.forEach(o => {
     const c = st.data.customers.find(x => x.id === o.customerId) || {};
-    const dep = Number(o.depositAmount||0), bal = balanceOf(o);
-    const got = balReceivedOf(o), fee = Math.max(0, bal - got);
-    const depPaid = dep === 0 || !!o.depositPaidDate;
-    const balPaid = !!o.balancePaidDate;
-    const settled = isBalSettled(o);
+    const agg = payAggOf(o), n = agg ? agg.n : 0, last = (agg && agg.last) || '';
+    const recv = receivedOf(o), un = unpaidOf(o), wo = writeOffOf(o), pct = payPctOf(o);
     let cls, txt;
-    if(isFullyPaid(o)){ cls = 'tag solid-slate'; txt = (settled && fee > 0) ? '已收齐·差额结清' : '已收齐'; }
-    else if(balPaid && !settled && got < bal){ cls = 'tag t-orange'; txt = '尾款差额未结'; }
-    else if(depPaid && !balPaid){ cls = 'tag t-orange'; txt = '待收尾款'; }
-    else if(!depPaid && balPaid){ cls = 'tag t-orange'; txt = '待收订金'; }
+    if(isFullyPaid(o)){ cls = 'tag solid-slate'; txt = wo > 0 ? '已收齐·差额结清' : '已收齐'; }
+    else if(n){ cls = 'tag t-blue'; txt = '部分回款 ' + pct + '%'; }
+    else if(Number(o.depositAmount||0) > 0 && !o.depositPaidDate){ cls = 'tag solid-red'; txt = '待收订金'; }
+    else if(Number(o.depositAmount||0) === 0 || o.depositPaidDate){ cls = 'tag t-orange'; txt = '待收尾款'; }
     else { cls = 'tag solid-red'; txt = '待收'; }
-    const recvCell = `${money(got)}${fee > 0 ? `<div class="muted" style="font-size:10.5px">手续费 ${money(fee)}</div>` : ''}`;
+    const recvCell = `${money(recv)}${wo > 0 ? `<div class="muted" style="font-size:10.5px">核销 ${money(wo)}</div>` : ''}`;
     h += `<tr data-oid="${o.id}"><td><b>${esc(o.orderNo||'')}</b></td><td>${esc(c.shortName||c.name||'')}</td>
       <td class="num">${money(o.amount)}</td>
-      <td class="num">${money(dep)}</td><td>${o.depositPaidDate||'<span class="muted">未付</span>'}</td>
-      <td class="num">${money(bal)}</td><td>${o.balancePaidDate||'<span class="muted">未付</span>'}</td>
-      <td class="num">${recvCell}</td>
+      <td class="num"><b class="${recv ? 'green' : ''}">${recvCell}</b></td>
+      <td class="num">${un ? money(un) : '<span class="muted">—</span>'}</td>
+      <td class="num">${n ? n + ' 笔' : '<span class="muted">—</span>'}</td>
+      <td>${last || '<span class="muted">未回款</span>'}</td>
+      <td class="num">${pct}%</td>
       <td><span class="${cls}">${txt}</span></td>
       <td><button class="btn sm primary" data-pay="${o.id}">登记回款</button></td></tr>`;
   });
   if(!list.length) h += `<tr><td colspan="10" class="empty">暂无记录</td></tr>`;
   return h + '</tbody></table></div></div></div>';
 }
+/* v0.55 · 回款登记弹层：汇总条 + 流水明细 + 「登记一笔」
+   ★ 一笔到账一条记录，想登记几笔就几笔 —— 分批出货分批汇款的标准场景。
+   ★ 首次给老订单登记时，ensureLegacyPays 会把「订金 / 尾款付款日」补成两笔流水，
+     所以老订单的已收金额不会因为换了口径而变小。 */
+function paySummaryHTML(o){
+  const amt = Number(o.amount || 0), recv = receivedOf(o), un = unpaidOf(o), pct = payPctOf(o);
+  const n = payListOf(o).length;
+  return `<div class="payhd">
+    <span class="pk"><em>订单金额</em><b>${money(amt)}</b></span>
+    <span class="pk"><em>已收</em><b class="green">${money(recv)}</b></span>
+    <span class="pk"><em>未收</em><b class="${un ? 'red' : ''}">${money(un)}</b></span>
+    <span class="pk"><em>回款</em><b>${n} 笔</b></span>
+    <span class="pbar" style="flex:1;min-width:90px"><i class="${pct >= 100 ? 'good' : ''}" style="width:${pct}%"></i></span>
+  </div>`;
+}
+function openPaySheet(orderId, opts){
+  const st = Store.state;
+  const back = (opts && typeof opts.back === 'function') ? opts.back : null;
+  const o = (st.data.orders || []).find(x => x.id === orderId); if(!o) return;
+  const c = st.data.customers.find(x => x.id === o.customerId) || {};
+  const un = unpaidOf(o), list = payListOf(o);
+  const KIND_CLS = { '订金':'t-blue', '尾款':'t-teal', '货款':'t-gray', '其他':'t-gray' };
+  const rows = list.length ? list.map((p, i) => `<div class="pp-rec" data-prec="${esc(p.id)}">
+      <div class="t"><b>${esc(p.payDate || '-')}</b>
+        <span class="tag ${KIND_CLS[p.kind] || 't-gray'}" style="font-size:10.5px">${esc(p.kind || '货款')}</span>
+        <b class="green">${money(p.amount)}</b>
+        ${i === list.length - 1 && list.length > 1 ? '<span class="muted" style="font-size:10.5px">最近一笔</span>' : ''}
+        <span style="flex:1"></span>
+        <span class="muted" style="font-size:10.5px">第 ${i + 1} / ${list.length} 笔</span>
+        <button class="btn xs del" data-pdel="${esc(p.id)}">删除</button></div>
+      <div class="s">${esc(p.method || '未填方式')}${p.ref ? ' ｜ 流水号 ' + esc(p.ref) : ''}${p.note ? ' ｜ ' + esc(p.note) : ''}</div>
+    </div>`).join('') : '<div class="empty">还没有回款记录 —— 在下方登记第一笔</div>';
+  sheet(`<div class="hd"><h3>回款登记</h3>
+      <span class="tag t-gray">${esc(o.orderNo || '')}</span>
+      <span class="muted" style="font-size:11.5px">${esc(c.shortName || c.name || '')}</span>
+      <div class="spacer"></div><button class="close" data-close>×</button></div>
+    <div class="bd">
+      ${paySummaryHTML(o)}
+      <div class="paylist" id="payListBox">${rows}</div>
+      <section class="pp-grp" style="margin-top:16px"><div class="pp-gt">登记一笔回款</div>
+        <div class="frow">
+          <div class="fld"><label>回款日期</label><input id="pyDate" type="date" value="${fmt(today())}"></div>
+          <div class="fld"><label>回款金额</label><input id="pyAmt" type="number" min="0" step="0.01"
+            placeholder="本次实际到账" value="${un > 0 ? un : ''}"></div>
+        </div>
+        <div class="frow">
+          <div class="fld"><label>款项类型</label><select id="pyKind">${
+            PAY_KINDS.map(k => `<option${k === (list.some(p => p.kind === '订金') ? '货款' : '订金') ? ' selected' : ''}>${k}</option>`).join('')
+          }</select></div>
+          <div class="fld"><label>回款方式</label><select id="pyMethod">${PAY_METHODS.map(k => `<option>${k}</option>`).join('')}</select></div>
+        </div>
+        <div class="frow">
+          <div class="fld"><label>流水号 / 凭证号</label><input id="pyRef" placeholder="银行流水号，选填"></div>
+          <div class="fld"><label>备注</label><input id="pyNote" placeholder="如：第二批发货后到账，选填"></div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;margin-top:10px;flex-wrap:wrap">
+          <button class="btn primary" id="pyAdd">＋ 登记这笔回款</button>
+          <span class="muted" style="font-size:11.5px">支持分多次回款：每笔独立记账，累计到账 = 已收</span>
+        </div>
+      </section>
+      ${un > 0 ? `<div class="hint" style="margin-top:2px"><label class="switch"><input type="checkbox" id="pySettle" ${isBalSettled(o) ? 'checked' : ''}> 差额已结清（手续费 / 汇损 / 尾差，勾选后不再计入未收）</label></div>` : ''}
+      <div style="display:flex;gap:8px;margin-top:14px"><button class="btn" data-close>${back ? '完成 · 返回订单' : '完成'}</button></div>
+    </div>`);
+  bindClose();
+  /* 从订单详情进来时，关掉登记弹层要回到详情，而不是掉回列表页 */
+  if(back) $$('#sheet [data-close]').forEach(b => b.onclick = () => { closeSheet(); back(); });
+  const addBtn = $('#pyAdd');
+  if(addBtn) addBtn.onclick = async () => {
+    if(!Store.state.source.capabilities.write){ toast('当前数据源只读，无法登记回款'); return; }
+    const date = $('#pyDate').value;
+    const val = Number($('#pyAmt').value || 0);
+    if(!date){ toast('请选择回款日期'); return; }
+    if(!(val > 0)){ toast('回款金额须大于 0'); return; }
+    /* v0.56 · 超收只确认、不硬拦：预收下批货款、客户抹零补款都合法，
+       但「多打一位数」是分次回款里最容易犯的错 —— 与发货的「超发确认」对齐。 */
+    const cur = st.data.orders.find(x => x.id === orderId) || o;
+    const amt0 = Number(cur.amount || 0), before = receivedOf(cur);
+    if(amt0 > 0 && before + val > amt0 + 0.005
+      && !window.confirm('累计回款将超过订单金额：\n\n已收 ' + money(before) + ' + 本次 ' + money(val)
+        + ' = ' + money(before + val) + '\n订单金额 ' + money(amt0)
+        + '（超 ' + money(before + val - amt0) + '）\n\n仍然登记吗？')) return;
+    await addPayment(o.id, { payDate:date, amount:val, kind:$('#pyKind').value,
+      method:$('#pyMethod').value, ref:$('#pyRef').value, note:$('#pyNote').value });
+    toast('已登记回款 ' + money(val));
+    openPaySheet(o.id, opts);
+  };
+  $$('#sheet [data-pdel]').forEach(b => b.onclick = async e => {
+    e.stopPropagation();
+    const p = list.find(x => x.id === b.dataset.pdel); if(!p) return;
+    if(!window.confirm('删除这笔回款？\n\n' + (p.payDate || '-') + ' ｜ ' + money(p.amount) + (p.kind ? ' ｜ ' + p.kind : '')
+      + '\n\n会移入「回收站」，可在「数据历史」页还原；该单的已收金额同步减少。')) return;
+    await deletePayment(o.id, p.id);
+    toast('已删除该笔回款');
+    openPaySheet(o.id, opts);
+  });
+  const sw = $('#pySettle');
+  if(sw) sw.onchange = async () => {
+    await Store.state.source.update('orders', o.id, { balanceSettled: sw.checked });
+    await reload();
+    toast(sw.checked ? '已标记差额结清，该单不再计入未收' : '已取消差额结清');
+    openPaySheet(o.id, opts);
+  };
+}
 function bindPay(){
   $$('[data-pt]').forEach(x => x.onclick = () => { payTab = x.dataset.pt; Store.set({}); });
-  $$('#page [data-pay]').forEach(b => b.onclick = () => {
-    const o = Store.state.data.orders.find(x => x.id === b.dataset.pay); if(!o) return;
-    const dep = Number(o.depositAmount||0), bal = balanceOf(o);
-    sheet(`<div class="hd"><h3>登记回款</h3><div class="spacer"></div><button class="close" data-close>×</button></div>
-      <div class="bd">
-        <div class="hint" style="margin-bottom:12px">${esc(o.orderNo||'')} ｜ 金额 ${money(o.amount)} ｜ 订金 ${money(dep)} ｜ 尾款 ${money(bal)}
-          ${infoI('登记「实付日期」即视为该笔已收；被扣手续费时填实收尾款金额并勾选「差额已结清」。')}</div>
-        <div class="frow">
-          <div class="fld"><label>订金付款日期</label><input id="pdDep" type="date" value="${o.depositPaidDate||''}"></div>
-          <div class="fld"><label>尾款付款日期</label><input id="pdBal" type="date" value="${o.balancePaidDate||''}"></div>
-        </div>
-        <div class="frow" style="margin-top:2px">
-          <div class="fld"><label>实收尾款金额</label><input id="pdRecv" type="number" placeholder="银行实际到账，默认=尾款" value="${o.balanceReceived ? o.balanceReceived : ''}"></div>
-          <div class="fld"><label style="padding-top:18px"><label class="switch"><input type="checkbox" id="pdSettle" ${isBalSettled(o) ? 'checked' : ''}> 差额已结清（手续费/尾差）</label></label></div>
-        </div>
-        <div style="display:flex;gap:8px">
-          <button class="btn primary" id="pSave">保存</button>
-          <button class="btn" data-close>取消</button>
-        </div></div>`);
-    bindClose();
-    $('#pSave').onclick = async () => {
-      const balDate = $('#pdBal').value;
-      const recv = balDate ? (Number($('#pdRecv').value || 0) || 0) : 0;
-      const patch = {
-        depositPaidDate: $('#pdDep').value, balancePaidDate: balDate,
-        balanceReceived: recv, balanceSettled: !!(balDate && $('#pdSettle').checked)
-      };
-      await Store.state.source.update('orders', o.id, patch);
-      closeSheet(); await reload();
-      toast('已更新回款登记' + (isFullyPaid({ ...o, ...patch }) ? '，该单已收齐' : ''));
-    };
-  });
+  $$('#page [data-pay]').forEach(b => b.onclick = () => openPaySheet(b.dataset.pay));
 }
 
 /* ---------- 客户档案：新增 / 编辑 / 删除 + 客户维度汇总 ---------- */
@@ -4748,10 +5243,13 @@ function custSumHTML(list, zero, orphan){
 function refreshCustList(){
   const st = Store.state;
   const list = custQuery(st);
-  const body = $('#custBody'), sum = $('#custSum');
-  if(body) body.innerHTML = custRowsHTML(list);
-  if(sum) sum.innerHTML = custSumHTML(list);   /* 汇总行可能含未匹配告警，须走 innerHTML */
-  bindCustRows();
+  /* ★ v0.50：换 tbody 会把卡内表格的滚动钳到 0 → 包一层保住位置 */
+  return keepScroll(function(){
+    const body = $('#custBody'), sum = $('#custSum');
+    if(body) body.innerHTML = custRowsHTML(list);
+    if(sum) sum.innerHTML = custSumHTML(list);   /* 汇总行可能含未匹配告警，须走 innerHTML */
+    bindCustRows();
+  });
 }
 function bindCust(){
   const n = $('#custNew'); if(n) n.onclick = () => {
@@ -4813,6 +5311,14 @@ function openCustomerSheet(cid){
         <div class="fld"><label>地址</label><input readonly value="${esc(c.address||'-')}"></div>
         <div class="fld"><label>信用备注</label><textarea readonly rows="2">${esc(c.creditNote||'')}</textarea></div>
       </div></div>
+      <div class="card" style="margin-bottom:14px"><div class="hd"><h3>该客户产品</h3>
+        <span class="tag t-gray">${custProdCount(st, cid)} 个</span>
+        <div class="spacer"></div>
+        <button class="btn sm" id="csAddProd">+ 新增产品</button></div>
+        <div class="bd np"><div class="tw"><table><thead><tr><th>SKU</th><th>品名</th><th>客户型号</th>
+          <th class="num">价格</th><th class="num">MOQ</th><th>订购状态</th></tr></thead><tbody>
+          ${custProdRowsHTML(st, cid)}
+        </tbody></table></div></div></div>
       <div class="card"><div class="hd"><h3>订单记录</h3><span class="tag t-gray">${os.length} 笔</span>
         ${infoI('这里是该客户的<b>全部订单</b>，与列表页「订单数」同口径，<b>不受顶部筛选影响</b>。')}</div>
         <div class="bd np"><div class="tw"><table><thead><tr><th>订单号</th><th>业务员</th><th>状态</th>
@@ -4827,8 +5333,1619 @@ function openCustomerSheet(cid){
     </div>`, {wide:true});
   bindClose();
   const eb = $('#csEdit'); if(eb) eb.onclick = () => openCustomerForm(cid);
+  /* v0.47：客户详情里的产品区块 —— 新增时预填该客户，点行直接进产品详情 */
+  const cap = $('#csAddProd');
+  if(cap) cap.onclick = () => openProductForm(null, 'cust', { customerId: cid });
+  $$('#sheet [data-cpid]').forEach(tr => tr.onclick = () => { closeSheet(); openProductSheet(tr.dataset.cpid, 'cust'); });
   const db = $('#csDel'); if(db) db.onclick = () => deleteResource('customer', cid);
   $$('#sheet [data-oid]').forEach(tr => tr.onclick = () => { closeSheet(); openOrder(tr.dataset.oid); });
+}
+
+/* ==========================================================================
+   v0.47 · 产品库（客户产品 / 供应商产品）
+   --------------------------------------------------------------------------
+   设计取舍（写下来免得以后又推翻）：
+   ① 两张**独立表**，不是一张表的两个视图。客户型号 ↔ 工厂型号在定制业务里不是一对一：
+      同一个客户型号可能同时挂着两三家工厂的货，硬塞进一条记录会让「工厂价 / 工厂 MOQ」无从落脚。
+      所以客户产品可挂一条 supplierProductId 作「首选对应供应商产品」，需要多工厂就多建几条供应商产品。
+   ② 两表字段结构完全一致 → 列表 / 详情 / 表单三套渲染共用一个 kind 参数，只有「归属对象」和
+      「哪个型号算主型号」不同（客户侧主型号 = 客户型号，供应商侧主型号 = 工厂型号）。
+   ③ 订购状态一变就刷 statusAt（订购状态更新时间）。这是需求里唯一的时间字段，
+      不做手工编辑 —— 手填的时间最终一定会和真实状态脱节。
+   ④ 包装资料是产品上的结构化字段（pack*），包装文件走 FileStore 元数据数组（packingFiles），
+      附件白名单是 FileStore 的可选参数，订单附件仍只收 PDF / JPG / PNG。
+   ========================================================================== */
+const ORDER_STATUS = ['在售','待定','停产','打样中'];
+const PKG_EXT = ['pdf','jpg','jpeg','png','xls','xlsx','doc','docx','csv','zip'];
+const PROD_KIND = {
+  cust: { res:'custProducts', label:'客户产品', ownLabel:'归属客户', ownRes:'customers',
+          mdlA:'客户型号', mdlB:'工厂型号', priceLabel:'客户价' },
+  supp: { res:'supplierProducts', label:'供应商产品', ownLabel:'归属供应商', ownRes:'suppliers',
+          mdlA:'工厂型号', mdlB:'客户型号', priceLabel:'采购价' }
+};
+const pk = kind => PROD_KIND[kind] || PROD_KIND.cust;
+/* ---------- v0.52 · 产品库排序记忆（刷新 / 重开页面后顺序不变）----------
+   为什么不复用 ot.sort.v1：那个键由 sortSave() 整体重写（遍历 SORT_DEF 的 ord/prod），
+   产品库的 cust/supp 混进去会被下一次订单页排序顺手抹掉。单开一个键，互不干扰。
+   存 { cust:{k,d}, supp:{k,d} }，d 用 ±1（与产品库内部口径一致，不转 asc/desc）。 */
+const PSORT_KEY = 'ot.psort.v1';
+const PSORT_FIELDS = ['sku','custModel','factoryModel','owner','price','moq','orderStatus','statusAt'];
+const PSORT_DEF = { cust:{ k:'statusAt', d:-1 }, supp:{ k:'statusAt', d:-1 } };
+function psortCfg(){
+  try { const o = JSON.parse(localStorage.getItem(PSORT_KEY) || '{}'); return (o && typeof o === 'object') ? o : {}; }
+  catch(e){ return {}; }
+}
+/* 字段仍在表内 + 方向是 ±1 才认，脏数据 / 旧版本一律退回默认（默认按更新时间倒序） */
+function psortInit(kind){
+  const d = PSORT_DEF[kind] || PSORT_DEF.cust, o = psortCfg()[kind];
+  if(o && typeof o === 'object' && PSORT_FIELDS.includes(o.k) && (o.d === 1 || o.d === -1)) return { k:o.k, d:o.d };
+  return { k:d.k, d:d.d };
+}
+function psortSave(kind){
+  const o = psortCfg();
+  o[kind] = { k:PROD_SORT[kind].k, d:PROD_SORT[kind].d };
+  try { localStorage.setItem(PSORT_KEY, JSON.stringify(o)); } catch(e){}
+}
+const PROD_SORT = { cust: psortInit('cust'), supp: psortInit('supp') };
+const PROD_KW   = { cust:'', supp:'' };
+const colwKind  = kind => kind === 'cust' ? 'cprod' : 'sprod';
+
+/* ---------- v0.48 · 表格文字对齐（整表切换 + 记忆）----------
+   只影响产品库两张表（table[data-al]），订单表 / 排产表维持原样。
+   默认「左」与 v0.47 的观感一致（数字列仍有 .num 的右对齐，直到用户手动切）。 */
+const PALIGN_KEY = 'ot.palign.v1';
+const PALIGN_OPTS = [{ v:'left', t:'左' }, { v:'center', t:'中' }, { v:'right', t:'右' }];
+let PALIGN = (() => { try{ const v = localStorage.getItem(PALIGN_KEY); return (v === 'center' || v === 'right') ? v : 'left'; }catch(e){ return 'left'; } })();
+function palignSave(v){
+  PALIGN = (v === 'center' || v === 'right') ? v : 'left';
+  try{ localStorage.setItem(PALIGN_KEY, PALIGN); }catch(e){}
+}
+function palignApply(){
+  const t = $('#page .tw.tscroll > table'); if(!t) return;
+  t.setAttribute('data-al', PALIGN);
+  $$('#pAl button').forEach(b => b.classList.toggle('on', b.dataset.al === PALIGN));
+}
+
+const CUR_SYM  = { CNY:'¥', USD:'$', EUR:'€', JPY:'JP¥' };
+const CUR_OPTS = [{ v:'CNY', t:'CNY ¥' }, { v:'USD', t:'USD $' }, { v:'EUR', t:'EUR €' }, { v:'JPY', t:'JPY ¥' }];
+function priceTxt(n, cur){
+  const v = Number(n || 0);
+  if(!v) return '—';
+  return (CUR_SYM[cur] || '¥') + v.toLocaleString('zh-CN', { minimumFractionDigits:2, maximumFractionDigits:2 });
+}
+const osTag = s => s === '在售' ? 'tag t-green'
+             : s === '待定' ? 'tag t-amber'
+             : s === '打样中' ? 'tag t-blue' : 'tag t-gray';
+
+/* ---------- 归属解析 ---------- */
+function prodOwner(st, p, kind){
+  const C = pk(kind), id = kind === 'cust' ? p.customerId : p.supplierId;
+  return (st.data[C.ownRes] || []).find(x => x.id === id) || null;
+}
+function prodOwnerName(st, p, kind){
+  const o = prodOwner(st, p, kind);
+  if(!o) return '—';
+  return o.shortName || o.name || '—';
+}
+function prodText(st, p, kind){
+  return [p.sku, p.name, p.custModel, p.factoryModel, p.unit, p.remark, prodOwnerName(st, p, kind)]
+    .filter(Boolean).join(' ').toLowerCase();
+}
+
+/* ---------- 缩略图：FileStore 里存的是二进制，URL 得异步取 ----------
+   列表里先渲染空容器，取到再回填 src；取不到就留「无图」占位，不弹错。
+   URL 缓存在 _thumbCache 里 —— 同一张图在一次会话内只建一次 objectURL。 */
+const _thumbCache = new Map();
+async function hydrateThumbs(root){
+  const box = root || document;
+  const imgs = Array.prototype.slice.call(box.querySelectorAll ? box.querySelectorAll('img[data-img]') : []);
+  for(const el of imgs){
+    const fid = el.getAttribute('data-img');
+    if(!fid) continue;
+    if(_thumbCache.has(fid)){ el.src = _thumbCache.get(fid); continue; }
+    try{
+      const u = await FileStore.url(fid);
+      if(u){ _thumbCache.set(fid, u); if(el.isConnected) el.src = u; }
+      else if(el.isConnected) el.classList.add('pimg-broken');
+    }catch(e){ if(el.isConnected) el.classList.add('pimg-broken'); }
+  }
+}
+
+/* ==========================================================================
+   v0.51 · 产品图放大预览
+   --------------------------------------------------------------------------
+   三处可点：列表缩略图（.pthumb）、详情画廊主图（.pmain）、表单图片网格（.pimg）。
+   遮罩节点第一次点图时才建 —— 不用这个功能的人不多一个 DOM。
+   ★ 捕获阶段拦截：列表行本身绑了 tr.onclick = 打开详情，冒泡阶段再拦就两件事都发生了。
+   ★ 只认已经有 src 的图：缩略图是异步 hydrate 的，src 还没回来就什么都不做（别开空遮罩）。
+   ★ 表单图片上的「设主图 / 删除」是 button，直接放行，保持原职责。
+   ========================================================================== */
+let _zoomOn = false;
+function zoomBox(){
+  let box = document.getElementById('imgZoom');
+  if(box) return box;
+  box = document.createElement('div');
+  box.id = 'imgZoom';
+  box.setAttribute('role', 'dialog');
+  box.setAttribute('aria-label', '产品图预览');
+  box.innerHTML = '<button class="iz-x" type="button" title="关闭（Esc）">×</button>'
+    + '<img alt="产品图"><div class="iz-tip">点击任意处或按 Esc 关闭</div>';
+  document.body.appendChild(box);
+  box.addEventListener('click', () => closeZoom());
+  return box;
+}
+function openZoom(src){
+  if(!src) return;
+  const box = zoomBox(), img = box.querySelector('img');
+  if(!img) return;
+  img.src = src;
+  box.classList.add('on');
+  _zoomOn = true;
+  document.body.classList.add('zooming');
+}
+function closeZoom(){
+  const box = document.getElementById('imgZoom');
+  if(!box || !_zoomOn) return;
+  box.classList.remove('on');
+  const img = box.querySelector('img');
+  if(img) img.removeAttribute('src');    /* 断开引用，objectURL 归 _thumbCache 管 */
+  _zoomOn = false;
+  document.body.classList.remove('zooming');
+}
+document.addEventListener('click', e => {
+  const t = e.target;
+  if(!t || !t.closest || _zoomOn) return;      /* 遮罩开着时由它自己的 click 关 */
+  const z = t.closest('.pthumb, .pmain, .pimg');
+  if(!z || t.closest('button')) return;
+  const img = z.querySelector('img');
+  if(!img || !img.getAttribute('src')) return;
+  e.preventDefault(); e.stopPropagation();     /* 抢在 tr 的「打开详情」之前 */
+  openZoom(img.getAttribute('src'));
+}, true);
+
+/* ---------- 列表 ---------- */
+function prodRows(st, kind){
+  const C = pk(kind), so = PROD_SORT[kind];
+  const kw = (PROD_KW[kind] || '').trim().toLowerCase();
+  let list = (st.data[C.res] || []).slice();
+  if(kw) list = list.filter(p => prodText(st, p, kind).includes(kw));
+  const val = p => {
+    if(so.k === 'owner') return prodOwnerName(st, p, kind);
+    if(so.k === 'price') return Number(p.price || 0);
+    if(so.k === 'moq')   return Number(p.moq || 0);
+    return String(p[so.k] == null ? '' : p[so.k]);
+  };
+  list.sort((a, b) => {
+    const x = val(a), y = val(b);
+    const r = (typeof x === 'number' && typeof y === 'number')
+      ? (x - y) : String(x).localeCompare(String(y), 'zh-CN');
+    /* v0.52：供应商产品库允许 SKU 重复 —— 只拿 sku 兜底会让同 SKU 的行每次排序都换位，
+       再补一级 id，相同数据每次刷新顺序完全一致。 */
+    return (r * so.d)
+      || String(a.sku || '').localeCompare(String(b.sku || ''), 'zh-CN')
+      || String(a.id || '').localeCompare(String(b.id || ''));
+  });
+  return list;
+}
+function prodTh(kind, k, label, cls){
+  const so = PROD_SORT[kind], on = so.k === k;
+  return `<th class="pth ${cls || ''}${on ? ' on' : ''}" data-sk="${k}" title="点击按此列排序">${label}`
+    + `<span class="sarrow">${on ? (so.d > 0 ? '↑' : '↓') : ''}</span></th>`;
+}
+function prodHeadHTML(kind){
+  const C = pk(kind);
+  const ka = kind === 'cust' ? 'custModel' : 'factoryModel';
+  const kb = kind === 'cust' ? 'factoryModel' : 'custModel';
+  return `<tr><th class="pcell">产品图</th>
+    ${prodTh(kind, 'sku', 'SKU')}
+    ${prodTh(kind, ka, C.mdlA)}
+    ${prodTh(kind, kb, C.mdlB)}
+    ${prodTh(kind, 'owner', C.ownLabel)}
+    ${prodTh(kind, 'price', '价格', 'num')}
+    ${prodTh(kind, 'moq', 'MOQ', 'num')}
+    ${prodTh(kind, 'orderStatus', '订购状态')}
+    ${prodTh(kind, 'statusAt', '更新时间')}
+    <th>操作</th></tr>`;
+}
+function prodRowsHTML(st, kind, list){
+  const C = pk(kind);
+  if(!list.length){
+    return `<tr><td colspan="10"><div class="empty">${(PROD_KW[kind] || '').trim()
+      ? '没有匹配的产品，换个关键词试试'
+      : '还没有' + C.label + '。点左上角「+ 新增' + C.label + '」建立第一条'}</div></td></tr>`;
+  }
+  return list.map(p => {
+    const imgs = Array.isArray(p.images) ? p.images.filter(Boolean) : [];
+    const own  = prodOwner(st, p, kind);
+    const mA = kind === 'cust' ? p.custModel : p.factoryModel;
+    const mB = kind === 'cust' ? p.factoryModel : p.custModel;
+    return `<tr data-pid="${esc(p.id)}">
+      <td class="pcell"><div class="pthumb">${imgs[0]
+        ? `<img data-img="${esc(imgs[0])}" alt="">`
+        : '<span class="pnoimg">无图</span>'}</div></td>
+      <td><b>${esc(p.sku || '—')}</b><div class="muted pnm">${esc(p.name || '')}</div></td>
+      <td class="pmdl">${esc(mA || '—')}</td>
+      <td class="pmdl">${esc(mB || '—')}</td>
+      <td>${own ? esc(own.shortName || own.name) : '<span class="tag t-red">未匹配</span>'}</td>
+      <td class="num">${priceTxt(p.price, p.currency)}<span class="muted punit">${esc(p.unit || '')}</span></td>
+      <td class="num">${p.moq ? esc(p.moq) : '—'}</td>
+      <td>${p.orderStatus ? `<span class="${osTag(p.orderStatus)}">${esc(p.orderStatus)}</span>` : '—'}</td>
+      <td class="muted">${esc(p.statusAt || '—')}</td>
+      <td><div class="acts">
+        <button class="btn sm" data-pedit="${esc(p.id)}">编辑</button>
+        <button class="btn sm danger" data-pdel="${esc(p.id)}">删除</button>
+      </div></td></tr>`;
+  }).join('');
+}
+function prodSumHTML(st, kind, list){
+  const by = {}; ORDER_STATUS.forEach(s => { by[s] = 0; });
+  let noImg = 0, noPack = 0;
+  list.forEach(p => {
+    if(by[p.orderStatus] !== undefined) by[p.orderStatus]++;
+    if(!(p.images || []).filter(Boolean).length) noImg++;
+    if(!(p.packingFiles || []).length) noPack++;
+  });
+  return `共 ${list.length} 个 SKU ｜ ${ORDER_STATUS.map(s => s + ' ' + by[s]).join(' ｜ ')}`
+    + (noImg  ? ` ｜ <span style="color:var(--amber-600)">缺图 ${noImg}</span>` : '')
+    + (noPack ? ` ｜ <span style="color:var(--amber-600)">无包装文件 ${noPack}</span>` : '');
+}
+function viewProducts(st, kind){
+  const C = pk(kind);
+  const list = prodRows(st, kind);
+  const canWrite = st.source && st.source.capabilities.write;
+  const empty = !(st.data[C.res] || []).length;
+  let h = `<div class="toolbar">
+      <button class="btn primary" id="pNew">+ 新增${C.label}</button>
+      ${empty && canWrite ? '<button class="btn" id="pSeed" title="插入示例供应商 / 产品，先看结构">载入示例数据</button>' : ''}
+      <input class="search" id="pKW" placeholder="搜索 SKU / 品名 / 型号 / ${C.ownLabel}"
+        value="${esc(PROD_KW[kind] || '')}">
+      <div class="seg" id="pAl" title="表格文字对齐方式（会记住，下次打开还是它）">
+        ${PALIGN_OPTS.map(o => `<button data-al="${o.v}" class="${PALIGN === o.v ? 'on' : ''}">${o.t}</button>`).join('')}
+      </div>
+      <div class="spacer"></div>
+      ${canWrite ? `<div class="iomenu" id="pIO">
+        <button class="btn" id="pIOBtn" title="导出模版 / 导出当前列表 / 从 CSV 导入">导入导出 ▾</button>
+        <div class="iomenu-bd" id="pIOMenu" hidden>
+          <button data-io="tpl">导出导入模版（表头 + 1 行示例）</button>
+          <button data-io="list">导出当前列表（按当前排序与搜索）</button>
+          <button data-io="imp">导入文件（CSV / TXT，带预览）</button>
+          <button data-io="paste">粘贴表格导入（泰文 / 中文不丢字）</button>
+          <div class="io-tip">Excel 填完请<b>另存为「CSV UTF-8」</b>再导入。若导入时看到问号，说明保存那一步已经把字丢了 —— 改用「粘贴表格导入」，从 Excel 直接复制。</div>
+        </div>
+        <input type="file" id="pImpFile" accept=".csv,.txt,.tsv,text/csv,text/plain" style="display:none">
+      </div>` : ''}
+      <span class="muted" style="font-size:12px" id="pSum">${prodSumHTML(st, kind, list)}</span>
+      ${infoI('客户产品库与供应商产品库是<b>两张独立的表</b>：客户产品挂客户、以客户型号为主；供应商产品挂供应商、以工厂型号为主。'
+        + '客户产品详情里可以挂一条「对应供应商产品」，一个客户型号对多个工厂时，多建几条供应商产品即可。'
+        + '<br>「订购状态」为在售 / 待定 / 停产 / 打样中，<b>状态一变，更新时间自动刷新</b>（不用手填）。'
+        + '<br>包装资料与包装文件在<b>产品详情页</b>里维护。'
+        + '<br>列宽：<b>拖列头右边缘</b>调整，两张表各记各的；文字对齐用工具栏的 <b>左 / 中 / 右</b>，同样会记住。'
+        + '<br>批量维护走 <b>导入导出</b>：先导出模版，填好另存 CSV 再导入，<b>SKU 相同则更新、不同则新增</b>。')}
+    </div>`;
+  if(!canWrite) h += infoI('当前数据源<b>只读</b>，无法新增 / 编辑 / 删除产品。请到「数据源」页切换到「本地手工录入」。', 'warn');
+  h += `<div class="card"><div class="bd np"><div class="tw tscroll"><table data-al="${PALIGN}">
+    <thead id="pHead">${prodHeadHTML(kind)}</thead>
+    <tbody id="pBody">${prodRowsHTML(st, kind, list)}</tbody></table></div></div></div>`;
+  return h;
+}
+function refreshProdList(kind){
+  const st = Store.state;
+  const list = prodRows(st, kind);
+  /* ★ v0.50：换 thead / tbody 的一瞬间表格只剩表头那么高，卡内滚动会被钳到 0 → 包一层保住 */
+  return keepScroll(function(){
+    const tw0 = $('#page .tw.tscroll');
+    const h0  = tw0 ? Math.round(tw0.getBoundingClientRect().height) : 0;   /* v0.51 */
+    const head = $('#pHead'); if(head) head.innerHTML = prodHeadHTML(kind);
+    const body = $('#pBody'); if(body) body.innerHTML = prodRowsHTML(st, kind, list);
+    const sum  = $('#pSum');  if(sum)  sum.innerHTML  = prodSumHTML(st, kind, list);
+    bindProdRows(kind); bindProdSort(kind);
+    /* v0.48：表头被重建了 —— 对齐属性在 <table> 上（不随 thead 丢），但把手挂在 th 上，
+       必须重挂 colgroup 与把手，否则搜一次 / 排一次列宽就「松」了。 */
+    palignApply(); setupColResize(colwKind(kind));
+    /* v0.51：搜索把结果筛到两三条时，列表卡片别跟着塌下去 —— 高度取「刷新前」的值作
+       下限，只在变高时更新（缩窗口后下一次 render 会重建节点，内联值自然复位）。 */
+    const tw1 = $('#page .tw.tscroll');
+    if(tw1 && h0 > 0){
+      const min = parseFloat(tw1.style.minHeight) || 0;
+      if(h0 > min) tw1.style.minHeight = h0 + 'px';
+    }
+    hydrateThumbs($('#page'));
+  });
+}
+function bindProdSort(kind){
+  $$('#page [data-sk]').forEach(th => th.onclick = () => {
+    const so = PROD_SORT[kind], k = th.dataset.sk;
+    if(so.k === k) so.d = -so.d;
+    else { so.k = k; so.d = (k === 'price' || k === 'moq') ? -1 : 1; }
+    psortSave(kind);              /* v0.52：排序一变就记忆，刷新 / 重进页面顺序不变 */
+    refreshProdList(kind);
+  });
+}
+function bindProdRows(kind){
+  $$('#page [data-pedit]').forEach(b => b.onclick = e => {
+    e.stopPropagation(); openProductForm(b.dataset.pedit, kind);
+  });
+  $$('#page [data-pdel]').forEach(b => b.onclick = e => {
+    e.stopPropagation(); deleteProduct(b.dataset.pdel, kind);
+  });
+  $$('#page tr[data-pid]').forEach(tr => tr.onclick = () => openProductSheet(tr.dataset.pid, kind));
+}
+function bindProducts(kind){
+  const st = Store.state;
+  const n = $('#pNew');
+  if(n) n.onclick = () => {
+    if(!st.source || !st.source.capabilities.write){ toast('当前数据源只读，无法新增'); return; }
+    openProductForm(null, kind);
+  };
+  const kw = $('#pKW');
+  if(kw) kw.oninput = e => { PROD_KW[kind] = e.target.value; refreshProdList(kind); };
+  const sd = $('#pSeed'); if(sd) sd.onclick = () => seedProds();
+  bindProdRows(kind);
+  bindProdSort(kind);
+  /* v0.48：列宽（按 kind 各记一套）+ 对齐 + 导入导出 */
+  palignApply(); setupColResize(colwKind(kind));
+  bindPalignControls(); bindProdIO(kind);
+  hydrateThumbs($('#page'));
+}
+/* ==========================================================================
+   v0.48 · 产品库对齐 / 导入导出（CSV）
+   --------------------------------------------------------------------------
+   ① 对齐：整表切换（左 / 中 / 右），存 localStorage。用 <table data-al> 属性而不是
+      给每个 td 加 class —— 刷新表格时属性在 table 上，不会随 tbody 重建丢掉。
+   ② 导出复用 exportCSV()（带 BOM，Excel 双击不乱码）。模版 = 表头 + 1 行示例，
+      示例行是**真实可导入**的值，所以菜单里写明「导入前删掉示例行」。
+   ③ 导入按 SKU upsert：同库内 SKU 相同就更新、不同就新增。归属按 名称 / 简称 / 编码
+      匹配，匹配不到整行跳过并报行号 —— 宁可不导，也不要造出孤儿产品。
+   ④ 编码：中文 Windows 的 Excel 另存 CSV 常是 GBK，UTF-8 解码失败的兜底走 GBK。
+   ========================================================================== */
+const PROD_CSV_COLS = [
+  ['sku','SKU'], ['name','品名'],
+  ['custModel','客户型号'], ['factoryModel','工厂型号'],
+  ['owner','归属'], ['price','价格'], ['currency','币种'],
+  ['moq','MOQ'], ['unit','单位'], ['orderStatus','订购状态'],
+  ['packMethod','包装方式'], ['packQty','装箱数'], ['packSize','外箱尺寸'],
+  ['packCbm','单箱体积'], ['packNet','单件净重'], ['packGross','单箱毛重'],
+  ['packMaterial','包装材料'], ['packMark','箱唛'], ['packNote','包装备注'], ['remark','备注']
+];
+const numOr = (v, d) => {
+  const n = Number(String(v == null ? '' : v).replace(/[^\d.\-]/g, ''));
+  return isFinite(n) ? n : d;
+};
+function prodCSVHead(kind){
+  const C = pk(kind);
+  return PROD_CSV_COLS.map(c => c[0] === 'owner' ? C.ownLabel : c[1]);
+}
+function prodCSVBody(st, kind, list){
+  return list.map(p => PROD_CSV_COLS.map(([k]) => {
+    if(k === 'owner') return prodOwnerName(st, p, kind);
+    if(k === 'price' || k === 'moq') return (p[k] == null || p[k] === '') ? '' : p[k];
+    return p[k] == null ? '' : p[k];
+  }));
+}
+function exportProdCSV(kind, mode){
+  const st = Store.state, C = pk(kind);
+  if(mode === 'tpl'){
+    const own = (st.data[C.ownRes] || [])[0];
+    const sample = {
+      sku:'DEMO-0001', name:'示例产品（导入前请删掉本行）',
+      custModel:'CUST-M-01', factoryModel:'FACT-M-01',
+      owner: own ? (own.shortName || own.name) : '',
+      price:'12.50', currency:'CNY', moq:'500', unit:'pcs', orderStatus:'在售',
+      packMethod:'PE 袋 + 内箱 + 外箱', packQty:'100', packSize:'52×38×32', packCbm:'0.063',
+      packNet:'0.42', packGross:'21.5', packMaterial:'五层瓦楞纸箱',
+      packMark:'正唛 / 侧唛', packNote:'', remark:''
+    };
+    exportCSV([prodCSVHead(kind), PROD_CSV_COLS.map(([k]) => sample[k] == null ? '' : sample[k])],
+      C.label + '导入模版');
+    toast('模版已导出：表头 + 1 行示例（导入前删掉示例行）');
+    return;
+  }
+  const list = prodRows(st, kind);
+  exportCSV([prodCSVHead(kind)].concat(prodCSVBody(st, kind, list)), C.label + '列表');
+  toast('已导出 ' + list.length + ' 个' + C.label);
+}
+/* 分隔符嗅探：Excel 复制出来的是制表符（TSV），另存文件的多半是逗号。
+   只看首行（表头）——表头几乎不会带引号，逗号/制表符计数可靠。
+   注意 2 列 TSV 首行只有 **1 个** tab，阈值写 2 会把它误判成 CSV。 */
+function sniffDelim(text){
+  const first = String(text == null ? '' : text).split(/\r?\n/)[0] || '';
+  const tab = (first.match(/\t/g) || []).length;
+  const comma = (first.match(/,/g) || []).length;
+  return (tab > 0 && tab >= comma) ? '\t' : ',';
+}
+function csvParse(text, delim){
+  const s = String(text == null ? '' : text).replace(/^\ufeff/, '');
+  const d = delim || sniffDelim(s);
+  const rows = []; let row = [], cur = '', q = false;
+  for(let i = 0; i < s.length; i++){
+    const c = s[i];
+    if(q){
+      if(c === '"'){ if(s[i+1] === '"'){ cur += '"'; i++; } else q = false; }
+      else cur += c;
+    }
+    else if(c === '"') q = true;
+    else if(c === d){ row.push(cur); cur = ''; }
+    else if(c === '\n'){ row.push(cur); cur = ''; rows.push(row); row = []; }
+    else if(c === '\r'){ /* 忽略，next 处理 \n */ }
+    else cur += c;
+  }
+  if(cur.length || row.length){ row.push(cur); rows.push(row); }
+  return rows.filter(r => r.some(x => String(x).trim() !== ''));
+}
+const csvNorm = h => String(h == null ? '' : h)
+  .replace(/[（(][^）)]*[）)]/g, '')
+  .replace(/[\s*＊]/g, '')
+  .toLowerCase();
+function prodCSVHeaderMap(head){
+  const alias = {
+    sku:'sku', 编码:'sku', 产品编码:'sku', 产品:'sku',
+    品名:'name', 产品名称:'name', 名称:'name',
+    客户型号:'custModel', 工厂型号:'factoryModel',
+    归属:'owner', 归属客户:'owner', 归属供应商:'owner', 客户:'owner', 供应商:'owner',
+    价格:'price', 单价:'price', 币种:'currency',
+    moq:'moq', 起订量:'moq', 最小起订量:'moq', 单位:'unit',
+    订购状态:'orderStatus', 状态:'orderStatus'
+  };
+  PROD_CSV_COLS.forEach(([k, label]) => { alias[csvNorm(label)] = k; });
+  const map = {};
+  (head || []).forEach((h, i) => { const k = alias[csvNorm(h)]; if(k && map[k] == null) map[k] = i; });
+  return map;
+}
+/* ==========================================================================
+   v0.49 · 编码探测（泰文 / UTF-16 / ANSI 都踩过）
+   --------------------------------------------------------------------------
+   ① TIS-620 / Windows-874：Excel 泰文版另存 CSV 的默认 ANSI，按 GBK 解会得到一串
+      乱码汉字（「สินค้า」→「试工橐」），看起来「不认识泰文」；
+   ② UTF-16：Excel「Unicode 文本」带 BOM，按 UTF-8 解全是控制字符；
+   ③ **已经丢字的**：Excel「CSV(逗号分隔)」用系统 ANSI 保存时，泰文/中文直接写成
+      0x3F —— 文件里就是问号，任何解码器都救不回来。只能提示改用「粘贴导入」。
+   ========================================================================== */
+const IMP_ENC_KEY = 'ot.impenv.v1';
+const IMP_ENCS = [
+  { v:'auto',        t:'自动探测' },
+  { v:'utf-8',       t:'UTF-8' },
+  { v:'gbk',         t:'GBK / ANSI（简体中文）' },
+  { v:'big5',        t:'BIG5（繁体中文）' },
+  { v:'windows-874', t:'TIS-620 / Windows-874（泰文）' },
+  { v:'utf-16le',    t:'UTF-16 LE（Excel「Unicode 文本」）' }
+];
+let IMP_ENC = (() => { try{ return localStorage.getItem(IMP_ENC_KEY) || 'auto'; }catch(e){ return 'auto'; } })();
+function impEncSave(v){
+  IMP_ENC = IMP_ENCS.some(x => x.v === v) ? v : 'auto';
+  try{ localStorage.setItem(IMP_ENC_KEY, IMP_ENC); }catch(e){}
+}
+function decodeText(ab, enc){
+  const u8 = new Uint8Array(ab);
+  const pick = (e, off) => {
+    try{ return { text: new TextDecoder(e).decode(off ? u8.subarray(off) : u8), enc: e }; }
+    catch(_){ return null; }
+  };
+  if(enc && enc !== 'auto'){
+    const r = pick(enc, 0);
+    if(r) return r;
+  }
+  if(u8.length > 2 && u8[0] === 0xEF && u8[1] === 0xBB && u8[2] === 0xBF) return pick('utf-8', 0);
+  if(u8.length > 2 && u8[0] === 0xFF && u8[1] === 0xFE) return pick('utf-16le', 2);
+  if(u8.length > 2 && u8[0] === 0xFE && u8[1] === 0xFF) return pick('utf-16be', 2);
+  try{ return { text: new TextDecoder('utf-8', { fatal:true }).decode(u8), enc:'utf-8' }; }catch(e){}
+  /* 无 BOM 的 UTF-16：ASCII 文本在高字节位上全是 0x00 */
+  const n = Math.min(u8.length, 400), pairs = Math.floor(n / 2);
+  let zero = 0;
+  for(let i = 1; i < n; i += 2){ if(u8[i] === 0) zero++; }
+  if(pairs > 10 && zero / pairs > 0.6) return pick('utf-16le', 0) || pick('utf-8', 0);
+  /* 单字节 / 双字节候选：替换符与控制字符重罚；解出越多泰文越像「泰文文件」，
+     给一点减分（分数越低越优），这样 874 文件不会被 GBK 抢走。 */
+  let best = null;
+  ['gbk','big5','windows-874'].forEach(e => {
+    const r = pick(e, 0); if(!r) return;
+    const bad  = (r.text.match(/\uFFFD/g) || []).length;
+    const ctrl = (r.text.match(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g) || []).length;
+    const thai = (r.text.match(/[\u0E00-\u0E7F]/g) || []).length;
+    const sc = bad * 10 + ctrl * 10 - Math.min(thai, 40) * 0.2;
+    if(!best || sc < best.sc) best = { text: r.text, enc: e, sc };
+  });
+  if(best) return { text: best.text, enc: best.enc };
+  return pick('utf-8', 0) || { text:'', enc:'utf-8' };
+}
+/* 导入前的「文本质量体检」：问号连串 = 源文件已被 ANSI 保存丢字；
+   替换符 = 编码猜错了，换个编码能救。 */
+function impQuality(text){
+  const s = String(text == null ? '' : text);
+  return {
+    qRuns: (s.match(/\?{2,}/g) || []).length,
+    replaceN: (s.match(/\uFFFD/g) || []).length
+  };
+}
+/* 纯文本导入：解析 → 计划 → 确认 → 写库。文件路径与粘贴路径共用这一份。 */
+async function importProdText(kind, text, opt){
+  const o = opt || {};
+  const st = Store.state, C = pk(kind);
+  if(!st.source || !st.source.capabilities.write){ toast('当前数据源只读，无法导入'); return { ok:0, skip:0, add:0 }; }
+  const rows = csvParse(text);
+  if(rows.length < 2){ toast('CSV 里没有数据行（只有表头？）'); return; }
+  const map = prodCSVHeaderMap(rows[0]);
+  if(map.sku == null){ toast('表头缺少「SKU」列，请用导出的模版填写'); return; }
+  if(map.owner == null){ toast('表头缺少「' + C.ownLabel + '」列，无法确定归属'); return; }
+  const ownList = st.data[C.ownRes] || [];
+  const findOwn = name => {
+    const q = String(name || '').trim().toLowerCase();
+    if(!q) return null;
+    return ownList.find(x => [x.name, x.shortName, x.code].filter(Boolean)
+      .some(v => String(v).trim().toLowerCase() === q)) || null;
+  };
+  const plans = [], errs = [];
+  rows.slice(1).forEach((r, idx) => {
+    const line = idx + 2;                       /* 表头算第 1 行 */
+    const cell = k => map[k] == null ? '' : String(r[map[k]] == null ? '' : r[map[k]]).trim();
+    const sku = cell('sku').toUpperCase();
+    if(!sku){ errs.push('第 ' + line + ' 行：SKU 为空'); return; }
+    const own = findOwn(cell('owner'));
+    if(!own){ errs.push('第 ' + line + ' 行：找不到' + C.ownLabel + '「' + cell('owner') + '」'); return; }
+    const cur = cell('currency').toUpperCase();
+    const payload = {
+      sku,
+      name: cell('name'),
+      custModel: cell('custModel'),
+      factoryModel: cell('factoryModel'),
+      price: numOr(cell('price'), 0),
+      currency: CUR_SYM[cur] ? cur : 'CNY',
+      moq: numOr(cell('moq'), 0),
+      unit: cell('unit') || 'pcs',
+      orderStatus: ORDER_STATUS.includes(cell('orderStatus')) ? cell('orderStatus') : '在售',
+      packMethod: cell('packMethod'), packQty: cell('packQty'), packSize: cell('packSize'),
+      packCbm: cell('packCbm'), packNet: cell('packNet'), packGross: cell('packGross'),
+      packMaterial: cell('packMaterial'), packMark: cell('packMark'), packNote: cell('packNote'),
+      remark: cell('remark'),
+      updatedAt: fmt(today())
+    };
+    payload[kind === 'cust' ? 'customerId' : 'supplierId'] = own.id;
+    /* v0.52：定位已有记录的口径跟着「允许重复」一起改。
+       客户产品 → SKU 全局唯一，命中即更新（老行为不变）。
+       供应商产品 → 按「SKU + 归属供应商」定位，且**只有唯一命中才更新**；
+                    命中多条说明用户是有意重复录入的，这时一律追加，不去猜该覆盖哪一条。 */
+    let exist = null;
+    const same = (st.data[C.res] || []).filter(x => String(x.sku || '').trim().toUpperCase() === sku);
+    if(kind === 'cust') exist = same[0] || null;
+    else { const hits = same.filter(x => x.supplierId === own.id); exist = hits.length === 1 ? hits[0] : null; }
+    plans.push({ line, sku, payload, exist });
+  });
+  if(!plans.length){ toast('没有可导入的行' + (errs.length ? '：' + errs[0] : '')); return { ok:0, skip:errs.length, add:0, errs }; }
+  const addN = plans.filter(p => !p.exist).length, updN = plans.length - addN;
+  if(o.confirm !== false && !confirm('将导入 ' + plans.length + ' 行（新增 ' + addN + ' / 更新 ' + updN + '）'
+    + (errs.length ? '\n另有 ' + errs.length + ' 行会被跳过：\n' + errs.slice(0, 5).join('\n') : '')
+    + '\n\n继续导入？')) return { ok:0, skip:0, add:0, errs, canceled:true };
+  let okN = 0;
+  for(const p of plans){
+    try{
+      if(p.exist){
+        /* 与表单同口径：状态没变保留原 statusAt，变了才刷今天（导入不该把更新时间全刷平） */
+        const oldSt = p.exist.orderStatus || '';
+        p.payload.statusAt = (p.exist.statusAt && oldSt === p.payload.orderStatus)
+          ? p.exist.statusAt : fmt(today());
+        await st.source.update(C.res, p.exist.id, p.payload);
+      }else{
+        p.payload.id = uid(kind === 'cust' ? 'CP' : 'SP');
+        p.payload.createdAt = fmt(today());
+        p.payload.statusAt = fmt(today());
+        p.payload.images = []; p.payload.packingFiles = [];
+        await st.source.create(C.res, p.payload);
+      }
+      okN++;
+    }catch(e){ errs.push('第 ' + p.line + ' 行写入失败：' + ((e && e.message) || e)); }
+  }
+  await reload();
+  toast('导入完成：成功 ' + okN + ' 行' + (errs.length ? '，跳过 / 失败 ' + errs.length + ' 行（明细见控制台）' : ''));
+  if(errs.length) console.warn('[产品导入] 未导入的行：\n' + errs.join('\n'));
+  return { ok: okN, skip: errs.length, add: addN, upd: updN, errs };
+}
+
+/* ==========================================================================
+   v0.49 · 导入预览弹层
+   --------------------------------------------------------------------------
+   为什么不直接读文件就导：编码猜错一次就是「泰文变乱码 / 变问号」的脏数据落库。
+   弹层里能切编码、看前 4 行原始文本，**用户一眼就能判断「这是乱码」**；
+   再来一条粘贴通道 —— 剪贴板是 UTF-16，不经过任何文件编码，泰文一个字都不会丢。
+   ========================================================================== */
+function openImportSheet(kind, seed){
+  const C = pk(kind);
+  const conf = seed || {};
+  const s = {
+    ab: conf.ab || null,
+    text: conf.text || '',
+    enc: IMP_ENC,
+    name: conf.name || '',
+    paste: !!conf.paste,
+    real: ''
+  };
+  if(s.ab){
+    const r = decodeText(s.ab, s.enc);
+    s.text = r.text; s.real = r.enc;
+  }
+  const draw = () => {
+    const rows = csvParse(s.text);
+    const dataN = Math.max(0, rows.length - 1);
+    const head = rows[0] || [];
+    const map = prodCSVHeaderMap(head);
+    const q = impQuality(s.text);
+    const delim = sniffDelim(s.text) === '\t' ? '制表符（TSV）' : '逗号（CSV）';
+    const miss = [];
+    if(map.sku == null) miss.push('SKU');
+    if(map.owner == null) miss.push(C.ownLabel);
+    const canGo = dataN > 0 && !miss.length;
+    const preview = String(s.text).split(/\r?\n/).slice(0, 4).join('\n');
+    const encLabel = s.ab ? (s.enc === 'auto' ? ('自动 → ' + (s.real || '?').toUpperCase()) : s.enc.toUpperCase())
+                          : '剪贴板文本（无需编码）';
+    const warn = [];
+    if(q.replaceN) warn.push('⚠ 有 ' + q.replaceN + ' 个字符解不出来（替换符 �）：<b>编码选错了</b>，换下面的编码再看预览。');
+    if(q.qRuns) warn.push('⚠ 发现 ' + q.qRuns + ' 处连续问号：如果原文是泰文 / 中文，说明<b>源文件已被 Excel 以 ANSI 编码保存，字在保存时就丢了</b>（任何编码都还原不了）。'
+      + '请改用 <b>粘贴表格导入</b>，或把 Excel 另存为「CSV UTF-8」再导。');
+    /* 编码错了表头也会跟着乱，这时再喊「缺少 SKU」只会误导 —— 先让用户把编码选对 */
+    if(miss.length && !q.replaceN) warn.push('⚠ 表头缺少：' + miss.join(' / ') + ' —— 请用导出的模版填写。');
+    if(!dataN) warn.push('⚠ 没有识别到数据行（只有表头或空内容）。');
+    if(s.paste) warn.push('在 Excel 里选中区域 <b>Ctrl+C</b>，然后点下面的输入框 <b>Ctrl+V</b> —— 走剪贴板，泰文/中文不会丢。');
+    if(kind === 'supp') warn.push('供应商产品库<b>允许 SKU 重复</b>：按「SKU + 归属供应商」定位，唯一命中才更新；已有多条同组合时本次<b>追加</b>，不会覆盖。');
+
+    sheet(`<div class="hd"><h3>导入${C.label}</h3>
+        <span class="tag t-gray">${esc(s.name || (s.paste ? '粘贴导入' : 'CSV'))}</span>
+        <div class="spacer"></div><button class="close" data-close>×</button></div>
+      <div class="bd">
+        <div class="frow">
+          <div class="fld"><label>编码</label>
+            ${s.ab ? `<select id="impEnc">${IMP_ENCS.map(e => `<option value="${e.v}"${e.v === s.enc ? ' selected' : ''}>${esc(e.t)}</option>`).join('')}</select>`
+                   : `<input readonly value="${esc(encLabel)}">`}
+          </div>
+          <div class="fld"><label>分隔符</label><input readonly value="${esc(delim)}"></div>
+        </div>
+        ${s.paste ? `<div class="fld"><label>粘贴表格内容（首行是表头）</label>
+          <textarea id="impPaste" rows="6" placeholder="在 Excel 里选中含表头的区域 → Ctrl+C → 点这里 → Ctrl+V">${esc(s.text)}</textarea></div>` : ''}
+        <div class="fld"><label>预览（前 4 行 · 已识别 ${dataN} 行数据）</label>
+          <textarea readonly rows="5" id="impPrev">${esc(preview || '（空）')}</textarea></div>
+        <div id="impWarn">${warn.map(w => `<div class="hint" style="margin:8px 0 0">${w}</div>`).join('')}</div>
+        <div style="display:flex;gap:8px;margin-top:14px">
+          <button class="btn primary" id="impGo"${canGo ? '' : ' disabled'}>导入 ${dataN} 行</button>
+          <button class="btn" data-close>取消</button>
+          <div class="spacer"></div>
+          <span class="muted" style="font-size:12px;align-self:center">编码：${esc(encLabel)}</span>
+        </div>
+      </div>`, { wide:true });
+    bindClose();
+    const sel = $('#impEnc');
+    if(sel) sel.onchange = e => {
+      const enc = e.target.value;
+      const r = decodeText(s.ab, enc);
+      s.enc = enc; s.text = r.text; s.real = r.enc;
+      /* 只记住「真能解开」的编码：切到 GBK 看出一屏乱码后取消，下次不该还被 GBK 套住 */
+      if(enc === 'auto' || !impQuality(s.text).replaceN) impEncSave(enc);
+      draw();
+    };
+    const ta = $('#impPaste');
+    if(ta){
+      ta.oninput = e => { s.text = e.target.value; refreshImp(); };
+      setTimeout(() => { try{ ta.focus(); }catch(_){} }, 60);
+    }
+    const go = $('#impGo');
+    if(go) go.onclick = async () => {
+      if(go.disabled) return;
+      go.disabled = true;
+      const res = await importProdText(kind, s.text, { confirm:false });
+      if(res && res.ok) closeSheet();
+      else go.disabled = false;
+    };
+  };
+  /* 粘贴输入时只刷新预览与按钮，不整层重绘 —— 重绘会把光标踢出 textarea */
+  const refreshImp = () => {
+    const rows = csvParse(s.text);
+    const map = prodCSVHeaderMap(rows[0] || []);
+    const dataN = Math.max(0, rows.length - 1);
+    const prev = $('#impPrev'); if(prev) prev.value = String(s.text).split(/\r?\n/).slice(0, 4).join('\n');
+    const go = $('#impGo');
+    if(go){
+      go.disabled = !(dataN > 0 && map.sku != null && map.owner != null);
+      go.textContent = '导入 ' + dataN + ' 行';
+    }
+    const q = impQuality(s.text);
+    const box = $('#impWarn');
+    if(box){
+      const w = [];
+      if(q.replaceN) w.push('⚠ 有 ' + q.replaceN + ' 个字符解不出来（替换符 �）：编码可能选错了。');
+      if(q.qRuns) w.push('⚠ 发现 ' + q.qRuns + ' 处连续问号：源文件可能已在保存时丢了泰文 / 中文，请直接从 Excel 复制粘贴。');
+      if(map.sku == null) w.push('⚠ 表头缺少：SKU');
+      if(map.owner == null) w.push('⚠ 表头缺少：' + C.ownLabel);
+      box.innerHTML = w.map(x => `<div class="hint" style="margin:8px 0 0">${x}</div>`).join('');
+    }
+  };
+  draw();
+}
+/* 文件入口：只负责读出字节，剩下交给预览弹层（编码切换 / 问号体检都在那儿） */
+async function importProdCSV(kind, file){
+  let ab = null;
+  try{ ab = await file.arrayBuffer(); }
+  catch(e){ toast('文件读取失败：' + ((e && e.message) || e)); return; }
+  openImportSheet(kind, { ab, name: file.name });
+}
+function bindPalignControls(){
+  const seg = $('#pAl'); if(!seg) return;
+  seg.onclick = e => {
+    const b = e.target && e.target.closest ? e.target.closest('[data-al]') : null;
+    if(!b) return;
+    palignSave(b.dataset.al);
+    palignApply();
+  };
+}
+function bindProdIO(kind){
+  const btn = $('#pIOBtn'), menu = $('#pIOMenu'), inp = $('#pImpFile');
+  if(!btn || !menu) return;
+  btn.onclick = e => { e.stopPropagation(); menu.hidden = !menu.hidden; };
+  menu.onclick = e => {
+    const b = e.target && e.target.closest ? e.target.closest('[data-io]') : null;
+    if(!b) return;
+    menu.hidden = true;
+    const act = b.dataset.io;
+    if(act === 'tpl') exportProdCSV(kind, 'tpl');
+    else if(act === 'list') exportProdCSV(kind, 'list');
+    else if(act === 'imp' && inp) inp.click();
+    else if(act === 'paste') openImportSheet(kind, { paste:true });
+  };
+  if(inp) inp.onchange = async () => {
+    const f = inp.files && inp.files[0];
+    inp.value = '';
+    if(!f) return;
+    if(!/\.(csv|txt|tsv)$/i.test(f.name)){ toast('请选择 .csv / .txt 文件（Excel 请先「另存为」）'); return; }
+    await importProdCSV(kind, f);
+  };
+  /* 点空白处收起菜单：document 上只绑一次，靠 hidden 判断，不会重复处理 */
+  if(!bindProdIO._doc){
+    bindProdIO._doc = true;
+    document.addEventListener('click', () => {
+      const m = $('#pIOMenu'); if(m && !m.hidden) m.hidden = true;
+    });
+  }
+}
+async function deleteProduct(id, kind){
+  const st = Store.state, C = pk(kind);
+  if(!st.source || !st.source.capabilities.write){ toast('当前数据源只读，无法删除'); return; }
+  const p = (st.data[C.res] || []).find(x => x.id === id); if(!p) return;
+  if(!confirm('确定删除' + C.label + '「' + (p.sku || p.name || id) + '」？\n产品下的产品图与包装文件会一并删除，'
+    + '删除后可在「数据历史」页的回收站里还原记录（文件不随快照保留）。')) return;
+  await st.source.remove(C.res, id);
+  closeSheet(); await reload(); toast('已移入回收站：' + (p.sku || p.name || id));
+}
+
+/* ---------- 详情 ---------- */
+/* 客户详情页里的「该客户产品」区块：与客户产品库同口径（按 customerId 直连） */
+function custProdCount(st, cid){
+  return (st.data.custProducts || []).filter(p => p.customerId === cid).length;
+}
+function custProdRowsHTML(st, cid){
+  const ps = (st.data.custProducts || []).filter(p => p.customerId === cid)
+    .sort((a, b) => String(b.statusAt || '').localeCompare(String(a.statusAt || '')));
+  if(!ps.length) return '<tr><td colspan="6"><div class="empty">该客户还没有产品，点「+ 新增产品」建立第一条</div></td></tr>';
+  return ps.map(p => `<tr data-cpid="${esc(p.id)}">
+      <td><b>${esc(p.sku || '—')}</b></td><td>${esc(p.name || '—')}</td>
+      <td>${esc(p.custModel || '—')}</td>
+      <td class="num">${priceTxt(p.price, p.currency)}</td>
+      <td class="num">${p.moq || '—'}</td>
+      <td>${p.orderStatus ? `<span class="${osTag(p.orderStatus)}">${esc(p.orderStatus)}</span>` : '—'}</td>
+    </tr>`).join('');
+}
+function prodPackingHTML(p){
+  const cell = (label, val) => `<div class="fld"><label>${label}</label><input readonly value="${esc(val || '—')}"></div>`;
+  return `<div class="frow">
+      ${cell('包装方式', p.packMethod)}
+      ${cell('装箱数（pcs/箱）', p.packQty)}
+    </div>
+    <div class="frow">
+      ${cell('外箱尺寸（cm）', p.packSize)}
+      ${cell('单箱体积（m³）', p.packCbm)}
+    </div>
+    <div class="frow">
+      ${cell('单件净重（kg）', p.packNet)}
+      ${cell('单箱毛重（kg）', p.packGross)}
+    </div>
+    <div class="frow">
+      ${cell('包装材料', p.packMaterial)}
+      ${cell('箱唛', p.packMark)}
+    </div>
+    <div class="fld"><label>包装备注</label><textarea readonly rows="2">${esc(p.packNote || '')}</textarea></div>`;
+}
+function pkFileCardHTML(m, i, prefix){
+  return `<div class="filecard">
+      <div class="fi">${esc(extTag(m.name))}</div>
+      <div style="flex:1;min-width:0">
+        <div class="fn">${esc(m.name)}</div>
+        <div class="fs">${sizeTxt(m.size)} · 上传于 ${esc(String(m.uploadedAt || '').slice(0,10))}</div>
+      </div>
+      <button class="btn sm ${prefix}Prev" data-i="${i}">预览</button>
+      <button class="btn sm ${prefix}Down" data-i="${i}">下载</button>
+    </div>`;
+}
+async function pkPreviewInto(meta, box){
+  if(!meta || !box) return;
+  const u = await FileStore.url(meta.id);
+  if(!u){ box.innerHTML = '<div class="fprev" style="padding:14px;color:var(--muted);font-size:12px">文件不存在或已被删除</div>'; return; }
+  const isImg = /image\//.test(meta.type || '') || /\.(jpg|jpeg|png)$/i.test(meta.name || '');
+  const isPdf = /pdf/i.test(meta.type || '') || /\.pdf$/i.test(meta.name || '');
+  const inner = isImg ? `<img src="${u}" alt="${esc(meta.name)}">`
+    : isPdf ? `<iframe src="${u}" title="${esc(meta.name)}"></iframe>`
+    : `<div style="padding:24px;text-align:center;color:var(--muted);font-size:13px">该格式不支持网页内预览（Excel / Word / ZIP 等），请点「下载」查看。</div>`;
+  box.innerHTML = `<div class="fprev">${inner}</div>`;
+}
+async function downloadFile(meta){
+  if(!meta) return;
+  const u = await FileStore.url(meta.id);
+  if(!u){ toast('文件不存在或已被删除'); return; }
+  const a = document.createElement('a');
+  a.href = u; a.download = meta.name || 'file'; a.click();
+}
+function openProductSheet(id, kind){
+  const st = Store.state, C = pk(kind);
+  const p = (st.data[C.res] || []).find(x => x.id === id); if(!p) return;
+  const imgs  = (Array.isArray(p.images) ? p.images : []).filter(Boolean);
+  const files = Array.isArray(p.packingFiles) ? p.packingFiles : [];
+  const own   = prodOwner(st, p, kind);
+  const mA = kind === 'cust' ? p.custModel : p.factoryModel;
+  const mB = kind === 'cust' ? p.factoryModel : p.custModel;
+
+  /* 关联：客户产品 → 对应供应商产品；供应商产品 → 被哪些客户产品引用。
+     用「只读 input + 查看按钮」而不是裸按钮 —— 裸按钮落在 .fld 里没有 input 的高度，
+     长名字会自己换行、把标签区顶变形。 */
+  let link = '';
+  if(kind === 'cust'){
+    const sp = p.supplierProductId
+      ? (st.data.supplierProducts || []).find(x => x.id === p.supplierProductId) : null;
+    link = `<div class="fld"><label>对应供应商产品</label>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input readonly style="flex:1" value="${esc(sp ? ((sp.sku || '') + ' · ' + (sp.name || '')) : '未关联（可在编辑里选择）')}">
+        ${sp ? `<button class="btn sm" style="flex:none" data-open-sp="${esc(sp.id)}">查看</button>` : ''}
+      </div></div>`;
+  }else{
+    const used = (st.data.custProducts || []).filter(x => x.supplierProductId === p.id);
+    link = `<div class="fld"><label>被客户产品引用</label>
+      <input readonly value="${esc(used.length
+        ? used.map(x => x.sku).filter(Boolean).join(' / ') + '（' + used.length + ' 个）'
+        : '暂无客户产品关联到它')}"></div>`;
+  }
+
+  const gallery = `<div class="pgallery">
+      <div class="pmain" id="pmain">${imgs.length
+        ? `<img data-img="${esc(imgs[0])}" alt="${esc(p.name || '')}">`
+        : '<div class="pnoimg big">暂无产品图<br><span style="font-size:11px">点「编辑」可上传</span></div>'}</div>
+      ${imgs.length > 1 ? `<div class="pstrip">${imgs.map((f, i) =>
+        `<button class="pstrip-i${i === 0 ? ' on' : ''}" data-si="${i}"><img data-img="${esc(f)}" alt=""></button>`).join('')}</div>` : ''}
+    </div>`;
+
+  sheet(`<div class="hd"><h3>${esc(p.name || p.sku || '产品')}</h3>
+      <span class="tag t-gray">${esc(p.sku || '—')}</span>
+      ${p.orderStatus ? `<span class="${osTag(p.orderStatus)}">${esc(p.orderStatus)}</span>` : ''}
+      <div class="spacer"></div>
+      <button class="btn sm" id="psEdit">编辑</button>
+      <button class="btn sm danger" id="psDel">删除</button>
+      <button class="close" data-close>×</button></div>
+    <div class="bd">
+      ${gallery}
+      <div class="card" style="margin-bottom:14px"><div class="hd"><h3>基础信息</h3>
+        ${infoI('「订购状态更新时间」由系统维护：状态一变就自动记下当天，不需要手填。')}</div>
+        <div class="bd">
+          <div class="frow">
+            <div class="fld"><label>SKU</label><input readonly value="${esc(p.sku || '—')}"></div>
+            <div class="fld"><label>品名</label><input readonly value="${esc(p.name || '—')}"></div>
+          </div>
+          <div class="frow">
+            <div class="fld"><label>${esc(C.mdlA)}</label><input readonly value="${esc(mA || '—')}"></div>
+            <div class="fld"><label>${esc(C.mdlB)}</label><input readonly value="${esc(mB || '—')}"></div>
+          </div>
+          <div class="frow">
+            <div class="fld"><label>${esc(C.ownLabel)}</label><input readonly value="${esc(own ? own.name : '—（档案不存在）')}"></div>
+            <div class="fld"><label>价格</label><input readonly value="${esc(priceTxt(p.price, p.currency))}"></div>
+          </div>
+          <div class="frow">
+            <div class="fld"><label>MOQ</label><input readonly value="${esc(p.moq || '—')} ${esc(p.unit || '')}"></div>
+            <div class="fld"><label>订购状态</label><input readonly value="${esc(p.orderStatus || '—')}"></div>
+          </div>
+          <div class="frow">
+            <div class="fld"><label>订购状态更新时间</label><input readonly value="${esc(p.statusAt || '—')}"></div>
+            <div class="fld"><label>最近修改</label><input readonly value="${esc(p.updatedAt || p.createdAt || '—')}"></div>
+          </div>
+          ${link}
+          <div class="fld"><label>备注</label><textarea readonly rows="2">${esc(p.remark || '')}</textarea></div>
+        </div></div>
+      <div class="card" style="margin-bottom:14px"><div class="hd"><h3>包装资料</h3>
+        ${infoI('包装资料是产品级的固定规格（不随订单变）；订单层面的箱数 / 毛重差异请在订单备注里记。')}</div>
+        <div class="bd">${prodPackingHTML(p)}</div></div>
+      <div class="card"><div class="hd"><h3>包装文件</h3><span class="tag t-gray">${files.length} 份</span>
+        ${infoI('支持 PDF / Excel / Word / CSV / ZIP / 图片，单个文件 ≤ 10MB。')}</div>
+        <div class="bd">
+          ${files.length
+            ? `<div id="psPkBox" style="display:flex;flex-direction:column;gap:8px">${files.map((m, i) => pkFileCardHTML(m, i, 'psPk')).join('')}</div>`
+            : '<div class="empty">还没有包装文件，点「编辑」上传包装规格单 / 图纸 / 箱唛文件</div>'}
+          <div id="psPkPrev" style="margin-top:10px"></div>
+        </div></div>
+    </div>`, { wide:true });
+
+  bindClose();
+  hydrateThumbs($('#sheet'));
+  const eb = $('#psEdit'); if(eb) eb.onclick = () => openProductForm(id, kind);
+  const db = $('#psDel');  if(db) db.onclick = () => deleteProduct(id, kind);
+  $$('#sheet [data-si]').forEach(b => b.onclick = () => {
+    const img = b.querySelector('img'); const main = $('#pmain img');
+    if(img && main && img.src){
+      main.src = img.src;
+      $$('#sheet [data-si]').forEach(x => x.classList.toggle('on', x === b));
+    }
+  });
+  const sp = $('#sheet [data-open-sp]');
+  if(sp) sp.onclick = () => { closeSheet(); openProductSheet(sp.dataset.openSp, 'supp'); };
+  const pkBox = $('#psPkBox');
+  if(pkBox) pkBox.onclick = e => {
+    const t = e.target, i = t.dataset && t.dataset.i;
+    if(i == null) return;
+    const m = files[+i]; if(!m) return;
+    if(t.classList.contains('psPkPrev')) pkPreviewInto(m, $('#psPkPrev'));
+    else if(t.classList.contains('psPkDown')) downloadFile(m);
+  };
+}
+
+/* ---------- 表单：产品图 / 包装文件两个自定义块 ---------- */
+function pimgHTML(list){
+  const arr = Array.isArray(list) ? list.filter(Boolean) : [];
+  const items = arr.map((f, i) => `<div class="pimg" data-fid="${esc(f)}">
+      <img data-img="${esc(f)}" alt="">
+      ${i === 0 ? '<span class="pmainbadge">主图</span>'
+                : `<button type="button" class="pimgup" data-up="${esc(f)}" title="设为主图">设主图</button>`}
+      <button type="button" class="pimgx" data-del="${esc(f)}" title="删除这张图">×</button>
+    </div>`).join('');
+  return `<label>产品图<span class="fhint-s">（第一张为主图；可点选、拖入，或直接 Ctrl+V 粘贴截图）</span></label>
+    <div class="pimgrid" id="pimgGrid">${items}
+      <button type="button" class="pimgadd" id="pimgAdd">＋<span>上传</span><em>拖入 / 粘贴</em></button>
+    </div>
+    <input type="file" id="pimgInput" accept=".jpg,.jpeg,.png" multiple style="display:none">
+    <div class="fhint"></div>`;
+}
+function redrawPImg(f){
+  const grid = $('#pimgGrid'); if(!grid) return;
+  const tmp = document.createElement('div');
+  tmp.innerHTML = pimgHTML(f.values.images || []);
+  const next = tmp.querySelector('#pimgGrid');
+  if(!next) return;
+  grid.replaceWith(next);
+  bindPImg(f); hydrateThumbs(next);
+}
+/* v0.48：拖拽 / 粘贴进来的 File 常常没有扩展名（剪贴板截图 name 可能是 image.png，
+   也可能整个是空的）。FileStore 是按扩展名判白名单的，先补一个能过检的名字。 */
+function fitFile(raw, defExt){
+  if(!raw) return null;
+  const nm = String(raw.name || '').trim();
+  if(nm && /\.[a-z0-9]{2,6}$/i.test(nm)) return raw;
+  const t = String(raw.type || '');
+  const ext = /png/i.test(t) ? 'png' : /jpe?g/i.test(t) ? 'jpg' : defExt;
+  const stamp = new Date().toISOString().replace(/[-:T]/g, '').slice(0, 14);
+  const base = (nm || ('粘贴-' + stamp)).replace(/[\\/:*?"<>|]/g, '_');
+  try{ return new File([raw], base + '.' + ext, { type: t || 'application/octet-stream' }); }
+  catch(e){ try{ raw.name = base + '.' + ext; }catch(_){} return raw; }
+}
+/* 选择 / 拖拽 / 粘贴三个来源共用的灌图入口 —— 三处各写一份太容易走偏 */
+async function pimgAddFiles(f, list){
+  const arr = Array.prototype.slice.call(list || []);
+  let ok = 0;
+  for(const raw of arr){
+    const file = fitFile(raw, 'png');
+    const bad = FileStore.check(file, ['jpg','jpeg','png']);
+    if(bad){ toast(bad); continue; }
+    try{
+      const meta = await FileStore.put(file, ['jpg','jpeg','png']);
+      if(!Array.isArray(f.values.images)) f.values.images = [];
+      f.values.images.push(meta.id);
+      f.pendingNew.push(meta.id);
+      ok++;
+    }catch(e){ toast('上传失败：' + ((e && e.message) || e)); }
+  }
+  if(ok) redrawPImg(f);
+  return ok;
+}
+function bindPImg(f){
+  const add = $('#pimgAdd'), inp = $('#pimgInput'), grid = $('#pimgGrid');
+  if(add && inp) add.onclick = () => inp.click();
+  if(inp) inp.onchange = async () => {
+    const fs = Array.prototype.slice.call(inp.files || []);
+    inp.value = '';
+    if(fs.length) await pimgAddFiles(f, fs);
+  };
+  if(grid){
+    /* 拖拽：整个网格都是投放区，拖进来高亮虚线框 */
+    grid.ondragover = e => { e.preventDefault(); grid.classList.add('dz'); };
+    grid.ondragleave = e => { if(!grid.contains(e.relatedTarget)) grid.classList.remove('dz'); };
+    grid.ondrop = async e => {
+      e.preventDefault(); grid.classList.remove('dz');
+      const fs = e.dataTransfer && e.dataTransfer.files;
+      if(fs && fs.length) await pimgAddFiles(f, fs);
+    };
+  }
+  if(grid) grid.onclick = e => {
+    const t = e.target && e.target.closest ? e.target.closest('[data-del],[data-up]') : null;
+    if(!t) return;
+    e.preventDefault();
+    const arr = Array.isArray(f.values.images) ? f.values.images.slice() : [];
+    if(t.dataset.del){
+      const fid = t.dataset.del;
+      f.values.images = arr.filter(x => x !== fid);
+      f.pendingNew = f.pendingNew.filter(x => x !== fid);
+      f.orphans.push(fid);          /* 保存时才真正删文件：中途取消不该把已上传的图弄丢 */
+    }else if(t.dataset.up){
+      const fid = t.dataset.up;
+      f.values.images = [fid].concat(arr.filter(x => x !== fid));
+    }
+    redrawPImg(f);
+  };
+}
+function pkFilesHTML(list){
+  const arr = Array.isArray(list) ? list : [];
+  return `<label>包装文件<span class="fhint-s">（PDF / Excel / Word / CSV / ZIP / 图片，单个 ≤ 10MB）</span></label>
+    <div class="pkbox" id="pkBox">${arr.length
+      ? arr.map((m, i) => `<div class="filecard" data-pk="${esc(m.id)}">
+          <div class="fi">${esc(extTag(m.name))}</div>
+          <div style="flex:1;min-width:0">
+            <div class="fn">${esc(m.name)}</div>
+            <div class="fs">${sizeTxt(m.size)} · 上传于 ${esc(String(m.uploadedAt || '').slice(0,10))}</div>
+          </div>
+          <button type="button" class="btn sm pkPrev2" data-i="${i}">预览</button>
+          <button type="button" class="btn sm pkDel2" data-pkd="${esc(m.id)}">删除</button>
+        </div>`).join('')
+      : '<div class="muted" style="font-size:12px;padding:2px 0">还没有包装文件</div>'}</div>
+    <div class="drop" id="pkDrop" style="margin-top:8px">点击、拖入，或 Ctrl+V 粘贴包装文件
+      <div style="font-size:11px;margin-top:4px">包装规格单 / 图纸 / 箱唛，可多份</div></div>
+    <input type="file" id="pkInput" accept=".pdf,.jpg,.jpeg,.png,.xls,.xlsx,.doc,.docx,.csv,.zip" multiple style="display:none">
+    <div id="pkFormPrev" style="margin-top:8px"></div>
+    <div class="fhint"></div>`;
+}
+function redrawPkFiles(f){
+  const box = $('#pkBox'); if(!box) return;
+  const wrap = box.parentNode;
+  const tmp = document.createElement('div');
+  tmp.innerHTML = pkFilesHTML(f.values.packingFiles || []);
+  const next = tmp.querySelector('#pkBox');
+  if(!next) return;
+  box.replaceWith(next);
+  bindPkFiles(f);
+}
+/* 选择 / 拖拽 / 粘贴三个来源共用（包装文件白名单比产品图宽，Excel / Word / ZIP 都收） */
+async function pkAddFiles(f, list){
+  const arr = Array.prototype.slice.call(list || []);
+  let ok = 0;
+  for(const raw of arr){
+    const file = fitFile(raw, 'pdf');
+    const bad = FileStore.check(file, PKG_EXT);
+    if(bad){ toast(bad); continue; }
+    try{
+      const meta = await FileStore.put(file, PKG_EXT);
+      if(!Array.isArray(f.values.packingFiles)) f.values.packingFiles = [];
+      f.values.packingFiles.push(meta);
+      f.pendingNew.push(meta.id);
+      ok++;
+    }catch(e){ toast('上传失败：' + ((e && e.message) || e)); }
+  }
+  if(ok) redrawPkFiles(f);
+  return ok;
+}
+function bindPkFiles(f){
+  const drop = $('#pkDrop'), inp = $('#pkInput');
+  if(drop){
+    drop.onclick = () => { if(inp) inp.click(); };
+    drop.ondragover = e => { e.preventDefault(); drop.classList.add('over'); };
+    drop.ondragleave = () => drop.classList.remove('over');
+    drop.ondrop = e => {
+      e.preventDefault(); drop.classList.remove('over');
+      if(e.dataTransfer && e.dataTransfer.files) pkAddFiles(f, e.dataTransfer.files);
+    };
+  }
+  if(inp) inp.onchange = () => {
+    const fs = inp.files; inp.value = '';
+    if(fs && fs.length) pkAddFiles(f, fs);
+  };
+  const box = $('#pkBox');
+  if(box) box.onclick = e => {
+    const t = e.target;
+    if(t.dataset && t.dataset.pkd){
+      const fid = t.dataset.pkd;
+      f.values.packingFiles = (f.values.packingFiles || []).filter(x => x.id !== fid);
+      f.pendingNew = f.pendingNew.filter(x => x !== fid);
+      f.orphans.push(fid);
+      redrawPkFiles(f);
+      return;
+    }
+    if(t.classList.contains('pkPrev2')){
+      const m = (f.values.packingFiles || [])[+t.dataset.i];
+      if(m) pkPreviewInto(m, $('#pkFormPrev'));
+    }
+  };
+}
+/* ==========================================================================
+   v0.48 · 产品表单的粘贴上传（Ctrl+V 直接进）
+   --------------------------------------------------------------------------
+   只处理「剪贴板里带文件」的粘贴：纯文字粘贴（在备注 / 箱唛里打字）一律放过 ——
+   全局监听最怕的就是抢走输入框的 Ctrl+V。
+   去向：鼠标最后停在哪块就进哪块（PROD_PASTE_ZONE）；没停留记录时按类型分流 ——
+   图片进产品图、其它文件进包装文件。
+   ========================================================================== */
+let PROD_PASTE_ZONE = null;   /* 'img' | 'pk' | null */
+function bindProdPaste(){
+  if(bindProdPaste._on) return;
+  bindProdPaste._on = true;
+  document.addEventListener('mouseover', e => {
+    const t = e.target;
+    if(!t || !t.closest) return;
+    if(t.closest('#pkBox') || t.closest('#pkDrop') || t.closest('#pkFormPrev')) PROD_PASTE_ZONE = 'pk';
+    else if(t.closest('#pimgGrid')) PROD_PASTE_ZONE = 'img';
+  });
+  document.addEventListener('paste', e => {
+    const f = FORM;
+    if(!f || f.kind !== 'product') return;
+    const grid = $('#pimgGrid'), box = $('#pkBox');
+    if(!grid && !box) return;
+    const items = e.clipboardData && e.clipboardData.items;
+    if(!items) return;
+    const files = [];
+    for(let i = 0; i < items.length; i++){
+      if(items[i].kind === 'file'){
+        const fl = items[i].getAsFile();
+        if(fl) files.push(fl);
+      }
+    }
+    if(!files.length) return;      /* 纯文字 → 不拦，交给输入框 */
+    e.preventDefault();
+    const imgs = files.filter(x => /^image\/(png|jpe?g)$/i.test(x.type || ''));
+    const others = files.filter(x => imgs.indexOf(x) < 0);
+    Promise.resolve().then(async () => {
+      if(!grid || PROD_PASTE_ZONE === 'pk'){
+        if(box) await pkAddFiles(f, files);
+        else if(grid) await pimgAddFiles(f, imgs);
+        return;
+      }
+      if(imgs.length) await pimgAddFiles(f, imgs);
+      if(others.length && box) await pkAddFiles(f, others);
+    });
+  });
+}
+function buildProductFields(kind){
+  const st = Store.state, C = pk(kind);
+  const isCust = kind === 'cust';
+  const ownOpts = (st.data[C.ownRes] || [])
+    .filter(x => String(x.active) !== 'false')
+    .map(x => ({ v:x.id, t:(x.shortName ? x.shortName + ' · ' : '') + x.name }));
+  const fields = [
+    { type:'group', label:'基础信息' },
+    { key:'sku', label:'SKU', required:true,
+      ph: isCust ? '产品编码，必填且客户产品库内唯一' : '产品编码，必填（同一 SKU 可重复录入）',
+      help: isCust ? '客户产品与供应商产品各自独立编号，互不校验重复'
+                   : '供应商产品库允许重复：同一 SKU 对应多个工厂型号 / 多家报价时，各建一条即可' },
+    { key:'name', label:'品名', ph:'如：不锈钢法兰 3/4"' },
+    { key: isCust ? 'custModel' : 'factoryModel', label:C.mdlA, ph:'型号 / 料号' },
+    { key: isCust ? 'factoryModel' : 'custModel', label:C.mdlB, ph:'型号 / 料号' },
+    { key: isCust ? 'customerId' : 'supplierId', label:C.ownLabel, type:'select', required:true, opts:ownOpts },
+    { key:'orderStatus', label:'订购状态', type:'select',
+      opts: ORDER_STATUS.map(s => ({ v:s, t:s })),
+      help:'保存时若状态有变化，自动把「订购状态更新时间」改成今天' },
+    { key:'price', label:'价格', type:'number', ph:'0.00' },
+    { key:'currency', label:'币种', type:'select', opts:CUR_OPTS },
+    { key:'moq', label:'MOQ', type:'number', ph:'最小起订量' },
+    { key:'unit', label:'单位', ph:'pcs / set / kg' },
+    { key:'remark', label:'备注', type:'textarea', full:true }
+  ];
+  if(isCust){
+    /* 客户产品可挂一条供应商产品 —— 只列同客户能用的？不，供应商产品是全公司共享的，全列 */
+    const spOpts = [{ v:'', t:'（不关联）' }].concat((st.data.supplierProducts || []).map(x => ({
+      v:x.id, t:(x.sku || '') + ' · ' + (x.name || '') + '（' + prodOwnerName(st, x, 'supp') + '）'
+    })));
+    fields.splice(6, 0, { key:'supplierProductId', label:'对应供应商产品', type:'select', opts:spOpts,
+      help:'可留空。一个客户型号对多个工厂时，多建几条供应商产品即可' });
+  }
+  fields.push({ type:'group', label:'包装资料' });
+  fields.push(
+    { key:'packMethod', label:'包装方式', ph:'如：PE 袋 + 内盒 + 外箱' },
+    { key:'packQty', label:'装箱数', ph:'pcs/箱' },
+    { key:'packSize', label:'外箱尺寸', ph:'如 52×38×32 cm' },
+    { key:'packCbm', label:'单箱体积', ph:'m³' },
+    { key:'packNet', label:'单件净重', ph:'kg' },
+    { key:'packGross', label:'单箱毛重', ph:'kg' },
+    { key:'packMaterial', label:'包装材料', ph:'如：五层瓦楞纸箱' },
+    { key:'packMark', label:'箱唛', ph:'正唛 / 侧唛要求' },
+    { key:'packNote', label:'包装备注', type:'textarea', full:true }
+  );
+  fields.push({ type:'group', label:'产品图与包装文件' });
+  fields.push({ key:'images', type:'custom',
+    render: v => pimgHTML(v.images || []),
+    bind: f => bindPImg(f) });
+  fields.push({ key:'packingFiles', type:'custom',
+    render: v => pkFilesHTML(v.packingFiles || []),
+    bind: f => bindPkFiles(f) });
+  return fields;
+}
+function openProductForm(id, kind, preset){
+  const st = Store.state, C = pk(kind);
+  const isCust = kind === 'cust';
+  bindProdPaste();   /* v0.48：全局只绑一次，内部按 FORM.kind 判断是否该接管粘贴 */
+  PROD_PASTE_ZONE = null;   /* 每次开表单重置去向：上一轮停在包装区不该影响这一轮 */
+  const p = id ? (st.data[C.res] || []).find(x => x.id === id) : null;
+  const ownList = (st.data[C.ownRes] || []).filter(x => String(x.active) !== 'false');
+  if(!ownList.length){
+    toast('还没有' + (isCust ? '客户' : '供应商') + '档案，请先到「' + (isCust ? '客户' : '供应商') + '」页新增一条');
+    return;
+  }
+  const pre = preset || {};
+  const d = p || {};
+  const values = {
+    sku: d.sku || '', name: d.name || '',
+    custModel: d.custModel || '', factoryModel: d.factoryModel || '',
+    customerId: isCust ? (d.customerId || pre.customerId || ownList[0].id) : '',
+    supplierId: isCust ? '' : (d.supplierId || pre.supplierId || ownList[0].id),
+    supplierProductId: d.supplierProductId || '',
+    orderStatus: d.orderStatus || '在售',
+    price: d.price == null ? '' : d.price,
+    currency: d.currency || 'CNY',
+    moq: d.moq == null ? '' : d.moq,
+    unit: d.unit || 'pcs',
+    remark: d.remark || '',
+    packMethod: d.packMethod || '', packQty: d.packQty || '', packSize: d.packSize || '',
+    packNet: d.packNet || '', packGross: d.packGross || '', packCbm: d.packCbm || '',
+    packMaterial: d.packMaterial || '', packMark: d.packMark || '', packNote: d.packNote || '',
+    images: Array.isArray(d.images) ? d.images.slice() : [],
+    packingFiles: Array.isArray(d.packingFiles) ? d.packingFiles.slice() : []
+  };
+  openForm({
+    kind: 'product', id, title: (id ? '编辑' : '新增') + C.label,
+    subtitle: id ? (d.sku || '') : '', fields: buildProductFields(kind), values, stack:true,
+    tip: '订购状态一变，「订购状态更新时间」会自动改成今天。产品图第一张为主图。',
+    onSave: async v => {
+      const src = st.source;
+      const sku = String(v.sku || '').trim().toUpperCase();
+      if(!sku) return false;
+      const dup = (st.data[C.res] || []).find(x => x.id !== (id || '')
+        && String(x.sku || '').trim().toUpperCase() === sku);
+      /* v0.52：供应商产品库允许 SKU 重复 —— 同一个 SKU 常对应多个工厂型号 / 多家报价，
+         强行拦住反而逼用户去改编码。客户产品库仍然唯一（客户侧 SKU 是对客报价编码）。 */
+      if(dup && kind === 'cust'){
+        FORM.errors = { sku:'SKU 已存在：' + sku + '（' + (dup.name || '未命名') + '）' }; drawForm(); toast('SKU 重复，请检查'); return false;
+      }
+      const oldSt = d.orderStatus || '';
+      const nextSt = v.orderStatus || '在售';
+      const payload = {
+        sku, name: String(v.name || '').trim(),
+        custModel: String(v.custModel || '').trim(),
+        factoryModel: String(v.factoryModel || '').trim(),
+        price: v.price === '' ? 0 : Number(v.price || 0),
+        currency: v.currency || 'CNY',
+        moq: v.moq === '' ? 0 : Number(v.moq || 0),
+        unit: String(v.unit || '').trim(),
+        orderStatus: nextSt,
+        /* 状态没变就保留原时间；新建或状态变化 → 记今天 */
+        statusAt: (p && oldSt === nextSt && d.statusAt) ? d.statusAt : fmt(today()),
+        images: (v.images || []).filter(Boolean),
+        packMethod: String(v.packMethod || '').trim(),
+        packQty: String(v.packQty || '').trim(),
+        packSize: String(v.packSize || '').trim(),
+        packNet: String(v.packNet || '').trim(),
+        packGross: String(v.packGross || '').trim(),
+        packCbm: String(v.packCbm || '').trim(),
+        packMaterial: String(v.packMaterial || '').trim(),
+        packMark: String(v.packMark || '').trim(),
+        packNote: String(v.packNote || '').trim(),
+        packingFiles: (v.packingFiles || []).filter(x => x && x.id),
+        remark: String(v.remark || '').trim(),
+        updatedAt: fmt(today())
+      };
+      if(isCust){
+        payload.customerId = v.customerId;
+        payload.supplierProductId = v.supplierProductId || '';
+      }else{
+        payload.supplierId = v.supplierId;
+      }
+      if(id){ await src.update(C.res, id, payload); }
+      else{
+        payload.id = uid(isCust ? 'CP' : 'SP');
+        payload.createdAt = fmt(today());
+        await src.create(C.res, payload);
+      }
+      /* 保存成功才真正删掉被移除的图 / 文件 */
+      for(const fid of (FORM.orphans || [])){ try{ await FileStore.del(fid); }catch(e){} }
+      FORM.orphans = []; FORM.pendingNew = [];
+      toast(C.label + '已' + (id ? '更新' : '新增') + '：' + sku
+        + (p && oldSt && oldSt !== nextSt ? '（状态 ' + oldSt + ' → ' + nextSt + '）' : ''));
+      return true;
+    }
+  });
+}
+
+/* ==========================================================================
+   v0.47 · 供应商档案
+   与客户档案平行的第四类实体。列表的「产品数」是供应商产品库的实时计数，
+   删供应商时若名下还有产品会被 deleteResource 拦下 —— 避免产品变成孤儿。
+   ========================================================================== */
+let SUPP_KW = '';
+const SUPP_RATING = [{ v:'A', t:'A · 主力' }, { v:'B', t:'B · 备选' }, { v:'C', t:'C · 观察' }];
+function suppQuery(st){
+  const kw = (SUPP_KW || '').trim().toLowerCase();
+  let list = (st.data.suppliers || []).map(s => ({
+    s, n: (st.data.supplierProducts || []).filter(p => p.supplierId === s.id).length
+  }));
+  if(kw){
+    list = list.filter(x => [x.s.name, x.s.shortName, x.s.code, x.s.category, x.s.contact, x.s.phone]
+      .filter(Boolean).join(' ').toLowerCase().includes(kw));
+  }
+  list.sort((a, b) =>
+    (String(a.s.active) === 'false' ? 1 : 0) - (String(b.s.active) === 'false' ? 1 : 0)
+    || b.n - a.n
+    || String(a.s.name || '').localeCompare(String(b.s.name || ''), 'zh-CN'));
+  return list;
+}
+function suppRowsHTML(list){
+  if(!list.length) return `<tr><td colspan="8"><div class="empty">没有供应商，点「+ 新增供应商」建立档案</div></td></tr>`;
+  return list.map(x => {
+    const s = x.s, off = String(s.active) === 'false';
+    return `<tr data-sid="${esc(s.id)}">
+      <td><b>${esc(s.shortName || s.name)}</b>
+        <div class="muted" style="font-size:11px;max-width:240px;overflow:hidden;text-overflow:ellipsis">${esc(s.name || '')}</div></td>
+      <td>${esc(s.category || '—')}</td>
+      <td>${esc(s.contact || '—')}<div class="muted" style="font-size:11px">${esc(s.phone || '')}</div></td>
+      <td class="num">${x.n}</td>
+      <td class="num">${s.settleDays || '—'} 天</td>
+      <td class="num">${s.leadTime || '—'} 天</td>
+      <td><span class="tag ${s.rating === 'A' ? 't-green' : s.rating === 'B' ? 't-blue' : 't-gray'}">${esc(s.rating || '—')}</span>
+        ${off ? '<span class="tag t-red" style="margin-left:4px">停用</span>' : ''}</td>
+      <td><div class="acts">
+        <button class="btn sm" data-sedit="${esc(s.id)}">编辑</button>
+        <button class="btn sm danger" data-sdel="${esc(s.id)}">删除</button>
+      </div></td></tr>`;
+  }).join('');
+}
+function suppSumHTML(list){
+  const n = list.reduce((a, b) => a + b.n, 0);
+  const off = list.filter(x => String(x.s.active) === 'false').length;
+  return `共 ${list.length} 家供应商 ｜ 名下产品 ${n} 个` + (off ? ` ｜ 停用 ${off}` : '');
+}
+function viewSuppliers(st){
+  const list = suppQuery(st);
+  const canWrite = st.source && st.source.capabilities.write;
+  const empty = !(st.data.suppliers || []).length;
+  let h = `<div class="toolbar">
+      <button class="btn primary" id="supNew">+ 新增供应商</button>
+      ${empty && canWrite ? '<button class="btn" id="supSeed" title="插入示例供应商 / 产品，先看结构">载入示例数据</button>' : ''}
+      <input class="search" id="supKW" placeholder="搜索名称 / 编码 / 主营类别 / 联系人" value="${esc(SUPP_KW)}">
+      <div class="spacer"></div>
+      <span class="muted" style="font-size:12px" id="supSum">${suppSumHTML(list)}</span>
+      ${infoI('「产品数」是供应商产品库里挂在该供应商名下的产品条数，实时统计。<br>名下还有产品时不允许删除供应商 —— 先把产品移走或把供应商停用。')}
+    </div>`;
+  if(!canWrite) h += infoI('当前数据源<b>只读</b>，无法新增 / 编辑 / 删除供应商。请到「数据源」页切换到「本地手工录入」。', 'warn');
+  h += `<div class="card"><div class="bd np"><div class="tw tscroll"><table>
+    <thead><tr><th>供应商</th><th>主营类别</th><th>联系人</th><th class="num">产品数</th>
+      <th class="num">付款账期</th><th class="num">常规交期</th><th>评级</th><th>操作</th></tr></thead>
+    <tbody id="supBody">${suppRowsHTML(list)}</tbody></table></div></div></div>`;
+  return h;
+}
+function refreshSuppList(){
+  const st = Store.state;
+  const list = suppQuery(st);
+  /* ★ v0.50：同 refreshCustList，换 tbody 时保住卡内滚动位置 */
+  return keepScroll(function(){
+    const body = $('#supBody'); if(body) body.innerHTML = suppRowsHTML(list);
+    const sum  = $('#supSum');  if(sum)  sum.innerHTML  = suppSumHTML(list);
+    bindSuppRows();
+  });
+}
+function bindSuppRows(){
+  $$('#page [data-sedit]').forEach(b => b.onclick = e => { e.stopPropagation(); openSupplierForm(b.dataset.sedit); });
+  $$('#page [data-sdel]').forEach(b => b.onclick = e => { e.stopPropagation(); deleteResource('supplier', b.dataset.sdel); });
+  $$('#page tr[data-sid]').forEach(tr => tr.onclick = () => openSupplierSheet(tr.dataset.sid));
+}
+function bindSuppliers(){
+  const n = $('#supNew');
+  if(n) n.onclick = () => {
+    if(!Store.state.source || !Store.state.source.capabilities.write){ toast('当前数据源只读，无法新增'); return; }
+    openSupplierForm(null);
+  };
+  const kw = $('#supKW');
+  if(kw) kw.oninput = e => { SUPP_KW = e.target.value; refreshSuppList(); };
+  const sd = $('#supSeed'); if(sd) sd.onclick = () => seedProds();
+  bindSuppRows();
+}
+function buildSupplierFields(){
+  return [
+    { key:'name', label:'供应商名称', required:true, ph:'公司全称' },
+    { key:'shortName', label:'简称', ph:'用于列表展示' },
+    { key:'code', label:'供应商编码', ph:'留空自动生成' },
+    { key:'category', label:'主营类别', type:'combo',
+      opts: () => {
+        const s = new Set(['五金件','塑胶件','钣金','包材','电子料','表面处理']);
+        (Store.state.data.suppliers || []).forEach(x => { if(x.category) s.add(String(x.category)); });
+        return [...s].map(v => ({ v, t:v }));
+      },
+      ph:'可直接输入新类别', help:'保存后自动进入候选列表' },
+    { key:'settleDays', label:'付款账期（天）', type:'number', ph:'月结天数' },
+    { key:'leadTime', label:'常规交期（天）', type:'number', ph:'从下单到交货' },
+    { key:'rating', label:'评级', type:'select', opts:SUPP_RATING },
+    { key:'contact', label:'联系人' },
+    { key:'phone', label:'联系电话' },
+    { key:'email', label:'邮箱' },
+    { key:'address', label:'地址', full:true },
+    { key:'remark', label:'备注', type:'textarea', full:true },
+    { key:'active', label:'合作状态', type:'select',
+      opts: [{ v:'true', t:'合作中' }, { v:'false', t:'已停用' }],
+      help:'停用后不再出现在新增供应商产品的选项里' }
+  ];
+}
+function openSupplierForm(id){
+  const st = Store.state;
+  const s = id ? (st.data.suppliers || []).find(x => x.id === id) : null;
+  const values = s ? {
+    name:s.name || '', shortName:s.shortName || '', code:s.code || '',
+    category:s.category || '', settleDays:s.settleDays == null ? '' : s.settleDays,
+    leadTime:s.leadTime == null ? '' : s.leadTime, rating:s.rating || 'B',
+    contact:s.contact || '', phone:s.phone || '', email:s.email || '',
+    address:s.address || '', remark:s.remark || '', active:String(s.active !== false)
+  } : {
+    name:'', shortName:'', code:'', category:'', settleDays:30, leadTime:30, rating:'B',
+    contact:'', phone:'', email:'', address:'', remark:'', active:'true'
+  };
+  openForm({
+    kind:'supplier', id, title: id ? '编辑供应商' : '新增供应商', subtitle: s ? s.name : '',
+    fields: buildSupplierFields(), values,
+    onSave: async v => {
+      const src = st.source;
+      const nm = String(v.name || '').trim();
+      const dup = (st.data.suppliers || []).find(x => x.id !== (id || '') && String(x.name || '').trim() === nm);
+      if(dup){ FORM.errors = { name:'已存在同名供应商：' + nm }; drawForm(); toast('供应商名称重复，请检查'); return false; }
+      const payload = {
+        name: nm,
+        shortName: String(v.shortName || '').trim() || nm.slice(0, 8),
+        code: String(v.code || '').trim(),
+        category: String(v.category || '').trim(),
+        settleDays: Number(v.settleDays || 0),
+        leadTime: Number(v.leadTime || 0),
+        rating: v.rating || 'B',
+        contact: String(v.contact || '').trim(),
+        phone: String(v.phone || '').trim(),
+        email: String(v.email || '').trim(),
+        address: String(v.address || '').trim(),
+        remark: String(v.remark || '').trim(),
+        active: v.active !== 'false'
+      };
+      if(id){ await src.update('suppliers', id, payload); toast('供应商已更新：' + payload.name); }
+      else{
+        payload.id = uid('S');
+        payload.createdAt = fmt(today());
+        if(!payload.code) payload.code = 'S-' + fmt(today()).replace(/-/g, '').slice(2) + Math.floor(Math.random() * 90 + 10);
+        await src.create('suppliers', payload); toast('供应商已新增：' + payload.name);
+      }
+      return true;
+    }
+  });
+}
+function openSupplierSheet(sid){
+  const st = Store.state;
+  const s = (st.data.suppliers || []).find(x => x.id === sid); if(!s) return;
+  const ps = (st.data.supplierProducts || []).filter(p => p.supplierId === sid)
+    .sort((a, b) => String(b.statusAt || '').localeCompare(String(a.statusAt || '')));
+  const canWrite = st.source && st.source.capabilities.write;
+  sheet(`<div class="hd"><h3>${esc(s.shortName || s.name)}</h3>
+      <span class="tag t-gray">${esc(s.code || '—')}</span>
+      <span class="tag ${s.rating === 'A' ? 't-green' : s.rating === 'B' ? 't-blue' : 't-gray'}">${esc(s.rating || '—')} 级</span>
+      <span class="tag ${String(s.active) === 'false' ? 't-red' : 't-green'}">${String(s.active) === 'false' ? '已停用' : '合作中'}</span>
+      <div class="spacer"></div>
+      <button class="btn sm" id="ssEdit">编辑</button>
+      <button class="btn sm danger" id="ssDel">删除</button>
+      <button class="close" data-close>×</button></div>
+    <div class="bd">
+      <div class="card" style="margin-bottom:14px"><div class="hd"><h3>档案信息</h3></div><div class="bd">
+        <div class="frow">
+          <div class="fld"><label>公司全称</label><input readonly value="${esc(s.name || '')}"></div>
+          <div class="fld"><label>供应商编码</label><input readonly value="${esc(s.code || '—')}"></div></div>
+        <div class="frow">
+          <div class="fld"><label>主营类别</label><input readonly value="${esc(s.category || '—')}"></div>
+          <div class="fld"><label>付款账期</label><input readonly value="${esc(s.settleDays || '—')} 天"></div></div>
+        <div class="frow">
+          <div class="fld"><label>常规交期</label><input readonly value="${esc(s.leadTime || '—')} 天"></div>
+          <div class="fld"><label>联系人</label><input readonly value="${esc(s.contact || '—')}"></div></div>
+        <div class="frow">
+          <div class="fld"><label>联系电话</label><input readonly value="${esc(s.phone || '—')}"></div>
+          <div class="fld"><label>邮箱</label><input readonly value="${esc(s.email || '—')}"></div></div>
+        <div class="fld"><label>地址</label><input readonly value="${esc(s.address || '—')}"></div>
+        <div class="fld"><label>备注</label><textarea readonly rows="2">${esc(s.remark || '')}</textarea></div>
+      </div></div>
+      <div class="card"><div class="hd"><h3>供应商产品</h3><span class="tag t-gray">${ps.length} 个</span>
+        ${canWrite ? '<div class="spacer"></div><button class="btn sm" id="ssAddProd">+ 新增产品</button>' : ''}</div>
+        <div class="bd np"><div class="tw"><table><thead><tr>
+          <th>SKU</th><th>品名</th><th>工厂型号</th><th class="num">价格</th><th class="num">MOQ</th><th>订购状态</th><th>更新时间</th>
+        </tr></thead><tbody>
+          ${ps.length ? ps.map(p => `<tr data-spid="${esc(p.id)}">
+            <td><b>${esc(p.sku || '—')}</b></td><td>${esc(p.name || '—')}</td>
+            <td>${esc(p.factoryModel || '—')}</td>
+            <td class="num">${priceTxt(p.price, p.currency)}</td>
+            <td class="num">${p.moq || '—'}</td>
+            <td>${p.orderStatus ? `<span class="${osTag(p.orderStatus)}">${esc(p.orderStatus)}</span>` : '—'}</td>
+            <td class="muted">${esc(p.statusAt || '—')}</td></tr>`).join('')
+          : '<tr><td colspan="7"><div class="empty">该供应商还没有产品</div></td></tr>'}
+        </tbody></table></div></div></div>
+    </div>`, { wide:true });
+  bindClose();
+  const eb = $('#ssEdit'); if(eb) eb.onclick = () => openSupplierForm(sid);
+  const db = $('#ssDel');  if(db) db.onclick = () => deleteResource('supplier', sid);
+  const ap = $('#ssAddProd'); if(ap) ap.onclick = () => openProductForm(null, 'supp', { supplierId: sid });
+  $$('#sheet [data-spid]').forEach(tr => tr.onclick = () => {
+    closeSheet(); openProductSheet(tr.dataset.spid, 'supp');
+  });
+}
+
+/* ---------- 示例数据（可选，不自动注入）----------
+   空库时给一条「看得懂结构」的样例：3 家供应商 → 6 个供应商产品 → 6 个客户产品（后者挂到现有客户上）。
+   老库升级**不**自动塞数据 —— 真实数据里混进假记录比看到空表更糟。 */
+async function seedProds(){
+  const st = Store.state, src = st.source;
+  if(!src || !src.capabilities.write){ toast('当前数据源只读，无法写入示例数据'); return; }
+  const custs = st.data.customers || [];
+  if(!confirm('将追加 3 家供应商、6 个供应商产品、6 个客户产品'
+    + (custs.length ? '（客户产品挂到现有客户上）' : '（当前没有客户，客户产品将跳过）')
+    + '。\n不会改动任何订单，确认继续？')) return;
+  const t0 = fmt(today());
+  const base = { currency:'CNY', unit:'pcs', active:true, address:'', email:'', remark:'',
+    packMethod:'', packQty:'', packSize:'', packNet:'', packGross:'', packCbm:'', packMaterial:'', packMark:'', packNote:'',
+    images:[], packingFiles:[], createdAt:t0, updatedAt:t0 };
+
+  const supDefs = [
+    ['宁波恒达五金制品有限公司','宁波恒达','五金件','陈工','0574-8812xxxx',30,25,'A'],
+    ['苏州汇彩包装材料有限公司','苏州汇彩','包材','周敏','0512-6677xxxx',45,15,'A'],
+    ['东莞精塑模具有限公司','东莞精塑','塑胶件','李海','0769-2233xxxx',30,30,'B']
+  ];
+  const supIds = [];
+  for(let i = 0; i < supDefs.length; i++){
+    const d = supDefs[i];
+    const row = Object.assign({}, base, {
+      id: uid('S'), code: 'S-' + (8801 + i), name: d[0], shortName: d[1], category: d[2],
+      contact: d[3], phone: d[4], settleDays: d[5], leadTime: d[6], rating: d[7], active: true
+    });
+    await src.create('suppliers', row);
+    supIds.push(row.id);
+  }
+  const spDefs = [
+    [0,'SP-FL50','不锈钢法兰盘 DN50','HD-FL50','NH-FL50-A',18.60,500,'在售','2026-09-12',
+      { packMethod:'PE 袋 + 内盒 + 五层外箱', packQty:'50', packSize:'52×38×32', packGross:'21.5', packCbm:'0.063', packMaterial:'五层瓦楞纸箱', packMark:'正唛：品名 / 型号 / 数量' }],
+    [0,'SP-FL80','碳钢法兰盘 DN80','HD-FL80','',26.40,300,'在售','2026-08-30', {}],
+    [1,'SP-BX5238','五层瓦楞外箱 52×38×32','HC-BX5238','',6.80,200,'在售','2026-09-05',
+      { packMethod:'打包带 2 道 + 缠绕膜', packQty:'20 只/捆' }],
+    [1,'SP-IN2215','彩印内盒 22×15×8','HC-IN2215','NH-BOX-A',1.35,2000,'在售','2026-07-18', {}],
+    [2,'SP-ABS-A','ABS 外壳 A 型','JS-ABS-A','NH-ABS-A',9.90,1000,'打样中','2026-09-25', {}],
+    [2,'SP-OR60','硅胶密封圈 Ø60','JS-OR60','',0.85,5000,'停产','2026-06-10', {}]
+  ];
+  const spIds = [];
+  for(let i = 0; i < spDefs.length; i++){
+    const d = spDefs[i];
+    const row = Object.assign({}, base, {
+      id: uid('SPR'), sku: d[1], name: d[2], factoryModel: d[3], custModel: d[4],
+      supplierId: supIds[d[0]], price: d[5], moq: d[6], orderStatus: d[7], statusAt: d[8]
+    }, d[9] || {});
+    await src.create('supplierProducts', row);
+    spIds.push(row.id);
+  }
+  if(custs.length){
+    const cpDefs = [
+      [0,'CP-FL50-A','法兰盘组件 FL-50','NH-FL50-A','HD-FL50',32.00,500,'在售','2026-09-20',0],
+      [0,'CP-FL80-B','法兰盘组件 FL-80','NH-FL80-B','HD-FL80',45.00,300,'在售','2026-08-30',1],
+      [1,'CP-BOX-A','整机彩箱套装','NH-BOX-A','HC-BX5238',12.50,200,'待定','2026-09-02',2],
+      [1,'CP-ABS-A','ABS 外壳组件','NH-ABS-A','JS-ABS-A',21.00,1000,'打样中','2026-09-26',4],
+      [2,'CP-SEAL-60','密封圈组套','NH-OR60','JS-OR60',2.60,5000,'停产','2026-06-12',5],
+      [0,'CP-ADP-01','转接件 01','NH-ADP-01','',7.80,800,'在售','2026-09-18',-1]
+    ];
+    for(let i = 0; i < cpDefs.length; i++){
+      const d = cpDefs[i];
+      const row = Object.assign({}, base, {
+        id: uid('CPR'), sku: d[1], name: d[2], custModel: d[3], factoryModel: d[4],
+        customerId: (custs[d[0] % custs.length] || {}).id,
+        price: d[5], moq: d[6], orderStatus: d[7], statusAt: d[8],
+        supplierProductId: d[9] >= 0 ? spIds[d[9]] : ''
+      }, i === 0 ? { packMethod:'PE 袋 + 内盒 + 五层外箱', packQty:'50', packSize:'52×38×32',
+        packGross:'21.5', packCbm:'0.063', packMaterial:'五层瓦楞纸箱', packMark:'正唛：品名 / 型号 / 数量' } : {});
+      await src.create('custProducts', row);
+    }
+  }
+  await reload();
+  toast('示例数据已载入：3 家供应商 / 6 个供应商产品 / ' + (custs.length ? '6 个客户产品' : '客户产品已跳过'));
 }
 
 /* ---------- 业务员档案：新增 / 编辑 / 删除 + 业绩汇总 ---------- */
@@ -5066,29 +7183,53 @@ function openShipmentForm(orderId, shipId){
   const o = st.data.orders.find(x => x.id === orderId); if(!o) return;
   const editing = shipId && st.data.shipments.find(s => s.id === shipId);
   const def = editing || {};
+  /* v0.55：分批出货 —— 表单抬头就把「已发多少、还能发多少」摆出来，
+     新增时金额默认 = 剩余未发（而不是整单金额，那是最容易把分批记成整单的坑）。 */
+  const agg = shipAggOf(o), remain = Math.max(0, Number(o.amount || 0) - agg.amount);
+  const hint = `订单金额 ${money(o.amount)} ｜ 已发 ${money(agg.amount)}（${agg.n} 个出货单号）`
+    + ` ｜ 剩余可发 ${money(remain)}`
+    + (agg.nos.length ? `<div style="margin-top:4px" class="muted">已登记单号：${agg.nos.map(n => esc(n)).join('、')}</div>` : '');
   openForm({
     kind:'shipment', orderId, title: editing ? '编辑发货 / 物流' : '登记发货', subtitle: o.orderNo || '',
-    extra: `<div class="hint" style="margin:12px 0 0">订单金额 ${money(o.amount)}</div>`,
-    tip: '发货后请同步关注回款计划是否到期：发货超期仍未收齐会进「预警中心」的严重档。',
+    extra: `<div class="hint" style="margin:12px 0 0">${hint}</div>`,
+    tip: '支持分批出货：每次出货登记一条记录、各自一个出货单号，详情页会显示「已发 / 剩余 / 进度」。发货后请同步关注回款计划是否到期：发货超期仍未收齐会进「预警中心」的严重档。',
     fields: [
-      { key:'shipNo', label:'发货单号', ph:'留空自动生成', rule:'code' },
+      { key:'shipNo', label:'发货单号', ph:'留空自动生成', rule:'code',
+        help:'一票货一个单号；分批出货就分行登记，各单号全局唯一' },
       { key:'shipDate', label:'发货日期', type:'date', required:true },
       { key:'qty', label:'发货数量', type:'number', ph:'件 / 台' },
-      { key:'amount', label:'发货金额', type:'number', required:true, ph:'元' },
+      { key:'amount', label:'发货金额', type:'number', required:true, ph:'元',
+        help:'本批出货对应的货款；新增时默认等于剩余未发金额' },
       { key:'carrier', label:'承运方', type:'select', opts: CARRIERS.map(v => ({ v, t:v })) },
       { key:'logisticsNo', label:'物流单号' },
       { key:'signDate', label:'签收日期', type:'date' }
     ],
     values: { shipNo: def.shipNo || '', shipDate: def.shipDate || fmt(today()), qty: def.qty != null ? def.qty : 1,
-      amount: def.amount != null ? def.amount : o.amount,
+      amount: def.amount != null ? def.amount : remain,
       carrier: CARRIERS.indexOf(def.carrier) >= 0 ? def.carrier : CARRIERS[0],
       logisticsNo: def.logisticsNo || '', signDate: def.signDate || '' },
     onReady: () => wireCarrierManage(),
     onSave: async v => {
-      const shipNo = String(v.shipNo || '').trim() || ('DN-' + fmt(today()).replace(/-/g,'').slice(2) + Math.floor(Math.random()*900+100));
+      /* v0.56 · 自动单号要自己避开已占用的号段：以前生成撞号后直接弹「单号已被占用」，
+         而用户压根没填单号 —— 明明系统自己撞的，却要用户自己想一个。现在循环重生成。 */
+      let shipNo = String(v.shipNo || '').trim();
+      if(!shipNo){
+        const base = 'DN-' + fmt(today()).replace(/-/g,'').slice(2);
+        for(let i = 0; i < 40; i++){
+          const cand = base + String(Math.floor(Math.random()*900+100));
+          if(!shipNoOwner(cand, editing ? editing.id : null)){ shipNo = cand; break; }
+        }
+      }
+      const dup = shipNoOwner(shipNo, editing ? editing.id : null);
+      if(dup){ toast('出货单号已被占用：' + dup.shipNo); return false; }
       const payload = { shipNo, shipDate:v.shipDate, qty:Number(v.qty||0),
         amount: Number(v.amount||0), logisticsNo: String(v.logisticsNo||'').trim(),
         carrier: v.carrier, signDate: v.signDate || '' };
+      /* 累计发货金额（含本次）——超发只确认、不硬拦：改单加量 / 赠品 / 运费都会让金额对不上 */
+      const total = agg.amount - Number((editing && editing.amount) || 0) + payload.amount;
+      const amt0 = Number(o.amount || 0), over = total - amt0;
+      if(over > 0.005 && !window.confirm('累计发货金额将超出订单金额：\n\n累计 ' + money(total)
+        + ' > 订单 ' + money(amt0) + '（超 ' + money(over) + '）\n\n仍然保存吗？')) return false;
       if(editing){ await st.source.update('shipments', editing.id, payload); }
       else { await st.source.create('shipments', Object.assign({ id: uid('S'), orderId, _src:'manual' }, payload)); }
       /* v0.29：登记发货顺手把订单推进到「已发货」，省掉再手动改一次状态。
@@ -5098,7 +7239,9 @@ function openShipmentForm(orderId, shipId){
       if(adv && st.source.capabilities.write)
         await st.source.update('orders', orderId, { status: adv });
       closeSheet(); await reload(); openOrder(orderId);
-      toast(editing ? '发货记录已更新：' + shipNo : '已登记发货：' + shipNo);
+      const tail = over > 0.005 ? '（累计已超订单金额 ' + money(over) + '）'
+        : (total + 0.005 < amt0 ? '（部分发货，剩余未发 ' + money(amt0 - total) + '）' : '（已发完）');
+      toast((editing ? '发货记录已更新：' : '已登记发货：') + shipNo + tail);
       return false;
     }
   });
@@ -5340,7 +7483,7 @@ async function syDropDemoData(){
   if(!src || !src.capabilities.write) return { ok:false, n:0, msg:'当前数据源只读，无法清理' };
   const isDemo = x => !!(x && x._src === 'demo');
   let n = 0;
-  for(const t of ['orders','customers','production','shipments','followups']){
+  for(const t of ['orders','customers','production','shipments','payments','followups']){
     const targets = (st.data[t] || []).filter(isDemo);
     if(!targets.length) continue;
     if(t === 'orders'){ for(const r of targets) for(const a of (r.attachments || [])){ try{ await FileStore.del(a.id); }catch(e){} } }
@@ -6217,8 +8360,8 @@ function viewSync(st){
       <div class="frow">
         <div class="fld full"><label>同步内容</label>
           <div style="display:flex;gap:14px;flex-wrap:wrap;padding-top:4px">
-            ${typeBox('Orders','订单')}${typeBox('Customers','客户')}${typeBox('Owners','业务员')}
-            ${typeBox('Production','排产')}${typeBox('Shipments','发货')}${typeBox('Followups','跟进')}${typeBox('Attachments','附件')}
+    ${typeBox('Orders','订单')}${typeBox('Customers','客户')}${typeBox('Owners','业务员')}
+    ${typeBox('Production','排产')}${typeBox('Shipments','发货')}${typeBox('Payments','回款')}${typeBox('Followups','跟进')}${typeBox('Attachments','附件')}
           </div></div>
       </div>
       <div class="frow">
@@ -6445,16 +8588,23 @@ const FileStore = (() => {
   function readDataURL(file){ return new Promise((res, rej) => {
     const r = new FileReader(); r.onload = () => res(r.result);
     r.onerror = () => rej(new Error('文件读取失败')); r.readAsDataURL(file); }); }
-  function check(file){
+  /* v0.47：allow 是可选的白名单 —— 包装文件要收 Excel / Word / ZIP，
+     但订单附件仍只收 PDF / JPG / PNG。不传 allow 时行为与旧版完全一致。
+     提示文案对 JPEG 去重成 JPG，保持原有「PDF / JPG / PNG」的读法。 */
+  function check(file, allow){
     if(!file) return '未选择文件';
     const ext = String(file.name || '').toLowerCase().split('.').pop();
-    if(!FILE_EXT.includes(ext)) return '格式不支持，仅允许 PDF / JPG / PNG';
+    const ok = (allow && allow.length) ? allow : FILE_EXT;
+    if(!ok.includes(ext)){
+      const label = [...new Set(ok.map(x => String(x).toUpperCase() === 'JPEG' ? 'JPG' : String(x).toUpperCase()))].join(' / ');
+      return '格式不支持，仅允许 ' + label;
+    }
     if(file.size === 0) return '文件内容为空';
     if(file.size > FILE_MAX) return '文件不能超过 10MB（当前 ' + sizeTxt(file.size) + '）';
     return null;
   }
-  async function put(file){
-    const bad = check(file); if(bad) throw new Error(bad);
+  async function put(file, allow){
+    const bad = check(file, allow); if(bad) throw new Error(bad);
     const meta = { id: uid('F'), name: file.name, size: file.size,
       type: file.type || ('.' + String(file.name).toLowerCase().split('.').pop()),
       uploadedAt: new Date().toISOString() };
@@ -6552,6 +8702,125 @@ const RULES = {
     return null;
   }
 };
+/* ==========================================================================
+   v0.55 · 回款流水（一笔到账一条记录）
+   --------------------------------------------------------------------------
+   数据落在 payments 表：{ orderId, payDate, amount, kind, method, ref, note }。
+   ★ 口径优先级：**有回款流水的订单以流水为准**；没有流水的订单退回原来的
+     「订金 + 尾款 + 实收尾款 + 差额结清」四字段口径 —— 历史订单与既有回归断言
+     因此完全不受影响（老数据的数字一个不变）。
+   ★ PAY_AGG 是为了让 receivedOf(o) 这类「只收一个订单对象」的纯函数也能读到流水：
+     按 payments 数组的**引用 + 长度**判断要不要重建，避免每笔订单都重扫一遍。
+   ★ 全部用 function 声明（而非常量箭头函数）：调用方散落在文件各处，
+     函数声明会被提升，不存在「初始化前调用」的时序坑。
+   ========================================================================== */
+const PAY_KINDS   = ['订金','尾款','货款','其他'];
+const PAY_METHODS = ['电汇','银行承兑','商业承兑','现金','支票','信用证','其他'];
+let _payArr = null, _payLen = -1, _payIdx = new Map();
+function payRows(){ const d = Store.state && Store.state.data; return (d && d.payments) || []; }
+function reindexPays(force){
+  const arr = payRows();
+  if(!force && arr === _payArr && arr.length === _payLen) return _payIdx;
+  _payArr = arr; _payLen = arr.length;
+  const m = new Map();
+  arr.forEach(p => {
+    if(!p || !p.orderId) return;
+    let a = m.get(p.orderId);
+    if(!a){ a = { n:0, sum:0, last:'', list:[] }; m.set(p.orderId, a); }
+    a.n++; a.sum += Number(p.amount || 0) || 0;
+    if(p.payDate && String(p.payDate) > a.last) a.last = String(p.payDate);
+    a.list.push(p);
+  });
+  /* 明细按「日期升序 → id」排：同一天登记的多笔顺序稳定，不随写入顺序抖动 */
+  m.forEach(a => a.list.sort((x, y) =>
+    String(x.payDate || '').localeCompare(String(y.payDate || '')) || String(x.id).localeCompare(String(y.id))));
+  _payIdx = m;
+  return m;
+}
+function payAggOf(o){ return (o && o.id != null) ? (reindexPays().get(o.id) || null) : null; }
+function hasPayRows(o){ return !!payAggOf(o); }
+function payListOf(o){ const a = payAggOf(o); return a ? a.list : []; }
+function paySumOf(o){ const a = payAggOf(o); return a ? a.sum : 0; }
+/* 已收占订单金额的比例（0~100，整数）—— 回款弹层与详情的进度条共用一份口径 */
+function payPctOf(o){
+  const amt = Number((o && o.amount) || 0);
+  if(amt <= 0) return isFullyPaid(o) ? 100 : 0;
+  return Math.max(0, Math.min(100, Math.round(paidTotalOf(o) / amt * 100)));
+}
+/* 把「流水列表」折算成订单上的镜像字段（订金付款日 / 尾款付款日 / 实收尾款）。
+   镜像只为兼容思源推送、CSV 导出与老的「订金未付」筛选 —— 数学口径一律以流水为准。
+   一笔都没有时返回空值组（删除最后一笔 → 该单回到「未收」）。 */
+function legacyPatchOf(list){
+  const sum = a => a.reduce((s, p) => s + (Number(p.amount) || 0), 0);
+  const rows = list || [];
+  if(!rows.length) return { depositPaidDate:'', balancePaidDate:'', balanceReceived:0 };
+  const dep = rows.filter(p => p.kind === '订金' && p.payDate);
+  const bal = rows.filter(p => p.kind === '尾款' && p.payDate);
+  const dates = rows.map(p => p.payDate).filter(Boolean).sort();
+  const depDate = dep.length ? dep.map(p => p.payDate).sort()[0] : '';
+  /* 没有尾款笔时，把「最后一笔到账日」当尾款日、全部流水之和当实收 ——
+     免得只登记了一笔「货款」的单在思源那边看起来像一分没收。 */
+  const balDate = bal.length ? bal.map(p => p.payDate).sort().pop() : (dates[dates.length - 1] || '');
+  return {
+    depositPaidDate: depDate,
+    balancePaidDate: balDate,
+    balanceReceived: bal.length ? sum(bal) : sum(rows)
+  };
+}
+/* 把老口径（订金 / 尾款付款日）补成两笔流水 —— 只在「该单还没有任何流水」时执行。
+   不补的话，第一次登记第三笔时口径会从「流水合计」重算，已收的订金尾款凭空消失。 */
+async function ensureLegacyPays(o){
+  const st = Store.state, src = st.source;
+  if(!o || !src || !src.capabilities || !src.capabilities.write) return 0;
+  if(payListOf(o).length) return 0;
+  const rows = [];
+  const dep = Number(o.depositAmount || 0);
+  if(dep > 0 && o.depositPaidDate)
+    rows.push({ id:uid('PM'), orderId:o.id, payDate:o.depositPaidDate, amount:dep, kind:'订金',
+      method:'', ref:'', note:'由原「订金付款日」自动补录', _src:'migrate' });
+  const bal = balanceOf(o);
+  if(o.balancePaidDate && bal > 0)
+    rows.push({ id:uid('PM'), orderId:o.id, payDate:o.balancePaidDate, amount:balReceivedOf(o), kind:'尾款',
+      method:'', ref:'', note:'由原「尾款付款日」自动补录', _src:'migrate' });
+  for(const r of rows) await src.create('payments', r);
+  if(rows.length){ await reload(); reindexPays(true); }
+  return rows.length;
+}
+/* 回款流水变更后：把镜像字段写回订单（流水为空则清空镜像，回到未收） */
+async function syncLegacyFromPays(orderId){
+  const st = Store.state, src = st.source;
+  const o = (st.data.orders || []).find(x => x.id === orderId); if(!o) return;
+  const list = (st.data.payments || []).filter(p => p.orderId === orderId);
+  const patch = legacyPatchOf(list);
+  if(list.length === 0) patch.balanceSettled = false;
+  await src.update('orders', orderId, patch);
+  await reload();
+}
+/* 登记一笔回款：先补老口径 → 落流水 → 回写镜像。返回新建的流水行。 */
+async function addPayment(orderId, v){
+  const st = Store.state, src = st.source;
+  const o = (st.data.orders || []).find(x => x.id === orderId); if(!o) return null;
+  await ensureLegacyPays(o);
+  const row = { id:uid('PM'), orderId,
+    payDate: v.payDate || fmt(today()),
+    amount: Number(v.amount || 0) || 0,
+    kind: PAY_KINDS.indexOf(v.kind) >= 0 ? v.kind : '货款',
+    method: String(v.method || ''), ref: String(v.ref || '').trim(),
+    note: String(v.note || '').trim(), _src:'manual' };
+  await src.create('payments', row);
+  await reload();
+  await syncLegacyFromPays(orderId);
+  reindexPays(true);
+  return row;
+}
+async function deletePayment(orderId, payId){
+  const st = Store.state, src = st.source;
+  await src.remove('payments', payId);
+  await reload();
+  await syncLegacyFromPays(orderId);
+  reindexPays(true);
+}
+
 /* 订金 / 尾款派生：唯一计算入口，页面与保存逻辑都走它，避免两处口径不一致 */
 const balanceOf = o => Math.max(0, Number((o && o.amount) || 0) - Number((o && o.depositAmount) || 0));
 /* 尾款实收到账金额：记录「实收尾款金额」则按实收计，否则按合同尾款（未登记手续费时退化为合同额） */
@@ -6561,16 +8830,15 @@ const balReceivedOf = o => {
 };
 /* 尾差已结清（手续费 / 折让 / 尾差已确认，不再追收） */
 const isBalSettled = o => !!(o && o.balanceSettled);
-/* 订单级回款统计算子（重构后收款数据落在订单字段，取代原 payments 多期表）。
-   规则（主流回款逻辑）：订金 + 尾款，各自登记「付款日期」；订金为 0 时视为已收，不强制登记。
-   尾款阶段若被扣手续费，可登记「实收尾款金额」与「差额已结清」：差额结清后不再计入未收（详见下方实收/核销拆分）。 */
 /* ---- v0.10：销售额 / 实收额 分离 ----
    实收额(receivedOf) = 真实到账的钱，绝不含任何核销；
    核销额(writeOffOf) = 手续费 / 尾差，勾选「差额已结清」后不再追收，但不算真金白银到账；
    已回款(paidTotalOf) = 实收 + 核销，仅用于「未收多少」「是否已收齐」判断。
-   这样「货款 10125、实收 10115」时，实收额显示 10115，而不是 10125。 */
+   这样「货款 10125、实收 10115」时，实收额显示 10115，而不是 10125。
+   ★ v0.55：有回款流水的单 → 实收 = 流水合计；无流水 → 沿用下面的四字段口径。 */
 const depReceivedOf = o => Number((o && o.depositAmount) || 0);
 const receivedOf = o => {
+  if(hasPayRows(o)) return paySumOf(o);
   const dep = depReceivedOf(o);
   let s = 0;
   if(dep === 0 || (o && o.depositPaidDate)) s += dep;   // 订金为 0 → 视为已收（无需登记）
@@ -6578,19 +8846,28 @@ const receivedOf = o => {
   return s;
 };
 const writeOffOf = o => {
-  if(!o || !o.balancePaidDate || !isBalSettled(o)) return 0;
+  if(!o) return 0;
+  if(hasPayRows(o)) return isBalSettled(o) ? Math.max(0, Number(o.amount || 0) - paySumOf(o)) : 0;
+  if(!o.balancePaidDate || !isBalSettled(o)) return 0;
   return Math.max(0, balanceOf(o) - balReceivedOf(o));
 };
 const paidTotalOf = o => receivedOf(o) + writeOffOf(o);
 const unpaidOf = o => Math.max(0, Number((o && o.amount) || 0) - paidTotalOf(o));
 const isFullyPaid = o => {
+  const amt = Number((o && o.amount) || 0);
+  if(hasPayRows(o)) return paidTotalOf(o) >= amt - 0.005;
   const dep = Number((o && o.depositAmount) || 0);
   const depOk = (dep === 0 || (o && o.depositPaidDate));
   if(!depOk || !(o && o.balancePaidDate)) return false;
   return balReceivedOf(o) >= balanceOf(o) || isBalSettled(o);
 };
-/* 按「回款实收日」归集区间内的已收金额（用于看板按回款日筛选） */
+/* 按「回款实收日」归集区间内的已收金额（用于看板按回款日筛选）
+   v0.55：有流水的单逐笔归集（可能跨多个月），无流水的单仍按订金 / 尾款两个日期。 */
 const orderPaidInRange = (o, from, to) => {
+  if(hasPayRows(o)){
+    return payListOf(o).filter(p => p.payDate && p.payDate >= from && p.payDate <= to)
+      .reduce((s, p) => s + (Number(p.amount) || 0), 0);
+  }
   const dep = Number((o && o.depositAmount) || 0);
   let s = 0; const inR = d => d && d >= from && d <= to;
   if(dep > 0 && inR(o && o.depositPaidDate)) s += dep;
@@ -6611,8 +8888,10 @@ function computeInsertSortKey(st, pos){
 }
 const isRequired = (f, vals) => f.required || (typeof f.requiredWhen === 'function' && f.requiredWhen(vals));
 const isVisible  = (f, vals) => !f.showWhen || f.showWhen(vals);
-function buildOrderFields(st){
-  return [
+/* 老口径的四个回款字段：只在「该单还没有任何回款流水」时才有意义（见 buildOrderFields） */
+const LEGACY_PAY_KEYS = ['depositPaidDate','balancePaidDate','balanceReceived','balanceSettled'];
+function buildOrderFields(st, orderId){
+  const fields = [
     { type:'group', label:'基本信息' },
     { key:'customerId', label:'客户', type:'select', required:true,
       opts: (() => {
@@ -6670,6 +8949,18 @@ function buildOrderFields(st){
     { type:'group', label:'其他' },
     { key:'remark', label:'备注', type:'textarea', required:false, full:true }
   ];
+  /* v0.56 · 已经开始用「回款流水」记账的单，订金/尾款付款日这四个老字段就成了摆设：
+     口径以流水为准，改它们不影响已收；可「差额已结清」偏偏仍会改变未收 ——
+     同一组控件一半生效一半不生效，比不提供更糟。这里整组收起，只留一句指引。 */
+  if(orderId && hasPayRows({ id: orderId })){
+    const n = payListOf({ id: orderId }).length;
+    return fields
+      .filter(f => LEGACY_PAY_KEYS.indexOf(f.key) < 0)
+      .map(f => (f.type === 'group' && /^回款登记/.test(f.label))
+        ? { type:'group', label:'回款登记（本单已有 ' + n + ' 笔流水 · 请到「回款」页逐笔登记）' }
+        : f);
+  }
+  return fields;
 }
 function validateForm(fields, vals){
   const errs = {};
@@ -6698,6 +8989,9 @@ function fieldHTML(f, vals, errs){
   if(f.type === 'file') return fileFieldHTML(f, vals, err, req, hint, hide);
   if(f.type === 'files') return filesFieldHTML(f, vals, err, req, hint, hide);
   if(f.type === 'moNos') return moNosFieldHTML(f, vals, err, req, hint, hide, ih);
+  /* v0.47 · 自定义块：产品图网格 / 包装文件列表这类非标准控件由字段自带的 render 出 HTML，
+     事件由自带 bind 在 drawForm 末尾统一绑定（见 drawForm 里对 type==='custom' 的遍历）。 */
+  if(f.type === 'custom') return `<div class="fld full" data-fld="${f.key}">${typeof f.render === 'function' ? f.render(vals, errs) : ''}</div>`;
   const cls = 'fld' + (f.full ? ' full' : '') + (err ? ' err' : '') + hide;
   const wrap = inner => `<div class="${cls}" data-fld="${f.key}">${inner}</div>`;
   let ctrl;
@@ -6872,13 +9166,12 @@ function openForm(cfg){
   };
   sheet(`<div class="hd"><h3>${esc(cfg.title)}</h3>${cfg.tip ? infoI(cfg.tip) : ''}
       ${cfg.subtitle ? `<span class="tag t-gray">${esc(cfg.subtitle)}</span>` : ''}
-      <div class="spacer"></div><button class="close" data-close>×</button></div>
+      <div class="spacer"></div>
+      <button class="btn sm primary" id="formSave">保存</button>
+      <button class="btn sm" data-close>取消</button>
+      <button class="close" data-close>×</button></div>
     <div class="bd"><div id="formBody"></div>
-      ${cfg.extra || ''}
-      <div style="display:flex;gap:8px;margin-top:14px">
-        <button class="btn primary" id="formSave">保存</button>
-        <button class="btn" data-close>取消</button>
-      </div></div>`);
+      ${cfg.extra || ''}</div>`);
   drawForm();
   $('#formSave').onclick = saveOrderForm;
   const gp = $('#genPay'); if(gp) gp.onchange = e => { FORM.genPay = e.target.checked; };
@@ -6990,18 +9283,32 @@ function openOwnerForm(id){
   });
 }
 /* 删除档案：带引用完整性检查（有订单不允许删，避免脏数据） */
+/* v0.47：kind 扩展到 supplier —— 供应商档案与客户 / 业务员走同一条删除保护链路。
+   引用保护分两层：订单（refCounts）+ 产品（客户产品 / 供应商产品）。
+   产品还在的档案不允许删，否则产品会变成挂不到人的孤儿记录。 */
+const DEL_RES = { customer:'customers', owner:'owners', supplier:'suppliers' };
+const DEL_LABEL = { customer:'客户', owner:'业务员', supplier:'供应商' };
 async function deleteResource(kind, id){
   const st = Store.state;
   if(!st.source || !st.source.capabilities.write){ toast('当前数据源只读，无法删除（请切到本地录入）'); return; }
-  const res = kind === 'customer' ? 'customers' : 'owners';
-  const r = st.data[res].find(x => x.id === id); if(!r) return;
+  const res = DEL_RES[kind]; if(!res) return;
+  const r = (st.data[res] || []).find(x => x.id === id); if(!r) return;
+  const LAB = DEL_LABEL[kind] || '记录';
   const n = refCounts(st, kind, id);
   const nm = kind === 'customer' ? (r.shortName || r.name) : r.name;
+  const nProd = kind === 'customer'  ? (st.data.custProducts || []).filter(p => p.customerId === id).length
+              : kind === 'supplier' ? (st.data.supplierProducts || []).filter(p => p.supplierId === id).length
+              : 0;
   if(n > 0){
-    toast((kind === 'customer' ? '客户 ' : '业务员 ') + nm + ' 已关联 ' + n + ' 笔订单，不能删除。请先变更这些订单的归属，或停用该档案。');
+    toast(LAB + ' ' + nm + ' 已关联 ' + n + ' 笔订单，不能删除。请先变更这些订单的归属，或停用该档案。');
     return;
   }
-  if(!confirm('确定删除' + (kind === 'customer' ? '客户「' : '业务员「') + nm + '」？\n该档案无关联订单，删除后会移入「回收站」，可在「数据历史」页还原。')) return;
+  if(nProd > 0){
+    toast(LAB + ' ' + nm + ' 下还有 ' + nProd + ' 个' + (kind === 'customer' ? '客户产品' : '供应商产品')
+      + '，不能删除。请先移除这些产品，或停用该档案。');
+    return;
+  }
+  if(!confirm('确定删除' + LAB + '「' + nm + '」？\n该档案无关联订单与产品，删除后会移入「回收站」，可在「数据历史」页还原。')) return;
   await st.source.remove(res, id);
   if(kind === 'owner')    st.filters.ownerId    = selList(st.filters.ownerId).filter(x => x !== id);
   if(kind === 'customer') st.filters.customerId = selList(st.filters.customerId).filter(x => x !== id);
@@ -7036,7 +9343,7 @@ function openOrderForm(id){
   };
   openForm({
     kind:'order', id, title: id ? '编辑订单' : '新增订单', subtitle: (o && o.orderNo) || '',
-    fields: buildOrderFields(st), values, stack: true,
+    fields: buildOrderFields(st, id), values, stack: true,
     extra: `<div id="planBar"></div>
       `,
     tip: id ? '保存后更新订单信息与回款登记。' : '',
@@ -7049,6 +9356,20 @@ function syncPlanBar(f){
   const v = f.values, amt = Number(v.amount || 0);
   const dep = Number(v.depositAmount || 0), bal = Math.max(0, amt - dep);
   const rate = amt ? (dep / amt * 100).toFixed(1) : '0.0';
+  /* v0.56 · 已用流水记账的单，预览条也换成流水口径 —— 否则表单里显示「订金未付 / 尾款未付」，
+     而回款页明明已经收到钱了，两处对不上。 */
+  if(f.id && hasPayRows({ id: f.id })){
+    const rows = payListOf({ id: f.id });
+    const recv = paySumOf({ id: f.id }), un = Math.max(0, amt - recv);
+    box.innerHTML = `<div class="planbar">
+        <span class="it">订单金额 <b>${money(amt)}</b></span>
+        <span class="it">订金条款 <b class="green">${money(dep)}</b>（${rate}%）</span>
+        <span class="it">已收 <b class="green">${money(recv)}</b>　<span class="muted">${rows.length} 笔流水</span></span>
+        <span class="it">未收 <b class="${un ? 'red' : ''}">${money(un)}</b></span>
+        <span class="muted" style="font-size:11.5px">　回款请到「回款」页逐笔登记</span>
+      </div>`;
+    return;
+  }
   const depPaid = v.depositPaidDate ? `已付 ${v.depositPaidDate}` : '未付';
   const balPaid = v.balancePaidDate ? `已付 ${v.balancePaidDate}` : '未付';
   const got = v.balancePaidDate ? (Number(v.balanceReceived || 0) || 0) : 0;
@@ -7094,6 +9415,10 @@ function drawForm(){
   });
   bindFileField();
   bindMoField();       /* v0.43：排产单号 chips（值以「、」拼接的字符串存放） */
+  /* v0.47：自定义块的事件按字段回绑 —— drawForm 会重建 DOM，不重绑就变成死块 */
+  (f.fields || []).forEach(x => {
+    if(x.type === 'custom' && typeof x.bind === 'function'){ try{ x.bind(f); }catch(e){} }
+  });
   if(typeof f.onRedraw === 'function') f.onRedraw(f);
 }
 /* 输入过程中的局部刷新：只更新「显隐 / 必填星号 / 错误提示 / 派生值 / 预览条」。
@@ -7197,12 +9522,17 @@ async function saveOrderForm(){
     paymentTerm: v.paymentTerm, tradeTerm: v.tradeTerm,
     attachments: Array.isArray(v.attachments) ? v.attachments.filter(a => a && a.id) : [],
     remark: String(v.remark || '').trim(),
-    depositAmount: dep,
-    depositPaidDate: dep > 0 ? (v.depositPaidDate || '') : '',
-    balancePaidDate: v.balancePaidDate || '',
-    balanceReceived: v.balancePaidDate ? (Number(v.balanceReceived || 0) || 0) : 0,
-    balanceSettled: !!(v.balancePaidDate && v.balanceSettled)
+    depositAmount: dep
   };
+  /* v0.56 · 已经开始用流水记账的单，表单里没有这四个老字段（buildOrderFields 收起来了）。
+     ★ 绝不能因为「表单里没有」就写成空值：那会把镜像付款日抹掉、把「差额已结清」重置成
+       未结清，未收金额凭空跳高。这类单回款一律以流水为准，这里直接不碰这些键。 */
+  if(!(f.id && hasPayRows({ id: f.id }))){
+    payload.depositPaidDate = dep > 0 ? (v.depositPaidDate || '') : '';
+    payload.balancePaidDate = v.balancePaidDate || '';
+    payload.balanceReceived = v.balancePaidDate ? (Number(v.balanceReceived || 0) || 0) : 0;
+    payload.balanceSettled  = !!(v.balancePaidDate && v.balanceSettled);
+  }
   /* v0.43 · 排产单号：唯一可编辑来源是 production 表，payload 不再直写 moNo。
      先按 chips 的差异算出「新增 / 移除」计划（含全局唯一校验、有进度移除的确认），
      **校验不通过时订单一个字段都不动**；通过后才写订单、落排产记录，
@@ -7270,6 +9600,9 @@ function openOrder(id){
   const ps  = orderProds(st, o.id);
   const mos = orderMoNos(st, o.id);   /* v0.43：排产单号由排产记录派生（唯一来源） */
   const ss = st.data.shipments.filter(s => s.orderId === o.id);
+  const pays = payListOf(o);                 /* v0.55：回款流水（可能多笔、跨月） */
+  const shipA = shipAggOf(o);                /* v0.55：分批出货的累计口径 */
+  const shipPct = shipPctOf(o), shipOver = shipOverOf(o), shipPartial = shipPartialOf(o);
   const fs = st.data.followups.filter(f => f.orderId === o.id).sort((a,b) => (b.date||'').localeCompare(a.date||''));
   const recv = receivedOf(o);   /* 实收：真实到账，绝不含核销（v0.10 口径） */
   const wo   = writeOffOf(o);   /* 手续费 / 尾差核销（勾选「差额已结清」才计） */
@@ -7298,12 +9631,13 @@ function openOrder(id){
   const grp  = (title, rows) => '<section class="pp-grp"><div class="pp-gt">' + title + '</div>' + rows + '</section>';
 
   /* v0.29 起「关键信息 + 常用操作提到详情顶部一条」，v0.35 沿用 .odetop 承载：
-     左侧 3 格关键信息（合同交期 / 未收 / 排产），右侧 4 个常用入口。 */
+     左侧 4 格关键信息（合同交期 / 未收 / 排产 / 发货），右侧 4 个常用入口。 */
   const kpi = (label, val, cls) => '<span class="k"><em>' + label + '</em><b class="' + (cls || '') + '">' + val + '</b></span>';
   const basicBar = '<div class="odetop">'
       + kpi('合同交期', o.contractDelivery || '—')
       + kpi('未收', money(un), un > 0 ? 'bad' : '')
       + kpi('排产', (ps.length || 0) + ' 条')
+      + kpi('发货', shipA.n ? (shipA.n + ' 单 · ' + shipPct + '%') : '未发', shipOver > 0.005 ? 'bad' : '')
       + '<span class="spacer"></span>'
       + (canEdit ? '<button class="btn sm" id="dEdit">编辑</button>'
         + '<button class="btn sm" id="dProdBtn">+ 新增排产</button>'
@@ -7357,12 +9691,42 @@ function openOrder(id){
         + '</div><div class="s">' + esc(s.carrier || '-') + ' ｜ 单号 ' + esc(s.logisticsNo || '-') + ' ｜ ' + (s.qty || 0) + ' 件 ｜ ' + money(s.amount) + '</div></div>').join('')
     : '<div class="empty">暂无发货记录</div>';
 
+  /* v0.55 · 分批出货汇总：已发 / 剩余 / 超发 + 进度条，多个出货单号一目了然 */
+  const shipSum = shipA.n ? '<div class="shipsum' + (shipOver > 0.005 ? ' over' : '') + '">'
+      + '<span>已发 <b>' + money(shipA.amount) + '</b> / 订单 <b>' + money(o.amount) + '</b></span>'
+      + '<span>出货单号 <b>' + shipA.n + '</b> 个</span>'
+      + '<span>' + (shipOver > 0.005 ? '超发 <b>' + money(shipOver) + '</b>'
+          : shipPartial ? '剩余未发 <b>' + money(Number(o.amount || 0) - shipA.amount) + '</b>' : '<b>已发完</b>') + '</span>'
+      + '<span class="pbar" title="已发 ' + shipPct + '%"><i class="'
+        + (shipOver > 0.005 ? 'bad' : (shipPct >= 100 ? 'good' : '')) + '" style="width:' + Math.min(100, shipPct) + '%"></i></span>'
+      + '</div>' : '';
+
+  /* v0.55 · 回款流水：一笔到账一行，支持分次回款（每行可单独删除） */
+  const payPct = payPctOf(o);
+  const PAY_KIND_CLS = { '订金':'t-blue', '尾款':'t-teal', '货款':'t-gray', '其他':'t-gray' };
+  const payRows = pays.length ? pays.map(p => '<div class="pp-rec"><div class="t">'
+        + '<b>' + esc(p.payDate || '-') + '</b>'
+        + '<span class="tag ' + (PAY_KIND_CLS[p.kind] || 't-gray') + '" style="font-size:10.5px">' + esc(p.kind || '货款') + '</span>'
+        + '<b class="green">' + money(p.amount) + '</b><span style="flex:1"></span>'
+        + (canEdit ? '<button class="btn xs del" data-payrow="' + esc(p.id) + '">删除</button>' : '')
+        + '</div><div class="s">' + esc(p.method || '未填方式')
+        + (p.ref ? ' ｜ 流水号 ' + esc(p.ref) : '') + (p.note ? ' ｜ ' + esc(p.note) : '') + '</div></div>').join('')
+    : '<div class="empty">' + (canEdit ? '还没有回款记录 —— 点上方「＋ 登记回款」逐笔登记，支持分次回款' : '暂无回款记录') + '</div>';
+  const payHead = '<div class="payhd" style="margin-bottom:8px">'
+      + '<span class="pk"><em>回款率</em><b>' + payPct + '%</b></span>'
+      + '<span class="pk"><em>笔数</em><b>' + pays.length + '</b></span>'
+      + '<span class="pbar" style="flex:1;min-width:90px"><i class="' + (payPct >= 100 ? 'good' : '') + '" style="width:' + payPct + '%"></i></span>'
+      + (canEdit ? '<button class="btn xs" id="dPayBtn">＋ 登记回款</button>' : '')
+      + '</div>';
+
   const fwRows = fs.length ? fs.map(f => '<div class="pp-rec"><div class="s">' + f.date + ' · ' + esc(f.channel || '') + '</div>'
         + '<div style="font-size:13px">' + esc(f.content || '') + '</div>'
         + (f.nextAction ? '<div class="s" style="color:var(--primary-600)">下一步：' + esc(f.nextAction) + (f.nextDate ? '（' + f.nextDate + '）' : '') + '</div>' : '') + '</div>').join('')
     : '<div class="empty">暂无跟进记录</div>';
 
   sheet('<div class="hd"><h3>' + esc(o.orderNo) + '</h3><span class="' + stTag(o.status) + '">' + String(o.status).slice(3) + '</span>'
+      + (shipPartial ? '<span class="tag t-amber" title="已发 ' + money(shipA.amount) + '，还剩 ' + money(Number(o.amount||0) - shipA.amount) + ' 未发">部分发货</span>' : '')
+      + (shipOver > 0.005 ? '<span class="tag solid-red" title="累计已发超过订单金额 ' + money(shipOver) + '">超发</span>' : '')
       + '<span class="muted" style="font-size:11.5px">' + esc(c.name || '') + '</span><div class="spacer"></div>'
       + '<select id="dStatus" style="border:1px solid var(--line);border-radius:7px;padding:3px 7px;font-size:12.5px">'
       + STATUS.map(s => '<option' + (o.status === s ? ' selected' : '') + '>' + String(s).slice(3) + '</option>').join('') + '</select>'
@@ -7373,9 +9737,10 @@ function openOrder(id){
       + '<div class="pp">'
         + grp('订单信息', infoRows)
         + grp('金额与回款', moneyRows)
+        + grp('回款流水（' + pays.length + ' 笔 · 支持分次回款）', payHead + payRows)
         + grp('贸易与条款', tradeRows)
         + grp('排产', prodRows)
-        + grp('发货与物流', shipRows)
+        + grp('发货与物流' + (shipA.n > 1 ? '（' + shipA.n + ' 个出货单号）' : ''), shipSum + shipRows)
         + grp('跟进记录', fwRows)
         + grp('附件', '<div id="attViewBox">' + attachmentsViewHTML(o) + '</div>')
       + '</div>'
@@ -7402,6 +9767,17 @@ function openOrder(id){
   const eb = $('#dEdit'); if(eb) eb.onclick = () => openOrderForm(id);
   const shb = $('#dShipBtn'); if(shb) shb.onclick = () => openShipmentForm(id);
   const fwb = $('#dFwBtn'); if(fwb) fwb.onclick = () => openFollowupForm(id);
+  /* v0.55：详情里的「登记回款」→ 流水弹层；关掉弹层回到详情（不打断阅读上下文） */
+  const payb = $('#dPayBtn'); if(payb) payb.onclick = () => openPaySheet(id, { back: () => openOrder(id) });
+  $$('#sheet [data-payrow]').forEach(b => b.onclick = async () => {
+    const pid = b.dataset.payrow;
+    const p = payListOf(o).find(x => x.id === pid); if(!p) return;
+    if(!window.confirm('删除这笔回款？\n\n' + (p.payDate || '-') + ' ｜ ' + money(p.amount) + (p.kind ? ' ｜ ' + p.kind : '')
+      + '\n\n会移入「回收站」，可在「数据历史」页还原；该单的已收金额同步减少。')) return;
+    await deletePayment(id, pid);
+    toast('已删除该笔回款');
+    openOrder(id);
+  });
   const pdb = $('#dProdBtn'); if(pdb) pdb.onclick = () => openProdForm(id);
   $$('#sheet [data-ship]').forEach(b => b.onclick = () => {
     if(b.dataset.act === 'edit') openShipmentForm(id, b.dataset.ship);
@@ -7438,11 +9814,11 @@ async function deleteOrder(id){
   const st = Store.state;
   const o = st.data.orders.find(x => x.id === id); if(!o) return;
   if(!st.source.capabilities.write){ toast('当前数据源只读，无法删除（请切到本地录入）'); return; }
-  if(!confirm('确定删除订单 ' + o.orderNo + '？\n\n其排产 / 发货 / 跟进记录会一并移入「回收站」，可在「数据历史」页整组还原。\n附件文件会保留，直到你在回收站里彻底删除。')) return;
+  if(!confirm('确定删除订单 ' + o.orderNo + '？\n\n其排产 / 发货 / 回款流水 / 跟进记录会一并移入「回收站」，可在「数据历史」页整组还原。\n附件文件会保留，直到你在回收站里彻底删除。')) return;
   const src = st.source;
   /* v0.20：不再物理删除，整组移入回收站 —— 误删可救，这是本次改动的主要目的 */
   const items = [{ res:'orders', row:o }];
-  for(const res of ['production','shipments','followups']){
+  for(const res of ['production','shipments','payments','followups']){
     st.data[res].filter(x => x.orderId === id).forEach(r => items.push({ res, row:r }));
   }
   if(typeof src.removeGroup === 'function') await src.removeGroup(items, '订单 ' + o.orderNo);
@@ -8215,6 +10591,121 @@ function applyVersion(){
 }
 
 /* ==========================================================================
+   v0.54 · 工作台重命名
+   --------------------------------------------------------------------------
+   只改「显示名」：侧栏标题 / 浏览器标签页 / 桌面通知标题 / 思源库说明全引用 APP_NAME，
+   改完调一次 applyVersion() 就同步。**技术标识一律不动** —— CFG_EXPORT_FORMAT、
+   IndexedDB 库名、ot.* 键名、文件盐值都与名字无关，所以改名不会让已有数据找不到。
+   ========================================================================== */
+function appRename(raw, opt){
+  const o = opt || {};
+  const name = nameClean(raw) || APP_NAME_DEFAULT;
+  APP_NAME = name;
+  try{ localStorage.setItem(APP_NAME_KEY, name); }catch(e){}
+  applyVersion();
+  if(!o.silent) toast('工作台已重命名为「' + name + '」');
+  return name;
+}
+function appRenameReset(opt){
+  try{ localStorage.removeItem(APP_NAME_KEY); }catch(e){}
+  APP_NAME = APP_NAME_DEFAULT;
+  applyVersion();
+  if(!(opt || {}).silent) toast('已恢复默认名称「' + APP_NAME_DEFAULT + '」');
+  return APP_NAME;
+}
+function openRenameSheet(){
+  openForm({
+    kind: 'appname', id: null, title: '重命名工作台',
+    tip: '只改界面上的名字：<b>侧栏标题、浏览器标签页、桌面通知标题</b>都会跟着变。'
+      + '数据、导出文件格式、本地存储键名<b>完全不受影响</b>，改名不会让已有订单 / 产品对不上。',
+    fields: [
+      /* ★ 不做 required：留空保存就是要「回默认」。
+         而且 required 会先被 validateForm 拦下 —— 用户按提示清空反而报错，说不通。 */
+      { key:'name', label:'工作台名称', ph:'例如：亿达订单台 / Yoneka 工作室',
+        help:'最长 ' + APP_NAME_MAX + ' 字；留空保存即恢复默认「' + APP_NAME_DEFAULT + '」' }
+    ],
+    values: { name: APP_NAME },
+    extra: `<div style="display:flex;gap:8px;margin-top:4px">
+        <button class="btn sm" type="button" id="renReset">恢复默认名称</button>
+        <span class="muted" style="font-size:11.5px;line-height:2">清掉自定义名，回到「${esc(APP_NAME_DEFAULT)}」</span>
+      </div>`,
+    /* 留空 = 主动要默认名：走 reset（删存储键）而不是把默认名再写一遍，
+       这样以后出厂默认名若有调整，这类用户还能跟着变。 */
+    onSave: async v => {
+      const raw = nameClean(v.name);
+      if(!raw) appRenameReset(); else appRename(raw);
+      return true;
+    }
+  });
+  /* 「恢复默认」走独立的复位按钮，两条路都通：清空保存 / 一键恢复 */
+  const rb = $('#renReset');
+  if(rb) rb.onclick = () => { appRenameReset(); closeSheet(); };
+}
+/* 侧栏铅笔 + 双击标题，两个入口都走同一个弹层 */
+function bindRename(){
+  const ren = $('#btnRename');
+  if(ren) ren.onclick = e => { e.preventDefault(); openRenameSheet(); };
+  const t = $('#sidebar .sb-logo .t');
+  if(t){
+    t.setAttribute('data-ren', '1');
+    t.ondblclick = () => openRenameSheet();
+    /* 双击在触屏不灵，长按 600ms 也给一个入口 */
+    let lp = null;
+    t.addEventListener('pointerdown', () => { lp = setTimeout(openRenameSheet, 600); });
+    ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev =>
+      t.addEventListener(ev, () => { if(lp){ clearTimeout(lp); lp = null; } }));
+  }
+}
+
+/* ==========================================================================
+   v0.54 · 顶栏当日日期（星期）
+   --------------------------------------------------------------------------
+   ★ 用本地时区取日期（new Date()），不走 UTC —— 否则东八区早上 8 点前会显示前一天。
+   ★ 每 30 秒只比一次日期串，跨零点才重写 DOM；页面从后台回来（睡眠过夜）时补一次。
+   ========================================================================== */
+const DOW_CN = ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'];
+function todayParts(d){
+  const t = d || new Date();
+  const y = t.getFullYear(), m = t.getMonth() + 1, dd = t.getDate(), w = t.getDay();
+  const p2 = n => String(n).padStart(2, '0');
+  const dowShort = '周' + DOW_CN[w].slice(2);       /* 星期三 → 周三 */
+  return {
+    y, m, d: dd, w, dow: DOW_CN[w], dowShort,
+    iso: y + '-' + p2(m) + '-' + p2(dd),
+    long:  y + '年' + m + '月' + dd + '日 ' + DOW_CN[w],
+    short: p2(m) + '-' + p2(dd) + ' ' + dowShort,
+    weekend: w === 0 || w === 6
+  };
+}
+let _todayKey = '';
+function applyToday(force){
+  const p = todayParts();
+  if(!force && p.iso === _todayKey) return p;     /* 同一天：不碰 DOM */
+  _todayKey = p.iso;
+  const l = $('#todayLong'), s = $('#todayShort'), m = $('#todayMin'), chip = $('#todayChip');
+  if(l) l.textContent = p.long;
+  if(s) s.textContent = p.short;
+  if(m) m.textContent = p.dowShort;      /* ≤600px 只留「周二」：再宽一点会把页面标题挤成一个字 */
+  if(chip){
+    chip.title = p.long;
+    chip.setAttribute('data-iso', p.iso);
+    chip.classList.toggle('today-red', p.weekend);   /* 周末把「星期几」标红 */
+  }
+  return p;
+}
+function bindToday(){
+  applyToday(true);
+  /* ★ 刻意**不用 setInterval 轮询**：长驻定时器会让 jsdom 回归的 node 进程永不退出
+     （全部 50+ 个套件都会在跑到最后一行后挂死，只能 kill）。改成事件驱动：
+     用户任何操作 / 切回标签页 / 从后台恢复时校准一次；applyToday 内部有「同一天直接
+     return」的短路，命中时只花一次 new Date()，点击与滚动都感知不到。
+     长时间静止跨零点的情况由 render() 里的同一次调用兜住（任何重渲染都会校准）。 */
+  const kick = () => applyToday(false);
+  ['pointerdown', 'keydown', 'wheel', 'focus', 'pageshow', 'visibilitychange']
+    .forEach(ev => window.addEventListener(ev, kick, { passive: true, capture: true }));
+}
+
+/* ==========================================================================
    模块 10 · 数据装载与渲染主循环
    ========================================================================== */
 async function reload(){
@@ -8292,10 +10783,93 @@ window.addEventListener('resize', () => {
   if(window.requestAnimationFrame) _fitRaf = window.requestAnimationFrame(run); else setTimeout(run, 0);
 });
 
+/* ==========================================================================
+   v0.50 · 滚动位置保持（重渲染不再把人踢回顶部）
+   --------------------------------------------------------------------------
+   症状：改一个订购状态、点「重新载入」、切一下排序、在筛选里敲个字，页面就跳回最上面。
+   根因：render() 用 innerHTML 整块换掉 #page 的子节点 —— 内容在一瞬间变空，
+         scrollHeight 归零，浏览器把 scrollTop 钳到 0；新内容填回来以后也不会自己回去。
+         refreshProdList / refreshCustList 换 tbody 时，卡内那张表（.tw.tscroll）同理。
+   做法：重建前把「已经滚过的容器」连同 scrollTop / scrollLeft 记下来
+         （按 DOM 路径做 key，只记 >0 的，正常也就 1~3 个），重建后按同一路径找回来写回。
+   ★ 只认路径，不认节点 —— 节点每次重建都是新的，路径不变就能命中。
+   ★ 路径对不上（结构真的变了：切页、列表被筛短、区块增删）就放弃那一条：
+     宁可不动，也不乱滚。
+   ★ 切页 goto() 会置 _scrollReset —— 新页从顶部开始，这是用户主动的视图切换，
+     不该继承上一页的位置。
+   ★ 恢复时机必须在 fitPageH() 之后（它会改表格与末卡高度），再补一帧
+     （缩略图 / 字体撑开高度常晚一帧落地）。 */
+function scrollKey(el){
+  const parts = [];
+  let n = el;
+  while(n && n !== document.body && n.parentElement){
+    const p = n.parentElement;
+    let i = 0;
+    for(let c = p.firstElementChild; c; c = c.nextElementSibling){ if(c === n) break; i++; }
+    parts.unshift(n.tagName + ':' + i);
+    n = p;
+  }
+  return parts.join('>');
+}
+function findByScrollKey(key){
+  const segs = String(key == null ? '' : key).split('>');
+  if(!segs.length || !segs[0]) return null;
+  let cur = document.body;
+  for(let s = 0; s < segs.length; s++){
+    const cut = segs[s].lastIndexOf(':');
+    if(cut < 0) return null;
+    const tag = segs[s].slice(0, cut);
+    const idx = parseInt(segs[s].slice(cut + 1), 10) || 0;
+    let c = cur.firstElementChild;
+    for(let k = 0; k < idx && c; k++) c = c.nextElementSibling;
+    if(!c || c.tagName !== tag) return null;      /* 同位置换了标签 → 结构变了，这条不恢复 */
+    cur = c;
+  }
+  return cur === document.body ? null : cur;
+}
+function snapScroll(){
+  const out = [];
+  if(_scrollReset || !document.body) return out;
+  const all = document.body.getElementsByTagName('*');
+  for(let i = 0; i < all.length; i++){
+    const el = all[i];
+    if(el.scrollTop > 0 || el.scrollLeft > 0)
+      out.push({ k: scrollKey(el), t: el.scrollTop, l: el.scrollLeft });
+  }
+  return out;
+}
+/* onlyZero=true：只补「还是 0」的那几处 —— 用在 rAF 补帧，避免覆盖用户在这一帧里的主动滚动 */
+function restoreScroll(snap, onlyZero){
+  if(!snap || !snap.length) return 0;
+  let n = 0;
+  for(let i = 0; i < snap.length; i++){
+    const s = snap[i], el = findByScrollKey(s.k);
+    if(!el) continue;
+    if(s.t > 0 && (!onlyZero || el.scrollTop === 0)){ el.scrollTop = s.t; n++; }
+    if(s.l > 0 && (!onlyZero || el.scrollLeft === 0)) el.scrollLeft = s.l;
+  }
+  return n;
+}
+/* 局部重绘专用：换 tbody / 换表头的那一小段包在 fn 里，进出各存/取一次滚动位置。
+   卡片内那张表（.tw.tscroll）的路径不随 tbody 重建而变，所以按路径找回得来。 */
+function keepScroll(fn){
+  const sc = snapScroll();
+  try{ return fn(); }
+  finally{
+    if(sc.length){
+      restoreScroll(sc);
+      if(window.requestAnimationFrame)
+        window.requestAnimationFrame(function(){ restoreScroll(sc, true); });
+    }
+  }
+}
+
 function render(){
   const st = Store.state, p = st.ui.page;
   iiClose();                          /* ★ 先收起浮出的「i」说明：节点马上要被重建 */
   const focusSnap = snapFocus();      /* ★ 重建前记下条件行输入框的焦点，重建后恢复 */
+  const scrollSnap = snapScroll();    /* ★ v0.50：重建前记下滚动位置（切页时为空 = 不继承） */
+  _scrollReset = false;
   renderSidebar(st);
   $('#sidebar').classList.toggle('open', !!st.ui.sidebarOpen);
   let html = '';
@@ -8307,6 +10881,9 @@ function render(){
   else if(p === 'prod')      html += viewProd(st);
   else if(p === 'pay')       html += viewPay(st);
   else if(p === 'cust')      html += viewCust(st);
+  else if(p === 'custprod')  html += viewProducts(st, 'cust');
+  else if(p === 'suppliers') html += viewSuppliers(st);
+  else if(p === 'supprod')   html += viewProducts(st, 'supp');
   else if(p === 'owners')    html += viewOwners(st);
   else if(p === 'source')    html += viewSource(st);
   else if(p === 'sync')      html += viewSync(st);
@@ -8318,6 +10895,9 @@ function render(){
   else if(p === 'prod')      bindProd();
   else if(p === 'pay')       bindPay();
   else if(p === 'cust')      bindCust();
+  else if(p === 'custprod')  bindProducts('cust');
+  else if(p === 'suppliers') bindSuppliers();
+  else if(p === 'supprod')   bindProducts('supp');
   else if(p === 'owners')    bindOwners();
   else if(p === 'alert')     bindAlert();
   else if(p === 'assist')    bindAssist();
@@ -8331,13 +10911,24 @@ function render(){
   const om = _openMsel ? $('#page .msel.open') : null;
   if(om) placeMselPop(om);
   fitPageH();                    /* v0.36：放在最后，量的是最终布局 */
+  /* ★ v0.50：恢复滚动必须排在 fitPageH 之后 —— 它会重写表格与末卡的高度，
+     提前写 scrollTop 会被那一瞬间的中间高度钳住。再补一帧兜住缩略图 / 字体撑开。 */
+  if(scrollSnap.length){
+    restoreScroll(scrollSnap);
+    if(window.requestAnimationFrame)
+      window.requestAnimationFrame(function(){ restoreScroll(scrollSnap, true); });
+  }
+  applyToday();   /* v0.54：每次重渲染顺手校准一次日期（同一天直接短路，不碰 DOM） */
 }
 Store.subscribe(render);
 
 bindInfoIcons();   /* v0.27：说明图标的悬停 / 钉住交互，只绑一次（节点靠 DOM 委托） */
-/* v0.32 · 浮层按 Esc 关闭（只绑一次；点遮罩 / 点「×」的绑定在 bindCfgWrap 里） */
+/* v0.32 · 浮层按 Esc 关闭（只绑一次；点遮罩 / 点「×」的绑定在 bindCfgWrap 里）
+   v0.51：放大预览优先吃掉 Esc —— 它盖在最上层，先关它才符合直觉。 */
 document.addEventListener('keydown', e => {
-  if(e.key === 'Escape' && cfgOpen){ cfgOpen = ''; Store.set({}); }
+  if(e.key !== 'Escape') return;
+  if(_zoomOn){ closeZoom(); return; }
+  if(cfgOpen){ cfgOpen = ''; Store.set({}); }
 });
 /* 浮层 body 一滚，fixed 定位的下拉就与按钮脱开了 → 直接收起（滚动事件不冒泡，要捕获阶段） */
 document.addEventListener('scroll', e => {
@@ -8387,7 +10978,9 @@ const SYNC_SCHEMA = 1;
 const SYNC_PREFIX_DEFAULT = 'order-tracking/';
 const SYNC_CFG_KEY = 'ot.sync.cfg.v1';
 const SYNC_STATE_KEY = 'ot.sync.state.v1';
-const SYNC_TABLES = ['orders','customers','owners','production','shipments','followups','file_attachment'];
+const SYNC_TABLES = ['orders','customers','owners','production','shipments','payments','followups',
+  /* v0.47：产品库三张表必须进快照 —— 否则 A 端建的产品到 B 端完全看不到 */
+  'suppliers','custProducts','supplierProducts','file_attachment'];
 const SyncModule = (function(){
   const DEFAULT_CFG = {
     enabled:false, preset:'', endpoint:'', region:'', bucket:'', prefix:SYNC_PREFIX_DEFAULT,
@@ -8610,9 +11203,31 @@ const SyncModule = (function(){
   function buildSnapshotShape(){ const snap={ _format:'order-tracking-sync-v1', schemaVersion:SYNC_SCHEMA, deviceId:getDeviceId(), createdAt:Date.now(), db:{}, attachments:[] };
     SYNC_TABLES.forEach(t => { const flag='include'+cap(t); if(cfg[flag]!==false) snap.db[t]=Store.state.data[t]||[]; });
     return snap; }
-  async function collectAttachments(){ const ids=new Set(); const data=Store.state.data;
-    (data.orders||[]).forEach(o=>{ (o.attachments||[]).forEach(a=>{ if(a&&a.id) ids.add(a.id); }); }); (data.file_attachment||[]).forEach(f=>{ if(f.id) ids.add(f.id); });
-    const out=[]; for(const id of ids){ try{ const du=await FileStore.dataUrl(id); if(du) out.push({ id, meta:(data.file_attachment||[]).find(f=>f.id===id)||{}, dataUrl:du }); }catch(e){} } return out; }
+  /* v0.47：产品图与包装文件也随快照走（base64 内联）。meta 从各自的产品行上取，
+     不能只从 file_attachment 里找 —— 产品文件从来不在那张表里，找只会拿到空 meta、丢文件名。 */
+  async function collectAttachments(){
+    const ids = new Set(), metas = new Map();
+    const data = Store.state.data;
+    const addMeta = m => { if(m && m.id){ ids.add(m.id); metas.set(m.id, m); } };
+    (data.orders||[]).forEach(o => (o.attachments||[]).forEach(addMeta));
+    (data.custProducts||[]).forEach(p => {
+      (p.images || []).forEach(id => { if(id) ids.add(id); });
+      (p.packingFiles || []).forEach(addMeta);
+    });
+    (data.supplierProducts||[]).forEach(p => {
+      (p.images || []).forEach(id => { if(id) ids.add(id); });
+      (p.packingFiles || []).forEach(addMeta);
+    });
+    (data.file_attachment||[]).forEach(addMeta);
+    const out = [];
+    for(const id of ids){
+      try{
+        const du = await FileStore.dataUrl(id);
+        if(du) out.push({ id, meta: metas.get(id) || (data.file_attachment||[]).find(f => f.id === id) || {}, dataUrl: du });
+      }catch(e){}
+    }
+    return out;
+  }
   function mergeTables(local, remote){ const merged={}; SYNC_TABLES.forEach(t=>{ const L=new Map((local[t]||[]).map(r=>[r.id,r])); const R=new Map((remote[t]||[]).map(r=>[r.id,r]));
       const ids=new Set([...L.keys(),...R.keys()]); const out=[]; ids.forEach(id=>{ const l=L.get(id), r=R.get(id);
         if(!l) out.push(r); else if(!r) out.push(l);
@@ -8760,10 +11375,26 @@ window.OT = {
   buildOrderFields, validateForm, openOrderForm, openOrder, deleteOrder, initGlobalFilter, closeSheet,
   payTermLabel, tradeTermLabel, ALERT_DEFAULTS, loadAlertCfg,
   openForm, openCustomerForm, openOwnerForm, buildCustomerFields, buildOwnerFields,
-  deleteResource, refCounts, customerStats, ownerStats, computeAlerts, AlertEngine: null,
+  deleteResource, refCounts, rowFileIds, customerStats, ownerStats, computeAlerts, AlertEngine: null,
   /* v0.39：客户关联解析与订单数口径（回归断言用） */
   custIndex, custResolveId, custOrderCounts, orphanOrders, custSumHTML,
   CHANNELS, STAGES, CARRIERS, INDUSTRIES, LEVELS, money, moneyShort,
+  /* v0.47：产品库（客户产品 / 供应商产品 / 供应商档案）—— 回归断言用 */
+  ORDER_STATUS, PROD_KIND, SYNC_TABLES, openProductSheet, openProductForm, openSupplierSheet, openSupplierForm,
+  seedProds, custProdRowsHTML,
+  /* v0.52 · 供应商 SKU 可重复 + 产品库排序记忆 —— 回归断言用 */
+  PROD_SORT, PROD_KW, PSORT_KEY, PSORT_FIELDS, PSORT_DEF, psortInit, psortSave, prodRows, prodHeadHTML,
+  /* v0.48 · 列宽记忆（产品两表）/ 文字对齐 / CSV 导入导出；v0.49 · 编码探测与粘贴导入 */
+  colwKind, exportProdCSV, importProdCSV, importProdText, csvParse, prodCSVHeaderMap, exportCSV,
+  prodCSVBody, PROD_CSV_COLS, fitFile, pimgAddFiles, pkAddFiles, palignApply, palignSave, PALIGN_KEY,
+  decodeText, decodeCSV: decodeText, sniffDelim, impQuality, openImportSheet, IMP_ENCS, impEncSave,
+  get IMP_ENC(){ return IMP_ENC; }, get PALIGN(){ return PALIGN; }, get PROD_PASTE_ZONE(){ return PROD_PASTE_ZONE; },
+  /* v0.50 · 滚动位置保持（重渲染不跳顶）—— 回归断言直接调这几个纯逻辑件 */
+  render, snapScroll, restoreScroll, scrollKey, findByScrollKey, keepScroll,
+  get scrollReset(){ return _scrollReset; }, set scrollReset(v){ _scrollReset = !!v; },
+  /* v0.51 · 产品图放大预览 + 列宽摊平 */
+  openZoom, closeZoom, zoomBox, fitColToWrap,
+  get zoomOn(){ return _zoomOn; },
   openFollowupForm, openShipmentForm, deleteShipment, openProdForm, deleteProd, PROD_STATUS, exportOrders, askNotify, fireDesktopAlerts, clearData,
   /* v0.43 · 排产单号（一订单 → N 单号，唯一来源 = production 表） */
   splitMoNos, orderProds, orderMoNos, orderMoNoText, moNoOwner, dupMoNos, syncOrderMoNo,
@@ -8775,6 +11406,11 @@ window.OT = {
   openCustomerSheet, PAGES, depositOf, balanceOf, syncPlanBar, sheetMode, sheetOpen, sheetEl, mountSheet, remountSheet,
   isFullyPaid, paidTotalOf, unpaidOf, computeInsertSortKey, ATT_KINDS, attKindLabel,
   receivedOf, writeOffOf, balReceivedOf, isBalSettled, depReceivedOf,
+  /* v0.55 · 分次回款流水 + 分批发货 —— 回归断言用 */
+  PAY_KINDS, PAY_METHODS, payRows, reindexPays, payAggOf, hasPayRows, payListOf, paySumOf, payPctOf,
+  legacyPatchOf, ensureLegacyPays, syncLegacyFromPays, addPayment, deletePayment, openPaySheet, paySummaryHTML,
+  shipListOf, shipAggOf, shipRemainOf, shipOverOf, shipPartialOf, shipPctOf, shipNoOwner,
+  orderPaidInRange, basisDateOf,
   /* 客户等级自动定级（v0.13） */
   custAutoLevel, custShare, applyAutoLevels, totalSalesAmount, customerSalesAmount, custAutoLevelByShare,
   /* 批量修改（模块 8.5） */
@@ -8841,7 +11477,13 @@ window.OT = {
   get PALETTE(){ return PALETTE.slice(); }, get INK(){ return INK; },
   S3Sync: SyncModule.__test, Sync: SyncModule, getDeviceId, stampRecord,
   /* 版本基线 / 更新日志（v0.19） */
-  APP_VERSION, APP_UPDATED, APP_NAME, CHANGELOG, viewVersion, applyVersion, vlogText,
+  APP_VERSION, APP_UPDATED, CHANGELOG, viewVersion, applyVersion, vlogText,
+  /* v0.54 · 重命名工作台（APP_NAME 必须走 getter：它现在是 let，改名后要能读到新值） */
+  APP_NAME_DEFAULT, APP_NAME_KEY, APP_NAME_MAX, nameClean, nameRead,
+  appRename, appRenameReset, openRenameSheet, bindRename,
+  get APP_NAME(){ return APP_NAME; },
+  /* v0.54 · 当日日期星期 */
+  DOW_CN, todayParts, applyToday, bindToday, get todayKey(){ return _todayKey; },
   /* 数据历史：整库快照 + 回收站（v0.20） */
   SnapshotStore, histPush, histMaybeAuto, histForceMark, histManualMark, histPrime, histResetGate, histRestore, histDiff,
   histPickEvictions, HIST_KIND_RANK, LS_DB_KEY_DEFAULT,
@@ -8856,6 +11498,8 @@ window.OT = {
 
 syLoadBind();
 applyVersion();
+bindRename();    /* v0.54：侧栏铅笔 / 双击标题 → 重命名弹层 */
+bindToday();     /* v0.54：顶栏当日日期与星期，跨零点自动换日 */
 histPrime();     /* v0.20：同步「最近自动打点时刻」，避免刷新后第一笔改动就重复打点 */
 reload().then(() => fireDesktopAlerts());
 
