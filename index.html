@@ -3,7 +3,7 @@
 <head data-page-node-id="tB8joMdTgw5XU4U8A6S7i2">
 <meta charset="utf-8" data-page-node-id="iTOrAHcHmC5x6FNHHjD886">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" data-page-node-id="Ja1BDKMDLVRzLRExrICqlT">
-<title>订单追踪台 · v0.56</title>
+<title>订单追踪台 · v1.0.0</title>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#007aff">
 <link rel="icon" href="icon-192.png">
@@ -126,6 +126,37 @@ table,.num,.kpi .vl,.calcbox .v,.odetop .k b,.mc-kv .kv,.vno,.vdate,.planbar .it
 .sb-foot .ds{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:12px}
 .sb-foot .dot{width:7px;height:7px;border-radius:50%;background:var(--green)}
 .sb-foot .dot.warn{background:var(--orange)}
+/* ---------- v0.61 · 侧栏收起 / 展开 ----------
+   --sw 同时被 #sidebar（宽度）和 #main（margin-left）使用，所以只要在 body 上把它改小，
+   侧栏变窄、主内容区自动让位，不需要给 #main 写第二套规则。
+   收起态只留图标：导航文字 / 计数 / 分组标题 / 数据源文字全部隐藏，靠 title 兜可读性。 */
+body.sb-collapsed{--sw:62px}
+body.sb-collapsed .sb-name,
+body.sb-collapsed .sb-ren,
+body.sb-collapsed .sb-nav .grp,
+body.sb-collapsed .sb-nav a .tx,
+body.sb-collapsed .sb-nav a .cnt,
+body.sb-collapsed .sb-foot .ds,
+body.sb-collapsed .sb-foot #dsMeta{display:none}
+body.sb-collapsed .sb-logo{justify-content:center;padding:15px 0}
+body.sb-collapsed .sb-nav{padding:10px 8px}
+body.sb-collapsed .sb-nav a{justify-content:center;padding:9px 0;gap:0}
+body.sb-collapsed .sb-nav a .ico{font-size:17px}
+body.sb-collapsed .sb-foot{padding:10px 8px}
+.sb-toggle{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;
+  margin-top:9px;padding:6px 9px;border:1px solid var(--line);border-radius:var(--radius-ctl);
+  background:var(--panel);color:var(--muted);font-size:var(--fs-xs);cursor:pointer;
+  transition:color var(--dur-1),border-color var(--dur-1)}
+.sb-toggle:hover{border-color:var(--primary);color:var(--primary-600)}
+.sb-toggle .ar{font-size:13px;line-height:1}
+body.sb-collapsed .sb-toggle{justify-content:center;padding:6px 0;margin-top:0}
+body.sb-collapsed .sb-toggle .tx{display:none}
+@media(max-width:920px){
+  /* 手机端侧栏是 transform 抽屉、#main 又 margin-left:0，--sw 与折叠无关；
+     把它改回原值，免得抽屉展开时只有 62px 宽。折叠按钮也只在桌面出现。 */
+  body.sb-collapsed{--sw:224px}
+  .sb-toggle{display:none}
+}
 
 /* ---------- 主区 / 粘性头部（顶栏 + 全局筛选一起钉住） ---------- */
 #main{margin-left:var(--sw);height:100vh;height:100dvh;display:flex;flex-direction:column;min-height:0}
@@ -165,12 +196,24 @@ header.stick{position:sticky;top:0;z-index:60;background:var(--panel);border-bot
 /* v0.31：内容区是唯一滚动容器 —— 侧栏 / 顶栏 / 筛选栏永远在屏幕上，切页不再整页回滚 */
 /* v0.51：scrollbar-gutter:stable —— 列表长/短切换时纵向滚动条会出现或消失，
    不预留位置的话内容区宽度会跳 15~17px（表格跟着「一会儿宽一会儿窄」）。
-   预留后无论有无滚动条，内容区宽度恒定。 */
+   v0.61：页面主滚动条改为**视觉隐藏**（宽/高都 0），滚动能力不变：
+   订单页与排产页最右侧那条竖条不再出现，页面宽度也不再被它挤掉 15px；
+   scrollbar-gutter 保留无害（滚动条宽 0 → 预留宽也是 0）。
+   ★ 表格内部（.tw.tscroll）与排产看板（.mkan）的滚动条**不动** —— 它们要承担
+     表头吸顶 / 汇总栏吸底，去掉就吸不住了。 */
 #page{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;scrollbar-gutter:stable;
-  padding:16px 20px 40px;max-width:1920px;width:100%}
+  padding:16px 20px 40px;max-width:1920px;width:100%;
+  scrollbar-width:none;-ms-overflow-style:none}
+#page::-webkit-scrollbar{width:0;height:0}
 .grid{display:grid;gap:12px}
 .kpi{grid-template-columns:repeat(auto-fit,minmax(165px,1fr))}
 .c2{grid-template-columns:repeat(auto-fit,minmax(370px,1fr))}
+/* v0.66 · 手机端看板溢出的根因在这一行缺失上。
+   grid 子项的默认 min-width 是 auto → 「自动最小尺寸」取内容的最小宽度，
+   而图表画布过去是写死的 520px，于是轨道被顶到 530px：卡片比视口还宽，
+   再被 #page 的 overflow:hidden 裁掉 → 手机上就是「图表右边看不见、也滑不动」。
+   统一允许子项收缩，卡片宽度从此只由容器决定。 */
+.grid>*{min-width:0}
 /* v0.35：订单详情改为「可直接编辑属性面板」（.pp），原六卡网格 .od2 已移除 */
 .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--sh)}
 .card .hd{padding:11px 15px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
@@ -241,6 +284,27 @@ header.stick{position:sticky;top:0;z-index:60;background:var(--panel);border-bot
 .kpi .sb2{font-size:11px;color:var(--faint)}
 .kpi .vl.good{color:var(--green-600)} .kpi .vl.warn{color:var(--orange-600)} .kpi .vl.bad{color:var(--red-600)}
 .red{color:var(--red-600)} .green{color:var(--green-600)} .orange{color:var(--orange-600)}
+
+/* v0.63 · 订单数量分析：四宫格指标 + 状态筛选 chips
+   ★ 刻意**不挂 .kpi 类**：看板顶部那 7 张「销售 KPI 卡」是一个有明确语义的集合，
+     好几条回归断言盯着「.grid.kpi .card === 7」。这里自己写一份同款排版，
+     既不污染那个集合，视觉上也与上面完全一致（变量全部复用）。 */
+.qan-kpi{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.qan-kpi .card{padding:12px 15px;display:flex;flex-direction:column;gap:1px}
+.qan-kpi .lb{font-size:11px;color:var(--faint);font-weight:600;letter-spacing:.3px}
+.qan-kpi .vl{font-size:23px;font-weight:700;margin:2px 0 0;letter-spacing:-.6px;font-variant-numeric:tabular-nums;color:var(--text)}
+.qan-kpi .sb2{font-size:11px;color:var(--faint)}
+.qan-chips{display:inline-flex;flex-wrap:wrap;gap:6px;align-items:center}
+.qan-chip{height:28px;padding:0 11px;border-radius:999px;border:1px solid var(--line);
+  background:var(--panel);color:var(--muted);font-size:11.5px;font-weight:600;cursor:pointer;
+  font-family:inherit;transition:background .12s,border-color .12s,color .12s}
+.qan-chip:hover{border-color:var(--decor);color:var(--text)}
+.qan-chip.on{background:var(--primary-soft);border-color:var(--primary);color:var(--primary-700)}
+@media(max-width:920px){
+  .qan-kpi{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+  .qan-chips{gap:5px}
+  .qan-chip{height:26px;padding:0 9px;font-size:11px}
+}
 
 /* 表格 */
 .tw{overflow-x:auto}
@@ -709,6 +773,51 @@ body.col-rz,body.col-rz *{cursor:col-resize!important}
 .pg2.on{background:var(--primary-600);border-color:var(--primary-600);color:#fff}
 .pg2.gap{border:none;background:none;cursor:default;padding:3px 2px;color:var(--muted)}
 
+/* ---------- v0.60 · 固定汇总栏（U9 式：表格底部两条常驻栏 —— 小计 / 合计） ----------
+   结构：汇总栏不是 <tfoot>，而是表格容器 .tw.tscroll 内的一个独立块（#oSumFoot），
+        紧跟主表之后，用 sticky 吸在容器底部。
+   ★ 为什么不用 <tfoot>：Chromium 里 tfoot / tbody 内 td 的 position:sticky 计算值虽是
+     sticky，实际**不吸底**（实测真机滚动到中间时两行仍在视口外 y≈2061）。sticky 的包含块
+     被算成行组自身，没有可移动的余量。改成滚动容器的直接子块后包含块 = 整个 .tscroll，
+     才有余量真正吸底。
+   ★ 横向同步：汇总栏和主表同在一个滚动容器里，横向滚动天然对齐，不需要 JS 跟手。
+   ★ 纵向吸底：position:sticky;bottom:0 —— 横向滚动时跟着走、纵向滚动时钉死。
+   ★ 列对齐：主表是 auto 布局，所以汇总栏不给固定宽度，由 syncSumColW() 把主表每个
+     th 的实测宽度抄到 colgroup 上（拖列宽、改窗口都要重抄），否则金额列会错位。 */
+.sumdock{position:sticky;bottom:0;z-index:6;background:var(--panel);
+  box-shadow:inset 0 1px 0 var(--line-2)}
+.sumdock>table{width:100%;table-layout:fixed;border-collapse:collapse;font-size:13px}
+.sumdock td{height:30px;padding:0 12px;white-space:nowrap;box-sizing:border-box;
+  overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+.sumdock tr.subsum>td{background:var(--inset-bg);color:var(--muted);font-weight:600;font-size:var(--fs-xs)}
+.sumdock tr.subsum>td.num{color:var(--text)}
+.sumdock tr.grandsum>td{background:var(--primary-soft);color:var(--text);font-weight:700;
+  font-size:var(--fs-base);box-shadow:inset 0 1.5px 0 var(--primary)}
+.sumdock .sumtag{display:inline-block;border-radius:4px;padding:1px 7px;margin-right:8px;
+  font-weight:600;color:var(--primary-600)}
+.sumdock tr.subsum .sumtag{background:var(--primary-soft)}
+.sumdock tr.grandsum .sumtag{background:var(--panel)}
+.sumdock em{font-style:normal;font-weight:400;color:var(--faint);margin-left:8px}
+/* 手机上（<921px）本来没有「表格自成滚动区」那套规则，表格跟着页面整体滚，
+   于是 .tw 只靠 overflow-x:auto 也算滚动容器、但自身不限高 → 吸底无处可吸，
+   汇总栏只能停在表格末尾（要滚 60 多行才看得见）。这里只给「带汇总栏的表格」
+   补上限高与表头吸顶，别的表格不动。 */
+@media(max-width:920px){
+  .tw.tscroll:has(> .sumdock){max-height:calc(100dvh - 260px);overflow:auto}
+  .tw.tscroll:has(> .sumdock)>table>thead>tr>th{position:sticky;top:0;z-index:3}
+}
+/* 卡片视图的合计条 */
+.paysum{display:flex;flex-wrap:wrap;align-items:baseline;gap:5px 15px;
+  padding:11px 15px;border-top:1px solid var(--line-2);background:var(--inset-bg);
+  font-size:var(--fs-xs);color:var(--muted)}
+.paysum .ps-main{font-weight:600;color:var(--text)}
+.paysum .ps-main b{margin-left:5px;font-size:17px;font-variant-numeric:tabular-nums;color:var(--primary-600)}
+.paysum .ps-kv b{margin-left:4px;color:var(--text);font-variant-numeric:tabular-nums}
+.paysum .ps-kv.bad b{color:var(--red-600)}
+.paysum .ps-kv.good b{color:var(--green-600)}
+.paysum .ps-hint{margin-left:auto;font-size:11.5px;color:var(--faint)}
+.paysum.is-empty .ps-main b{color:var(--muted)}
+
 /* 可直接编辑属性面板（Notion 式：点字段即改，无边框，悬停/聚焦才显形） */
 .pp{display:flex;flex-direction:column}
 .pp-grp{margin-bottom:16px}
@@ -1038,6 +1147,22 @@ body.zooming{cursor:zoom-out}
   #topbar .ttl{font-size:16px}
 }
 
+/* --- v0.66 · 手机端看板：分段控件不许把字竖起来 ---
+   分段控件（.seg）是 flex 项，基础规则里 overflow:hidden + 可收缩，窄屏会被压到
+   只剩几十像素：按钮里的「近 90 天」折成三行，「全年」直接被裁掉 —— 看板顶上
+   那两处（单量范围 / 图表维度）就是这么坏的。
+   改成「控件自己横向滚、按钮不折行、不参与收缩」，外层 .hd / .toolbar 本来就是
+   flex-wrap，一行放不下就整组掉到下一行，字永远横着读。 */
+@media (max-width:560px){
+  .seg{max-width:100%;overflow-x:auto;scrollbar-width:none}
+  .seg::-webkit-scrollbar{display:none}
+  /* 按钮同时瘦一档：6 个短按钮（跟随筛选 / 近 30 天 …）瘦身后正好一行放得下，
+     不必为了「全年」去滑那 20 像素；更长的分组仍走横向滚动兜底。 */
+  .seg button{flex:0 0 auto;white-space:nowrap;padding:5px 8px;font-size:12px}
+  .card .hd{gap:6px;row-gap:6px}
+  .card .hd .seg{flex:0 0 auto}
+}
+
 /* --- v0.54 · 侧栏工作台名：可重命名 --- */
 .sb-logo .sb-name{flex:1 1 auto;min-width:0}
 .sb-logo .sb-ren{flex:none;border:0;background:transparent;color:var(--faint);
@@ -1073,13 +1198,14 @@ body.zooming{cursor:zoom-out}
 <aside id="sidebar" data-page-node-id="mOHG7ZovWQTFY89nDh3RpA">
   <div class="sb-logo" data-page-node-id="CItXgwA9E43rFqjh1jkPjK">
     <div class="mark" data-page-node-id="UZtmztULGLZ5gKgPjaSoN0"><svg width="28" height="28" viewBox="0 0 512 512" aria-hidden="true"><defs><linearGradient id="sbMarkBg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5b86d6"/><stop offset="1" stop-color="#3d8f89"/></linearGradient></defs><rect width="512" height="512" rx="116" fill="url(#sbMarkBg)"/><path d="M144 100 H252 L310 158 V322 A26 26 0 0 1 284 348 H144 A26 26 0 0 1 118 322 V126 A26 26 0 0 1 144 100 Z" fill="#ffffff"/><path d="M252 100 L310 158 L252 158 Z" fill="#cfe0f7"/><rect x="146" y="196" width="136" height="18" rx="9" fill="#d7e2f3"/><rect x="146" y="236" width="136" height="18" rx="9" fill="#d7e2f3"/><rect x="146" y="276" width="90" height="18" rx="9" fill="#d7e2f3"/><circle cx="396" cy="390" r="76" fill="#ffffff"/><path d="M362 390 L386 414 L430 362" fill="none" stroke="#3d8a5c" stroke-width="23" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-    <div class="sb-name" data-page-node-id="qJfiMtI7jd53xaMaRs2OfN"><div class="t" data-page-node-id="vxtJJYpJxW7saZcUyfaE3M" title="双击可重命名">订单追踪台</div><div class="s" data-page-node-id="ufakbTeCG3rPiVsiEX5UML">v0.56</div></div>
+    <div class="sb-name" data-page-node-id="qJfiMtI7jd53xaMaRs2OfN"><div class="t" data-page-node-id="vxtJJYpJxW7saZcUyfaE3M" title="双击可重命名">订单追踪台</div><div class="s" data-page-node-id="ufakbTeCG3rPiVsiEX5UML">v1.0.0</div></div>
     <button class="sb-ren" id="btnRename" type="button" title="重命名工作台" aria-label="重命名工作台">✎</button>
   </div>
   <nav class="sb-nav" id="sbNav" data-page-node-id="y58haCHcKQU8HJVk0gDYWN"></nav>
   <div class="sb-foot" data-page-node-id="aYIl2JwHHZlvyCXEx9VwGG">
     <div class="ds" data-page-node-id="AcH14v7NzWiccSb55vuBLg"><span class="dot" id="dsDot" data-page-node-id="JjHrmQzVGtBgTSkxM7Bdgr"></span><span id="dsName" data-page-node-id="wKCDBV5oRXTF3aa5S13H0y">本地手工录入</span></div>
     <div id="dsMeta" data-page-node-id="YC0N0pUIHVWH7oqaLmbCYy">读写就绪</div>
+    <button class="sb-toggle" id="btnSbToggle" type="button" title="收起导航栏"><span class="tx">收起导航</span><span class="ar">«</span></button>
   </div>
 </aside>
 
@@ -1141,6 +1267,12 @@ const moneyShort = n => { const a = Math.abs(n);
   if(a>=1e8) return (n/1e8).toFixed(2)+'亿';
   if(a>=1e4) return (n/1e4).toFixed(a>=1e6?0:1)+'万';
   return Number(n).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
+/* v0.61 · 订单数量（整数件数）
+   ★ 独立字段：不由产品明细、也不由排产/发货数量派生 —— 一单多款产品、排产还会拆多张工单，
+     自动合计出来的数字跟合同上的「总数量」对不上，反而添乱。手工填 / 智能录入识别。
+   ★ 空值统一按 0 处理，显示成「—」而不是 0：0 件订单不存在，0 会让「没填」看着像「填了 0」。 */
+const qtyOf  = o => { const n = Number(o && o.qty); return isFinite(n) && n > 0 ? Math.round(n) : 0; };
+const qtyFmt = n => { const v = Number(n) || 0; return v > 0 ? v.toLocaleString('zh-CN') : '—'; };
 const esc = s => String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const uid = p => p+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
@@ -1151,13 +1283,24 @@ function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a
    ========================================================================== */
 const SCHEMA = {
   owners    : ['id','name','dept','phone','email','active','remark'],
-  customers : ['id','code','name','shortName','industry','level','settleDays','creditNote',
+  /* v0.63：新增 region（国家/地区）—— 看板「订单数量分析」的地区维度就吃这个值。
+     刻意不做成「省 / 市」两级下拉：客户在境外时省市根本填不进去，一个自由文本的
+     国家/地区既能装下「中国台湾」「中国香港」，也能装下「德国」「越南」。
+     空值不进推断、不猜地址，统一归入「未填写」，逼着数据自己填准。 */
+  customers : ['id','code','name','shortName','industry','region','level','settleDays','creditNote',
                'contact','address','phone','email','active','createdAt'],
-  orders    : ['id','orderNo','moNo','customerId','ownerId','status','signDate','amount','taxAmount','currency',
+  /* v0.61：新增 qty（订单数量）—— 独立手工字段，不由产品明细或排产数量派生：
+     一单常有多款产品、排产又拆多工单，自动合计出来的数字没人对得上账。 */
+  orders    : ['id','orderNo','moNo','customerId','ownerId','status','signDate','qty','amount','taxAmount','currency',
                'contractDelivery','actualDelivery','productSummary','tags','remark',
-               'paymentTerm','tradeTerm','attachments','depositAmount','depositPaidDate','balancePaidDate',
+               'paymentTerm','tradeTerm','settleDays','attachments','depositAmount','depositPaidDate','balancePaidDate',
                'balanceReceived','balanceSettled','sortKey'],
-  production: ['id','orderId','moNo','workshop','planStart','planFinish','actualStart','actualFinish','qty','doneQty','progressPct','opStatus'],
+  /* v0.65：production 上的 opStatus（排产状态）与 progressPct（完成进度）**已取消**。
+     排产不持有自己的状态 —— 唯一真源是所属订单的 status，进度由状态映射得出
+     （待排产 0% / 生产中 30% / 已完工 100%）。两个字段一删，「两份状态打架」在结构上
+     就不存在了，v0.62 / v0.64 那套「状态同步 + 起步状态推断」的补丁也一并作废。
+     paused 是**布尔挂起标记**，不是状态：挂起时排产照旧显示订单状态，另挂一个「已挂起」标。 */
+  production: ['id','orderId','moNo','paused','workshop','planStart','planFinish','actualStart','actualFinish','qty','doneQty'],
   shipments : ['id','orderId','shipNo','shipDate','qty','amount','logisticsNo','carrier','signDate'],
   /* ---------- v0.55 · 分次回款流水 ----------
      回款从「订单上订金 + 尾款两笔固定字段」升级为**多笔流水**：一笔到账一条记录，
@@ -1703,9 +1846,13 @@ class LocalDataSource extends DataSource {
   async update(res, id, patch){
     const db = await this.init(); const i = (db[res]||[]).findIndex(x => x.id === id);
     if(i < 0) throw new Error('记录不存在：'+id);
-    const merged = { ...db[res][i], ...patch };
+    const prev = db[res][i];
+    const merged = { ...prev, ...patch };
     stampRecord(merged, false);
-    db[res][i] = merged; this._write(db); return db[res][i];
+    db[res][i] = merged;
+    /* v0.65：这里原本有一段「订单状态变了就顺手把排产记录状态带过去」的写库逻辑，
+       现在整段删掉 —— 排产不存状态，读的时候直接取订单状态，不需要任何搬运。 */
+    this._write(db); return db[res][i];
   }
   async remove(res, id){
     const db = await this.init();
@@ -1849,6 +1996,9 @@ function buildDemoData(){
   ];
   const customers = custDef.map((c,i) => ({
     id:'C'+(i+1), code:'C-10'+(21+i*7), name:c[0], shortName:c[1], industry:c[2],
+    /* v0.63：演示客户都是国内企业，地区统一「中国」—— 地区维度的分布要靠真实档案填出来，
+       演示数据不编造海外背景（编了反而让人以为分组口径有问题）。 */
+    region: '中国',
     level: pick(['A','A','B','B','C']), settleDays: pick([30,30,45,60,45]),
     creditNote:'', address:'', phone:'0'+(between(21,899))+'-88xxxx', _src:'demo'
   }));
@@ -1889,6 +2039,9 @@ function buildDemoData(){
       id:oid, orderNo,
       customerId:cust.id, ownerId:owner.id, status,
       signDate:fmt(sign), amount, currency:'CNY',
+      /* v0.63：演示订单补上「订单数量」。★ 用 i 算、不调 rnd() —— 一旦多消耗一次随机数，
+         后面所有金额 / 状态 / 交期的抽样序列都会整体错位，几十条依赖演示数据的老断言会集体变红。 */
+      qty: 20 + (i * 137) % 1480,
       contractDelivery:fmt(delivery),
       actualDelivery: closed || stCode(status) === '05'
         ? fmt(new Date(delivery.getTime() + between(-6,10)*86400000)) : '',
@@ -1912,7 +2065,7 @@ function buildDemoData(){
         planStart:fmt(ps), planFinish:fmt(pf),
         actualStart: fmt(new Date(ps.getTime()+between(0,4)*86400000)),
         actualFinish: finished ? fmt(new Date(pf.getTime()+between(-8,6)*86400000)) : '',
-        qty, doneQty:dq, opStatus: finished?'已完工':'生产中', _src:'demo' });
+        qty, doneQty:dq, _src:'demo' });
     }
     if(['04 已发货','05 已收款','06 已完结'].includes(status) && rnd() < 0.9){
       const sd = new Date(delivery); sd.setDate(sd.getDate()+between(-8,16));
@@ -1965,10 +2118,13 @@ function selLabel(opts, v){ const o = opts.find(x => x[0] === v); return o ? o[1
 /* 各维度的候选值：[值, 显示名] */
 const F_STATUS = STATUS.map(s => [s, String(s).slice(3)]);
 const F_PAY  = [['todo','未收齐'],['done','已收齐'],['wo','有核销'],['nodep','订金未收'],['dun','超交期未收']];
-const F_PROD = [['none','未排产'],['wait','待排产'],['doing','生产中'],['done','已完工'],['pause','已暂停']];
+/* v0.65：排产的「状态」不再是记录自己的字段 —— 下面几档全部由**订单状态**折出来
+   （ORDER2PROD），「已挂起」是唯一的例外：它来自布尔标记 paused，不是第四种状态。 */
+const F_PROD = [['none','未排产'],['wait','待排产'],['doing','生产中'],['done','已完工'],['pause','已挂起']];
 const F_RISK = [['overdue','已逾期'],['d7','7天内'],['t15','15天内'],['normal','正常'],['delivered','已交付'],['shipped','已发货']];
 /* 排产页：单条排产记录的两个维度 */
-const F_PROW  = [['待排产','待排产'],['生产中','生产中'],['已完工','已完工'],['已暂停','已暂停']];
+/* 排产页「排产状态」多选的值域：三档状态 + 挂起（挂起优先命中，见 prodStateOf） */
+const F_PROW  = [['待排产','待排产'],['生产中','生产中'],['已完工','已完工'],['已挂起','已挂起']];
 const F_PRISK = [['overdue','已逾期未完工'],['late','预计晚于交期'],['tight','卡交期'],['normal','正常'],['done','已完工']];
 
 /* 订单的交期维度（互斥）：已交付 > 已发货 > 已逾期 > 7天内 > 15天内 > 正常。
@@ -1994,21 +2150,25 @@ function ordPayKeys(o){
   return r;
 }
 /* 订单的排产维度：把该单所有排产记录归成一个整体状态
-   优先级 pause > done > doing > wait > none（有异常先报异常） */
-function ordProdStateOf(recs){
+   优先级 pause > done > doing > wait > none（有异常先报异常）
+   ★ v0.65：档位由**订单状态**折出来（排产记录自己没有状态字段），
+     「有挂起记录」是唯一还需要从记录本身读的信息。 */
+function ordProdStateOf(recs, o){
   if(!recs || !recs.length) return 'none';
-  if(recs.some(p => p.opStatus === '已暂停')) return 'pause';
-  if(recs.every(p => prodDone(p))) return 'done';
-  if(recs.some(p => p.opStatus === '生产中' || p.actualStart || prodPct(p) > 0)) return 'doing';
+  if(recs.some(p => p.paused)) return 'pause';
+  const s = ORDER2PROD[(o && o.status) || ''] || '待排产';
+  if(s === '已完工') return 'done';
+  if(s === '生产中') return 'doing';
   return 'wait';
 }
-function ordProdState(st, o){ return ordProdStateOf((st.data.production || []).filter(p => p.orderId === o.id)); }
+function ordProdState(st, o){ return ordProdStateOf((st.data.production || []).filter(p => p.orderId === o.id), o); }
 /* 订单 -> 排产状态索引（避免逐条重扫 production） */
 function prodStateIndex(st){
-  const groups = {};
+  const groups = {}, ords = {};
+  (st.data.orders || []).forEach(o => { ords[o.id] = o; });
   (st.data.production || []).forEach(p => { (groups[p.orderId] = groups[p.orderId] || []).push(p); });
   const idx = {};
-  Object.keys(groups).forEach(k => { idx[k] = ordProdStateOf(groups[k]); });
+  Object.keys(groups).forEach(k => { idx[k] = ordProdStateOf(groups[k], ords[k]); });
   return idx;
 }
 
@@ -2121,16 +2281,21 @@ function planOrderMoNos(st, orderId, text){
     const m = String(p.moNo == null ? '' : p.moNo).trim();
     return m && want.indexOf(m) < 0;
   });
-  /* 移除已经开工 / 有进度的排产记录要额外确认 —— 那是真在做的活 */
-  const busy = del.filter(p => prodPct(p) > 0 || Number(p.doneQty) > 0 || p.actualStart || p.actualFinish);
+  /* 移除已经开工 / 有进度的排产记录要额外确认 —— 那是真在做的活
+     （v0.65：进度/状态都取自订单，所以「订单已过签约」= 这条活在推进中） */
+  const busy = del.filter(p => prodPct(p, st) > 0 || Number(p.doneQty) > 0 || p.actualStart || p.actualFinish);
   if(busy.length && typeof confirm === 'function' &&
      !confirm('以下排产单号已开工 / 有进度，从本单移除会连同其排产记录移入「回收站」：\n\n'
-       + busy.map(p => '· ' + p.moNo + '（进度 ' + prodPct(p) + '%）').join('\n')
+       + busy.map(p => '· ' + p.moNo + '（进度 ' + prodPct(p, st) + '%）').join('\n')
        + '\n\n确定继续？')){
     return { ok:false, cancel:true, msg:'' };
   }
   return { ok:true, orderId: orderId, add: add, del: del, busy: busy };
 }
+/* ★ v0.65：这里不再需要「本次保存即将写入的状态」这个入参了。
+   以前要在**创建那一刻**把订单状态快照成排产自己的 opStatus，才引出「读到的可能是旧状态」
+   这个 v0.64 的死角；现在排产根本不存状态，显示时直接读订单 —— 不存在「起步状态」这回事。
+   调用点若还传第三个参数，JS 会直接忽略。 */
 async function runOrderMoNos(st, plan){
   if(!plan || !plan.ok) return { added:0, removed:0 };
   const orderId = plan.orderId;
@@ -2138,10 +2303,9 @@ async function runOrderMoNos(st, plan){
   let added = 0, removed = 0;
   for(const m of plan.add){
     const row = {
-      id: uid('P'), orderId: orderId, moNo: m, workshop: '',
+      id: uid('P'), orderId: orderId, moNo: m, workshop: '', paused: false,
       planStart: '', planFinish: String(o.contractDelivery || ''),
-      actualStart: '', actualFinish: '', qty: 0, doneQty: 0, progressPct: 0,
-      opStatus: '待排产', _src: 'manual'
+      actualStart: '', actualFinish: '', qty: 0, doneQty: 0, _src: 'manual'
     };
     await st.source.create('production', row);
     added++;
@@ -2296,9 +2460,9 @@ const PROD_FIELDS = [
   { k:'moNo',         label:'工单号',   type:'text',   get:(st,p) => p.moNo },
   { k:'orderNo',      label:'订单号',   type:'text',   get:(st,p,ctx) => (ctx.ord(p.orderId) || {}).orderNo },
   { k:'customerId',   label:'客户',     type:'enum',   get:(st,p,ctx) => (ctx.ord(p.orderId) || {}).customerId, opts:fOptCust },
-  { k:'opStatus',     label:'排产状态', type:'enum',   get:(st,p) => p.opStatus || '', opts:() => F_PROW },
+  { k:'opStatus',     label:'排产状态', type:'enum',   get:(st,p) => prodStateOf(p, st), opts:() => F_PROW },
   { k:'cmp',          label:'交期对比', type:'enum',   get:(st,p,ctx) => prodRisk(p, ctx.ord(p.orderId)), opts:() => F_PRISK },
-  { k:'progress',     label:'进度',     type:'number', get:(st,p) => prodPct(p) },
+  { k:'progress',     label:'进度',     type:'number', get:(st,p) => prodPct(p, st) },
   { k:'planStart',    label:'计划开工', type:'date',   get:(st,p) => p.planStart },
   { k:'planFinish',   label:'计划完工', type:'date',   get:(st,p) => p.planFinish }
 ];
@@ -2544,6 +2708,21 @@ function scopeFilters(st, scope){
   scope = scope || 'global';
   return scope === 'global' ? st.filters : (st.listFilters[scope] || st.filters);
 }
+/* v0.65 · 排产老字段一次性收敛（每次数据进内存都过一遍，含回收站还原 / 历史回滚 / S3 快照）
+   ① opStatus === '已暂停' → paused:true —— 「挂起」这层信息不丢，降级成布尔标记；
+      其余状态值直接丢弃：唯一真源是订单状态（用户已确认「以订单状态为准」）。
+   ② 删掉 opStatus / progressPct 两个键 —— 留着它们会继续在导出、快照、思源回填里
+      冒充业务字段，下一个人（或下一个我）又会把它当成第二份状态去读。 */
+function migrateProdRows(d){
+  const rows = (d && d.production) || [];
+  rows.forEach(p => {
+    if(!p || typeof p !== 'object') return;
+    p.paused = (p.opStatus === '已暂停') || p.paused === true || p.paused === 'true' || p.paused === 1;
+    delete p.opStatus;
+    delete p.progressPct;
+  });
+  return d;
+}
 const Store = (() => {
   const listeners = [];
   let alerts = [];
@@ -2575,7 +2754,7 @@ const Store = (() => {
     setChart(patch){ Object.assign(state.chart, patch); notify(); },
     setAlert(patch){ Object.assign(state.alertCfg, patch); saveAlertCfg(state.alertCfg); alerts = safeAlerts(state); notify(); },
     setUI(patch){ Object.assign(state.ui, patch); notify(); },
-    setData(d){ state.data = d; alerts = safeAlerts(state); notify(); },
+    setData(d){ migrateProdRows(d); state.data = d; alerts = safeAlerts(state); notify(); },
     refreshAlerts(){ alerts = safeAlerts(state); notify(); }
   };
 })();
@@ -2802,33 +2981,39 @@ function computeAlerts(st){
         meta:`客户 ${custName(st,o.customerId)} ｜ 交期 ${o.contractDelivery} ｜ 提前跟进生产进度`, days:d });
     }
   });
-  // ② 已发货未收齐超期：已发货且仍有未收金额，最晚发货日距今超过阈值
-  const shippedOrders = st.data.orders.filter(o => ACTIVE_STATUS(o.status) &&
-    (stCode(o.status) === '04' || st.data.shipments.some(s => s.orderId === o.id)));
-  shippedOrders.forEach(o => {
-    const ss = st.data.shipments.filter(s => s.orderId === o.id);
-    const lastShip = ss.map(s => s.shipDate).filter(Boolean).sort().pop();
+  /* ② 回款预警（v0.57 · 按账期）：
+     有账期 → 每批出货各自起算，应收日 = 该批发货日 + 账期；回款先进先出核销，
+              最早未收清那批的到期日就是催款日；已过 → 回款逾期，临近 → 回款待收。
+     无账期 → 退回老口径「最后发货日 + 固定阈值」，报「发货未收款」，不至于漏单。
+     ★ 绝不再拿 contractDelivery（合同交期）当收款日 —— 那是交货期限，账期根本没参与。 */
+  st.data.orders.forEach(o => {
+    if(!ACTIVE_STATUS(o.status)) return;
     const un = unpaidOf(o);
-    if(un > 0.005 && lastShip){
+    if(un <= 0.005) return;
+    const b = payBatchesOf(o, st);
+    if(b.days > 0){
+      const batch = b.rows.find(r => r.un > 0.005);
+      if(!batch || !batch.due) return;      /* 还没出货 → 账期还没开始走，不该催款 */
+      const d = diffToday(batch.due);
+      const openN = b.rows.filter(r => r.un > 0.005).length;
+      const meta = `${batch.shipNo || '出货'} ${batch.shipDate} ｜ 账期 ${b.days} 天 ｜ 应收 ${batch.due} ｜ 本批未收 ${money(batch.un)}`
+        + (openN > 1 ? ` ｜ 另有 ${openN - 1} 批未收` : '')
+        + (un > batch.un + 0.005 ? ` ｜ 整单未收 ${money(un)}` : '');
+      if(d < 0){
+        out.push({ lvl:'red', type:'回款逾期', orderId:o.id, title:`回款逾期 ${-d} 天 · ${o.orderNo}`, meta, days:d });
+      }else if(d <= (cfg.payDueSoon || 7)){
+        out.push({ lvl:'orange', type:'回款待收', orderId:o.id, title:`回款${d === 0 ? '今日到期' : 'T-' + d + ' 天'} · ${o.orderNo}`, meta, days:d });
+      }
+      return;
+    }
+    /* 无账期兜底：最后发货日 + 阈值 */
+    const lastShip = b.rows.map(r => r.shipDate).filter(Boolean).sort().pop();
+    if(lastShip){
       const age = -diffToday(lastShip);
       if(age >= (cfg.shipUnpaidDays || 30)){
         out.push({ lvl:'red', type:'发货未收款', orderId:o.id, title:`发货 ${age} 天仍未收齐 · ${o.orderNo}`,
-          meta:`发货日 ${lastShip} ｜ 未收 ${money(un)} ｜ 超阈值 ${cfg.shipUnpaidDays} 天`, days:age });
+          meta:`最后发货 ${lastShip} ｜ 未收 ${money(un)} ｜ 客户未设账期，按 ${cfg.shipUnpaidDays} 天阈值提醒`, days:age });
       }
-    }
-  });
-  // ③ 回款逾期 / 待收：以合同交期为收款预期基准，未收齐且临近/超过交期则警示
-  st.data.orders.forEach(o => {
-    if(o.status === DONE || !ACTIVE_STATUS(o.status) || !o.contractDelivery) return;
-    const un = unpaidOf(o);
-    if(un <= 0.005) return;
-    const d = diffToday(o.contractDelivery);
-    if(d < 0){
-      out.push({ lvl:'red', type:'回款逾期', orderId:o.id, title:`回款逾期 ${-d} 天 · ${o.orderNo}`,
-        meta:`合同交期 ${o.contractDelivery} ｜ 待收 ${money(un)}`, days:d });
-    }else if(d <= (cfg.payDueSoon || 7)){
-      out.push({ lvl:'orange', type:'回款待收', orderId:o.id, title:`回款${d===0?'今日到期':'T-'+d+' 天'} · ${o.orderNo}`,
-        meta:`合同交期 ${o.contractDelivery} ｜ 待收 ${money(un)}`, days:d });
     }
   });
   const rank = { red:0, orange:1, blue:2 };
@@ -2889,6 +3074,49 @@ function depositOf(st, o){
 /* ==========================================================================
    模块 7 · 图表引擎
    ========================================================================== */
+
+/* v0.66 · 图表画布宽度：手机档跟着卡片走。
+   绘图坐标系写死 860 宽时，字是随容器等比缩的 —— 卡宽 328 的手机上，
+   viewBox 里 10px 的字落到屏幕上只有 3.8px，缩到看不清。所以手机不再把
+   860 硬塞进去，而是**按容器实际宽度重建画布**（字保持 ~10px 真身）。
+   ★ 只在手机档（视口 ≤560px）生效：桌面即使分屏成两列、卡片只有 490 宽，
+     也维持原来的 860 画布 —— 那是既有观感，不该被这次「修手机」顺手改掉。
+   量不到宽度的场合一律回落 860：jsdom 没有排版引擎（clientWidth 恒 0，
+   matchMedia 一律 false），display:none 的容器也一样 —— 这两种情况必须走
+   老路径，否则测试与隐藏面板重渲染都会抖。 */
+const CH_W_BASE = 860, CH_W_MIN = 320, CH_W_KEEP = 520, CH_PHONE_MQ = '(max-width:560px)';
+function chartCanvasW(el, base){
+  const b = base || CH_W_BASE;
+  try { if(typeof matchMedia === 'function' && !matchMedia(CH_PHONE_MQ).matches) return b; }
+  catch(_e){ return b; }
+  const box = el && el.parentElement;
+  if(!box || typeof getComputedStyle !== 'function') return b;
+  const cs = getComputedStyle(box);
+  const pad = (parseFloat(cs.paddingLeft) || 0) + (parseFloat(cs.paddingRight) || 0);
+  const inner = (box.clientWidth || 0) - pad;
+  if(!(inner > 0)) return b;
+  return Math.max(CH_W_MIN, Math.round(inner));
+}
+/* v0.66 · SVG 里量不到字宽（没有 measureText），这里按 em 估：
+   中日韩全角算 1em、其余算 0.55em。用途只有一个 —— 坐标轴标签按**格子宽度**
+   裁字，不再按「几个字」拍脑袋：中文 5 个字在 10.5px 下就是 52 单位宽，
+   格子只有 37 单位时必然叠字（手机上看板 X 轴的「苏州靖/波武汉」就是这么叠出来的）。 */
+const CJK_RE = /[\u1100-\u115f\u2e80-\ua4cf\uac00-\ud7a3\uf900-\ufaff\ufe30-\ufe4f\uff00-\uff60\uffe0-\uffe6]/;
+function fitText(str, maxPx, fs){
+  /* 只有一处「至少留一个字」的兜底（就是下面那个 || ）：
+     别在这儿再写一次 Math.max(1, …)，两道护栏叠着，看起来更安全，
+     实际让「空串」这条分支永远走不到 —— 变异测试里那种改法会变成等价变异，
+     等于把一个真 bug 藏起来。 */
+  const max = maxPx / fs;
+  let out = '', w = 0;
+  for(const ch of String(str)){
+    const cw = CJK_RE.test(ch) ? 1 : 0.55;
+    if(w + cw > max) break;
+    out += ch; w += cw;
+  }
+  return out || String(str).slice(0, 1);
+}
+
 const Chart = (() => {
   function showTip(e, html){
     const t = $('#tip'); if(!t) return;
@@ -2899,11 +3127,25 @@ const Chart = (() => {
   function hideTip(){ const t = $('#tip'); if(t) t.style.opacity = 0; }
   const W = 860, H = 300, PL = 62, PR = 56, PT = 16, PB = 44;
   const moneyShortV = (v, metric) => metric === 'count' ? String(v) : moneyShort(v);
-  function bar(rows, metric){
+  /* v0.66：窄画布（手机卡）把左边距与右轴让窄一点，并收紧刻度标签，
+     否则 328 宽里左边白吃 62、右轴再吃 56，柱子只剩 210。
+     both=true 表示画了右轴（金额+数量双指标），右轴那点位置必须留够。 */
+  const geo = (cw, both) => {
+    const W = cw || 860, narrow = W < CH_W_KEEP;
+    return { W, narrow,
+      PL: narrow ? 42 : PL,
+      PR: narrow ? (both ? 34 : 16) : PR,
+      H, PT, PB };
+  };
+  function bar(rows, metric, cw){
+    const both = metric === 'both';
+    const { W, PL, PR } = geo(cw, both);
     const n = rows.length, iw = W - PL - PR, ih = H - PT - PB;
     const maxA = Math.max(1, ...rows.map(r => r.amount));
     const maxC = Math.max(1, ...rows.map(r => r.count));
     const step = iw / Math.max(1, n), bw = Math.min(44, step * 0.55);
+    /* 标签按格子宽度裁：留 4 单位呼吸，放不下就少写几个字，绝不叠字 */
+    const lblMax = Math.max(10, step - 4);
     const yA = v => PT + ih - (v / maxA) * ih;
     const yC = v => PT + ih - (v / maxC) * ih;
     let s = `<svg viewBox="0 0 ${W} ${H}" role="img">`;
@@ -2920,7 +3162,7 @@ const Chart = (() => {
         s += `<circle cx="${cx}" cy="${yC(r.count)}" r="4" fill="${INK.ink}"/>`;
         s += `<text x="${cx}" y="${yC(r.count)-9}" font-size="10" fill="${INK.ink}" text-anchor="middle">${r.count}</text>`;
       }
-      s += `<text x="${cx}" y="${H-PB+16}" font-size="10.5" fill="${INK.label}" text-anchor="middle">${esc(String(r.label).slice(0,7))}</text>`;
+      s += `<text x="${cx}" y="${H-PB+16}" font-size="10.5" fill="${INK.label}" text-anchor="middle">${esc(fitText(r.label, lblMax, 10.5))}</text>`;
       if(metric !== 'both') s += `<text x="${cx}" y="${yA(r.amount)-6}" font-size="10" fill="${INK.axis}" text-anchor="middle">${moneyShortV(metric==='count'?r.count:r.amount, metric)}</text>`;
     });
     return s + `<line x1="${PL}" y1="${PT+ih}" x2="${W-PR}" y2="${PT+ih}" stroke="${INK.base}"/></svg>`;
@@ -2953,7 +3195,9 @@ const Chart = (() => {
     }
     return s + '</svg>';
   }
-  function line(rows, metric, area){
+  function line(rows, metric, area, cw){
+    const both = metric === 'both';
+    const { W, PL, PR } = geo(cw, both);
     const iw = W - PL - PR, ih = H - PT - PB;
     const maxA = Math.max(1, ...rows.map(r => r.amount));
     const maxC = Math.max(1, ...rows.map(r => r.count));
@@ -2961,6 +3205,8 @@ const Chart = (() => {
     const X = i => PL + step*i;
     const YA = v => PT + ih - (v/maxA)*ih;
     const YC = v => PT + ih - (v/maxC)*ih;
+    /* 月份标签之间至少留 32 单位才不至于叠字：挤了就隔点写 */
+    const lblEvery = Math.max(1, Math.ceil(32 / Math.max(1, step)));
     let s = `<svg viewBox="0 0 ${W} ${H}">`;
     /* v0.40：双指标时补右轴刻度。金额与笔数各自归一化到满高，没有右轴就完全读不出
        虚线（笔数）的量级；柱状图一直有右轴，折线/面积图此前漏了。
@@ -2985,7 +3231,7 @@ const Chart = (() => {
     rows.forEach((r,i) => {
       s += `<circle cx="${X(i)}" cy="${YA(r.amount)}" r="3.6" fill="${INK.on}" stroke="${PALETTE[0]}" stroke-width="2"
              data-tip="${esc(r.label)}｜金额 ${money(r.amount)}｜订单 ${r.count} 单"><title>${esc(r.label)}</title></circle>`;
-      s += `<text x="${X(i)}" y="${H-PB+16}" font-size="10" fill="${INK.label}" text-anchor="middle">${esc(String(r.label).slice(-5))}</text>`;
+      if(i % lblEvery === 0) s += `<text x="${X(i)}" y="${H-PB+16}" font-size="10" fill="${INK.label}" text-anchor="middle">${esc(String(r.label).slice(-5))}</text>`;
     });
     return s + `<line x1="${PL}" y1="${PT+ih}" x2="${W-PR}" y2="${PT+ih}" stroke="${INK.base}"/></svg>`;
   }
@@ -2993,9 +3239,13 @@ const Chart = (() => {
      起点也没有方向，形态上就把「卡在哪一段」这层信息丢了；环形在宽卡里还两头留白。
      横向阶段条：每段一条，灰色轨道铺满（0 单的段也留着，链条不断），
      右侧直接给出「金额 · 笔数 · 占比」，一张图同时回答「多不多」和「挤在哪」。 */
-  function stage(rows, metric, colors){
-    const RH = 42, LW = 104, BW = 470, PADT = 16;
-    const vw = 860, vh = PADT*2 + rows.length*RH;
+  function stage(rows, metric, colors, cw){
+    /* v0.66：窄画布下左栏从 104 收到 62（标签只留前 4 字），右侧那串
+       「金额 · 笔数 · 占比」也压成只留占比 —— 手机上三样并排必然挤成一坨。
+       宽画布（≥520）走的是原样：LW 104 / 条区 470 / 画布 860，一个像素都不动。 */
+    const narrow = (cw || 860) < CH_W_KEEP;
+    const RH = 42, LW = narrow ? 62 : 104, BW = narrow ? Math.max(56, (cw || 860) - LW - 22 - 54) : 470, PADT = 16;
+    const vw = narrow ? (cw || 860) : 860, vh = PADT*2 + rows.length*RH;
     const x0 = LW + 22;
     const valOf = r => metric === 'count' ? r.count : r.amount;
     const maxV  = Math.max(1, ...rows.map(valOf));
@@ -3005,7 +3255,7 @@ const Chart = (() => {
       const cy = PADT + i*RH + RH/2 - 2;
       const bw = Math.max(3, valOf(r)/maxV * BW);
       const pct = (valOf(r)/total*100).toFixed(1);
-      s += `<text x="${LW}" y="${cy+4}" font-size="12" fill="${r.count ? INK.label : INK.axis}" text-anchor="end">${esc(String(r.label).slice(0,7))}</text>`;
+      s += `<text x="${LW}" y="${cy+4}" font-size="12" fill="${r.count ? INK.label : INK.axis}" text-anchor="end">${esc(String(r.label).slice(0, narrow ? 4 : 7))}</text>`;
       s += `<rect x="${x0}" y="${cy-9}" width="${BW}" height="18" rx="5" fill="${INK.grid}"/>`;
       /* 提示语按当前口径排头 —— 切到「笔数」时先给笔数，占比也跟着口径走，
          否则悬停看到的第一项和图上那根条量的是两回事。 */
@@ -3015,7 +3265,7 @@ const Chart = (() => {
       const fill = r.count ? ((colors && colors[i]) || PALETTE[i % PALETTE.length]) : INK.grid;
       s += `<rect x="${x0}" y="${cy-9}" width="${bw}" height="18" rx="5" fill="${fill}" opacity=".95"
              data-tip="${esc(String(r.label))}｜${main}｜${sub}｜占比 ${pct}%"><title>${esc(String(r.label))}</title></rect>`;
-      s += `<text x="${x0+BW+16}" y="${cy+4}" font-size="11.5" fill="${INK.ink}" style="font-variant-numeric:tabular-nums">${money(r.amount)} · ${r.count} 笔 · ${pct}%</text>`;
+      s += `<text x="${x0+BW+16}" y="${cy+4}" font-size="11.5" fill="${INK.ink}" style="font-variant-numeric:tabular-nums">${narrow ? pct + '%' : `${money(r.amount)} · ${r.count} 笔 · ${pct}%`}</text>`;
     });
     return s + '</svg>';
   }
@@ -3059,12 +3309,17 @@ const Chart = (() => {
       if(!rows.length){ el.innerHTML = '<div class="empty">当前筛选条件下没有数据</div>'; return; }
       const t = opt.type, m = opt.metric;
       if(t === 'table'){ el.innerHTML = table(rows); return; }
-      el.innerHTML = `<div class="tw"><div style="min-width:520px">${
-        t === 'bar'   ? bar(rows, m) :
-        t === 'pie'   ? pie(rows, m, false, opt.vw, opt.colors) :
-        t === 'donut' ? pie(rows, m, true, opt.vw, opt.colors) :
-        t === 'stage' ? stage(rows, m, opt.colors) :
-        t === 'line'  ? line(rows, m, false) : line(rows, m, true)
+      /* v0.66：画布宽按卡片实测宽度算（窄屏才生效，宽屏仍是 860）。
+         原来那层 `<div style="min-width:520px">` 已去掉 —— 正是它把
+         手机上的卡片顶到 530px、然后被 #page 裁掉。 */
+      const cw = chartCanvasW(el);
+      const vwPie = opt.vw ? Math.min(opt.vw, cw) : cw;
+      el.innerHTML = `<div class="tw"><div style="min-width:0">${
+        t === 'bar'   ? bar(rows, m, cw) :
+        t === 'pie'   ? pie(rows, m, false, vwPie, opt.colors) :
+        t === 'donut' ? pie(rows, m, true, vwPie, opt.colors) :
+        t === 'stage' ? stage(rows, m, opt.colors, cw) :
+        t === 'line'  ? line(rows, m, false, cw) : line(rows, m, true, cw)
       }</div></div>`;
       el.querySelectorAll('[data-tip]').forEach(n => {
         n.onmouseenter = e => showTip(e, n.getAttribute('data-tip'));
@@ -3102,8 +3357,8 @@ const Chart = (() => {
    —— 单一事实来源：界面标题 / 侧栏 / 「系统版本」页全部取自 APP_VERSION。
    新增一个版本时只需改两处：APP_VERSION / APP_UPDATED，并在 CHANGELOG 头部插一条。
    ========================================================================== */
-const APP_VERSION = 'v0.56';
-const APP_UPDATED = '2026-10-21';
+const APP_VERSION = 'v1.0.0';
+const APP_UPDATED = '2026-10-24';
 let   APP_NAME    = '订单追踪台';
 /* v0.54：工作台名支持用户重命名 —— APP_NAME_DEFAULT 是出厂默认，真实名从 localStorage 读。
    ★ 用 let 而不是继续 const：改名后要能被 document.title / 侧栏 / 桌面通知 / 思源库说明
@@ -3127,16 +3382,111 @@ function nameRead(){
 APP_NAME = nameRead();   /* 启动即用记住的名字（没改过 / 读不到 → 出厂默认） */
 /* v0.39：侧栏下方**只显示版本号**，不再显示这条「一句话」（详细说明请到「系统版本」页看）。
    APP_TAG 仍作为单点定义保留（更新日志 / 回归脚本引用它），只是不再渲染到侧栏。 */
-const APP_TAG     = '回款口径只留一处 · 超收与单号补防';
+const APP_TAG     = '回款预警改按账期 · 出货日 + 账期 = 应收日';
 
 const CHANGELOG = [
-  { v:'v0.56', date:'2026-10-21', cat:'回款口径只留一处 · 超收与单号补防', cur:true, items:[
+  { v:'v1.0.0', date:'2026-10-24', cat:'正式版：订单跟踪主线功能冻结，数据结构定稿', cur:true, items:[
+    '★ <b>为什么是 1.0</b>：不是又加了一个功能，而是<b>把一直在动的地基定下来</b>。从 v0.1 到 v0.66 这段路里，需求是一轮一轮长出来的 —— 表结构改过、状态口径改过、排产甚至整个取消了自己的状态。1.0 的意思是：业务链路跑通了，<b>数据结构不再随手改</b>，往后是修与扩，不是推倒重来。',
+    '★ <b>主线闭环</b>：询价 → 报价（3 套纸张模板 + 打印）→ 签约 → 排产（多工单 / 挂起 / 交期风险分级）→ 分批发货 → 分次回款（账期 + 超收确认）→ 完结。订单 6 段状态贯穿全站，回款独立跟踪。',
+    '★ <b>数据契约定稿</b>：`orders` / `prods` / `production` / `shipments` / `receipts` / `customers` / `suppliers` / `supplierProducts` / `recycle` 九张表。其中 <b>排产不持有状态与进度</b>（v0.65 定案）：唯一真源是订单 `status`，排产只留一个 `paused` 布尔挂起标 —— 同一件事只记一遍，结构上不可能打架。',
+    '★ <b>界面基线</b>：iOS 风格设计语言（字号 / 颜色 / 圆角全部令牌化）、WorkBuddy 式分屏（每格独立滚动、列宽可拖可记忆）、纵向表单、列表头点击排序、i-icon 收纳说明、深色跟随系统。报价单纸张模板<b>刻意不参与令牌化</b> —— 打印布局不能被主题改。',
+    '★ <b>单文件离线</b>：一个 HTML 装完，零 CDN、零构建依赖，双击就能用；数据落 IndexedDB，可导入导出、可 PWA 安装、可七牛云 S3 多端同步。发给别人只要给一个文件，不装环境也能跑。',
+    '★ <b>质量门槛</b>：62 套 jsdom 回归 / 3559 条断言全绿 + 每轮变异测试（把实现逐处改坏，专项断言必须见红，且要能还原）。这套东西的价值不在数字，而在于<b>敢改</b>：改错了有东西立刻喊。',
+    '★ <b>顺手修掉的老毛病</b>：本页的更新日志一直在把富文本标签当字面印出来 —— 渲染函数 `vlogText` 只认「反引号 → code」这一种语法，历史上有 44 个版本写的是 HTML 标签，于是页面上真的印出「&lt;code&gt;orders&lt;/code&gt;」。这一版 154 处全部改成反引号，并加了两条护栏：数据侧不许出现标签、渲染侧必须真的长出 code 元素 —— 两头都锁，免得下次只改一边。',
+    '★ <b>1.0 之后的规矩</b>：版本号走语义化 —— <b>破坏数据结构 / 需要迁移老数据的改动才配叫 2.0</b>，新功能走 1.x。老数据靠 `migrateProdRows()` 这类迁移函数在 `Store.setData()` 单一入口收敛，不写「手工修一下」的说明文档。',
+    '· 未做（明确不在 1.0）：客户销售排行等 7 列表格在手机上仍横向滚动（表格该滚，压成看不清更糟）；用友 U9C 目前是只读同步 + Excel 历史导入，不做写回；思源笔记是属性视图单向/双向同步，不是主存储。',
+  ]},
+  { v:'v0.66', date:'2026-10-24', cat:'手机端看板不再「右边被切掉」：图表画布跟着卡片走', items:[
+    '★ <b>病根</b>：图表里写死了 `min-width:520px`，卡片因此被顶到 <b>530px</b>；390 的手机上它既装不下、又被 `#page` 的 `overflow:hidden` 裁掉 —— 所以是「图表右边看不见、还滑不动」，不是能滚只是没滚。',
+    '★ <b>布局侧</b>：grid 子项默认 `min-width:auto`，会被内部内容的<b>最小宽度</b>顶宽、连带把整条轨道撑爆。全站补上 `.grid&gt;*{min-width:0}`，卡片宽度从此只由容器决定；同时去掉图表那层 520px 地板。',
+    '★ <b>可读性侧</b>：光「塞得下」不够 —— 860 的坐标系压进 356 的卡里，10px 的字只剩 <b>3.8px</b>。手机档（视口 ≤560）改成<b>按卡片实测宽度重建画布</b>（缩放 1.00，字就是 10px 真身）；桌面哪怕分屏成 490 宽也维持原来的 860 画布，观感一点不动。',
+    '★ <b>标签不再叠字</b>：坐标轴标签原来按「几个字」拍脑袋截，中文 5 字 ≈ 52 单位、格子只有 37 单位，于是叠成「苏州靖/波武汉」。现在按<b>格子实宽</b>裁字（全角算 1em、半角 0.55em），放不下就少写几个字；折线图横轴按「每格至少 30 单位」自动隔点写。完整名字仍在图例与悬停提示里。',
+    '★ <b>窄画布让位</b>：柱/折线左轴 62→42、右轴 56→16（双指标 34）；阶段条左栏 104→62、右侧「金额 · 笔数 · 占比」压成只留占比；单量分布的左右两栏 106/186→64/64。都是为了让「图形本身」在手机上还有地方画。',
+    '★ <b>顶部控件不再竖排</b>：分段控件（`.seg`）是 flex 项，窄屏被压到几十像素，「近 90 天」折成三行、「全年」直接被裁。现在按钮不折行、整组不参与收缩、放不下就自己横向滚，外层按整组换行 —— 一行放不下就整组掉下一行，字永远横着读。',
+    '★ <b>实测（Edge 4320 全程）</b>：320 / 360 / 375 / 390 / 430 / 520 / 560 / 768 / 900 / 1024 / 1280 / 1440 十二档，页面级横向溢出<b>全为 0</b>；手机档图表缩放 <b>1.00</b>、图内文字 10px 起；桌面 860 画布保持原样（缩放 0.42～1.01）。',
+    '· 未改：客户销售排行这类 7 列表格在手机上仍横向滚动（表格该滚，不该被压成看不清）；阶段条窄屏右侧只留占比，金额改看悬停提示。',
+  ]},
+  { v:'v0.65', date:'2026-10-24', cat:'取消排产自己的状态：排产状态 / 进度一律跟随订单', items:[
+    '★ <b>为什么改</b>：v0.62 加了「订单状态自动同步到排产」，v0.64 又修「同步时读到旧状态」—— 两次都是在给<b>两份状态</b>打补丁。根子在排产记录上单独存了一份状态与进度：同一件事记两遍，就总有一天会不一致。这一版把那份直接删掉，不留"同步"这件事。',
+    '★ <b>结构变化</b>：`production` 表去掉 `opStatus`（排产状态）与 `progressPct`（完成进度）两个字段，只留 `paused`（挂起，布尔）。排产显示的状态与进度，一律由所属订单的 `status` 现算：<b>已签约→待排产 0% ｜ 已排产→生产中 30% ｜ 已完工待发货及以后→已完工 100%</b>。',
+    '★ <b>再也不会不同步</b>：不存在「写第二份状态」这个动作，也就不存在漏写、写晚、写到旧值。改订单状态的那一刻，订单页、排产页、详情面板、卡片视图、看板同时就是新值。',
+    '★ <b>「已暂停」降级为「已挂起」</b>：它不是第四种状态。挂起只是给这条排产打个标记 —— 状态列照旧显示订单处在哪个阶段，旁边多一个「已挂起」橙色角标；筛选里作为单独一项，可以「只看被挂起的排产」。',
+    '★ <b>表单只留三项</b>：排产记录现在只填 <b>排产单号 / 计划开工 / 计划完工</b>，加一个「挂起」开关。原来那两个「状态」「完成进度（按状态自动）」输入框彻底移除 —— 既然状态跟随订单，就不该在这里留一个改状态的入口。',
+    '★ <b>老数据怎么办</b>：以订单状态为准（你的选择）。载入时自动收敛：原本「已暂停」的记录转成挂起标记（这层信息不丢），其余状态值与手填进度直接丢弃；两个旧键同时从记录里删掉，免得它们继续在导出 / 快照 / 回填里冒充业务字段。',
+    '★ <b>排产页说明同步改写</b>：tooltip 直接写明「状态与进度都跟随订单，本页没有改状态的入口，去订单详情改」；保存后的提示也不再是「已同步 N 条」，而是当场告诉你这条排产现在的状态与进度。',
+    '★ <b>一条连带的取舍</b>：v0.46 那两条「手填百分比」「已完成 ÷ 生产数量」的备用进度口径一并下线 —— 它们原本只服务老数据，而老数据这次统一以订单状态为准，留着就是第三条互相打架的口径。',
+  ]},
+  { v:'v0.64', date:'2026-10-24', cat:'修复「订单已排产、排产状态还是待排产」', items:[
+    '★ <b>现象</b>：把订单状态设成「02 已排产」时，同一订单号下的排产记录仍然停在「待排产」/ 0%，还得人工再去排产页改一遍。',
+    '★ <b>根因</b>：新建排产记录时，代码按<b>内存里的订单状态</b>决定起步状态（`st.data.orders`）。而——<b>新建订单</b>时那笔单还没进内存（记录都不存在），<b>编辑订单</b>时 `st.data` 要等 `reload()` 才更新。两种情况下读到的都是<b>旧状态</b>，于是新建出来的排产记录一律落到「待排产」。',
+    '★ <b>修复</b>：把「本次保存即将写入的订单状态」显式传给排产落库函数（`runOrderMoNos(st, plan, status)`），新建记录按它起步 → 已排产 = 生产中 30%、已完工待发货 = 已完工 100%、已签约 = 待排产 0%。',
+    '★ <b>覆盖三个场景</b>：① 编辑订单改状态 <b>并同时新增排产单号</b>；② 新建订单时状态直接选「已排产」并填单号；③ 订单已有排产记录、只改状态（这条 v0.62 就是好的，本次补上回归防止退化）。',
+    '★ <b>顺带堵一个坑</b>：详情面板的状态下拉若拿到认不出的值，以前会把 `undefined` 写进 status，整笔订单会被迁移逻辑当脏数据<b>直接丢掉</b>；现在认不出就什么都不做。',
+  ]},
+  { v:'v0.63', date:'2026-10-24', cat:'客户档案新增「国家/地区」· 数据看板新增「订单数量分析」模块', items:[
+    '★ <b>客户档案新增「国家/地区」</b>：字段 `region`，可输入下拉（常用国家/地区可选、也能直接敲新的），客户列表多一列「国家/地区」、详情分屏的档案信息里也显示。这是看板按地区统计订单的唯一数据源。',
+    '★ <b>港澳台写法固定</b>：候选值一律是「中国香港 / 中国澳门 / 中国台湾」，不出现任何能被读成独立国家的写法；自由输入也沿用同一套口径。',
+    '★ <b>看板新增「订单数量分析」</b>：紧跟 KPI 之后、金额维度分析之前。四个指标 —— <b>订单总数 / 商品件数 / 日均单量 / 覆盖地区</b>；左侧「单量趋势」按时间桶出柱状或折线，右侧「单量分布」按状态 / 地区 / 业务员 / 客户出条形或表格。',
+    '★ <b>两种口径</b>：「订单笔数」按订单条数算；「商品件数」按 v0.61 的<b>订单数量</b>字段求和 —— 未填的不计入、也不拿 0 冒充，卡片上直接写「N 笔已填 / M 笔未填」。',
+    '★ <b>时间范围独立可选</b>：跟随筛选 / 近 30 天 / 近 90 天 / 近 365 天 / 本年 / 全部。它是在<b>顶部筛选结果之上再收窄</b>（不是另起一套过滤），归集基准日仍沿用全局的签订日 / 合同交期 / 回款实收日。',
+    '★ <b>粒度与自动降级</b>：月 / 周 / 日三档；选「日」但窗口超过 62 天时自动按周聚合，并在卡片右上角写明「范围长，已按周聚合」—— 静默改口径比不改更糟。',
+    '★ <b>状态多选筛选</b>：7 个 chip（全部 + 6 段），只作用于本模块，不影响上方金额卡片与其它页面；点「全部状态」一键清空。',
+    '★ <b>口径只认档案</b>：地区分组只看客户档案的 `region`，空值统一归「未填写」，<b>不拿地址猜、不从公司名猜</b> —— 猜出来的分组经不起对账。卡里会提示还有几家客户没填地区。',
+    '★ <b>趋势不留假空档</b>：连续时间桶全铺（没有订单的月份也留一根 0 柱），中间断档一眼能看出来；峰值在卡片底部直接标出。',
+  ]},
+  { v:'v0.62', date:'2026-10-24', cat:'分屏缩放后列宽能长回来 · 订单状态自动同步排产状态', items:[
+    '★ <b>修「分屏缩了、全屏回不来」</b>：列宽拆成<b>基准</b>与<b>渲染</b>两层。基准（`colBase`）与容器宽度无关、只在列数变化或用户拖动时改；容器变窄时整表<b>等比压缩</b>，系数单独记在 `colScale` 里，容器一宽回来就照基准原样长回去。原来每一次渲染都拿「已经注入固定宽的表格」实测当自然宽 —— 分屏量到的是被压扁的窄值，写回内存后基准就丢了，所以再也恢复不了；更糟的是首屏那条「把超出容器的差值从最宽一列扣掉」的逻辑，在分屏态会把某一列直接扣成几像素。',
+    '★ <b>容器一变就重排</b>：用 `ResizeObserver` 盯着表格的滚动容器，<b>开 / 关详情分屏、缩放窗口、收起展开侧栏</b>都会自动重算一次。观察的是容器外框宽度（由布局决定、不受表格内容影响），不会自己触发自己，另有一道「宽度差 &lt; 2px 就跳过」的防线。',
+    '★ <b>拖动仍然跟手、且不会被分屏污染</b>：拖的是基准宽，显示宽 = 基准 × 缩放系数，所以分屏态鼠标移 10px 显示也移 10px。落盘的是<b>基准</b>而非当前渲染宽 —— 以前在分屏态拖一下，就会把压扁后的窄值存成「用户意图」，下次全屏打开还是窄的。',
+    '★ <b>订单状态 → 排产状态自动同步</b>：已签约→待排产、已排产→生产中、<b>已完工待发货 / 已发货 / 已收款 / 已完结→已完工</b>，排产进度随之落 0% / 30% / 100%（进度本来就只跟状态走）。改一次订单状态，该单下所有排产记录一起走，不用再人工重复改。',
+    '★ <b>五条入口一次覆盖</b>：同步挂在数据层的 `update` 上 —— 订单表单、详情属性面板、批量修改、发货推进（已发货）、思源同步都走这一条，不存在「某条路径漏同步」。同一次落盘完成，不会出现「订单改了、排产没改」的中间态。',
+    '★ <b>规则说清楚，不做小聪明</b>：订单状态是主导方，<b>推进和回退都跟着走</b>（回退时两边仍然一致才叫同步）；唯一例外是排产的「已暂停」—— 人工挂起，订单还在已签约 / 已排产阶段时不动它，订单推进到已完工待发货及以后自动解除。<b>反向不回写</b>：排产单独改成「已完工」不会把订单推成「已完工待发货」（订单状态还牵着发货、收款、完结，自动推进太激进）。',
+    '★ <b>新建排产记录按订单状态起步</b>：订单已经是「已排产」时补录排产单，不会再建出一条「待排产」。保存后 toast 会写明「排产状态已同步 N 条 → 已完工」，批量修改则汇总成一条提示。',
+  ]},
+  { v:'v0.61', date:'2026-10-24', cat:'导航栏可收起 · 订单新增「数量」字段 · 去掉页面级滚动条', items:[
+    '★ <b>导航栏可收起</b>：侧栏底部新增「收起导航」按钮，收起后只剩图标（宽 224 → 62px），再点一下展开。状态记在本机（`ot_sb_collapsed`），刷新 / 重开保持；收起后每项挂 `title`，鼠标停一下就能看到页名。手机端（≤920px）侧栏本来就是抽屉，不收窄，按钮隐藏。',
+    '★ <b>订单新增「订单数量」</b>：<b>独立手工字段</b>，不从产品明细或排产数量推算 —— 一单常有多款产品、排产还会拆多张工单，自动合计出来的数字跟合同上的总件数对不上，反而添乱。列表在「交期」右侧多一列「数量」（可点列头排序），表格底部的<b>小计 / 合计两行也累加数量</b>，并标注「已填数量的 N 笔」说明口径；空值显示「—」而不写 0（0 件订单不存在，写 0 会让「没填」看着像「填了 0」）。订单表单、详情属性面板、导出 Excel 都带上这一列。',
+    '★ <b>智能录入认得数量</b>：「订单数量：1200」「数量 500 件」「共 1200 件」「3000pcs」都能识别，也认 1,200 这种千分位；读到 0 或非数字只提示、不落值，缺这一项不算「必填未填」。',
+    '★ <b>去掉页面级滚动条</b>：订单页 / 排产页最右侧那条<b>页面</b>滚动条不再显示（`scrollbar-width:none` + `::-webkit-scrollbar{width:0}`），内容仍可正常滚动，`scrollbar-gutter:stable` 保留以免滚动条消失时布局左右跳动。<b>表格内部（.tw.tscroll）与排产看板（.mkan）的滚动条不动</b> —— 它们要承担表头吸顶、汇总栏吸底，去掉就没法横向看全 12 列。',
+    '★ <b>一致性</b>：数量列走同一套列宽引擎（可拖、可记忆、汇总栏列宽同步），导出列序与表头列序一致；卡片视图的「字段」菜单多了「订单数量」可勾项（<b>默认不勾</b>，既有默认布局不变）。',
+  ]},
+  { v:'v0.60', date:'2026-10-24', cat:'汇总栏固定到表格底部（U9 式：上小计、下合计，滚动不跑）', items:[
+    '★ <b>汇总改到表格底部，两条常驻栏</b>：上「小计」、下「合计」，就是 U9 列表底部那两行。不再是 v0.59 那样把分组小计<b>插在数据行中间</b>，也不再是 v0.58 那样在<b>表格外面飘一条汇总条</b>。',
+    '★ <b>两栏真的固定</b>：每个汇总单元格单独 `position:sticky` 吸底 —— `tr` 的 sticky 各浏览器实现不一致（Safari 直接不生效），落点只能选 `td`；其中合计压在最底 `bottom:0`，小计叠在它上方 `bottom:30px`。表格纵向滚动时<b>表头吸顶、这两行吸底</b>，翻到哪一行都看得见。',
+    '★ <b>小计口径</b>：<b>已勾选行 ∩ 当前筛选</b>；一笔没勾时 = <b>当前页</b>。标签直接写「所选 N 笔」/「当前页 N 笔」，不用猜这两行差在哪；被筛选挡住的勾选不参与。',
+    '★ <b>合计口径</b>：当前筛选结果<b>分页之前</b>的全部行 —— 所以分页时小计（当页）与合计（全部）才有区别，这正是 U9 的用法。分页与汇总栏不再互斥（v0.59 那个「半组小计」的顾虑随分组小计一起消失）。',
+    '★ <b>撤掉的东西</b>：「小汇总 / 大汇总」两个开关、分组维度下拉（客户 / 业务员 / 状态 / 交期月份）、组内小计行全部移除 —— 汇总栏常驻，没有可关的入口，标题右侧也就不再挂开关。',
+    '★ <b>边界不猜</b>：无订单 → 两行照出「0 笔 / ¥0」而不隐藏（忽隐忽现比空数字更慌）；只有一笔 → 小计 = 合计；未收按<b>单笔夹 0</b> 求和、超收单独提示；金额按分取整。卡片视图没有列，退化成底部合计条，口径一致。',
+  ]},
+  { v:'v0.59', date:'2026-10-23', cat:'汇总改两级（U9 式）：小汇总 = 分组小计，大汇总 = 全表合计', items:[
+    '★ <b>去掉 v0.58 的「汇总货款」勾选项</b>：靠勾选决定汇总范围不符合做账习惯 —— 挑几笔算总额靠筛选，不靠勾选。订单列表改为 <b>两级汇总</b>，与 U9 表格一致：<b>小汇总</b>（每组一行小计）+ <b>大汇总</b>（全表一行合计），<b>勾选重新只服务批量修改</b>，两者彻底解耦。',
+    '★ <b>小汇总（分组小计）规则</b>：按选定维度分组 —— <b>客户 / 业务员 / 状态 / 交期月份</b>，默认客户。每组末行插一行小计「小计 · 客户名 · N 笔 · 货款 · 已收 · 未收 · 回款率」，<b>金额落在金额列、已收落在已收列</b>，不用再把飘着的条子对回表格。组顺序按分组键升序，<b>组内仍按你点的列头排序</b>（不抢排序权）。',
+    '★ <b>大汇总（全表合计）规则</b>：当前筛选结果<b>分页之前的全部行</b>一行的合计，挂在表格 <b>tfoot</b>，永远压在最底下。卡片视图没有列，退化成底部合计条，笔数 / 货款 / 已收 / 未收 / 回款率 / 超收口径完全一致。',
+    '★ <b>切换方式</b>：列表标题右侧两个<b>互相独立</b>的开关「小汇总」「大汇总」，可单开也可同开（同开就是 U9 的常见形态）。<b>默认大汇总开、小汇总关</b> —— 打开页面就有总额，与小计无关。小汇总的分组维度用旁边的下拉随时换，换完立刻重排分组。',
+    '★ <b>小汇总与分页互斥</b>：分页会把一组切成两段，小计就成了「半组小计」，比不显示更误导。开小汇总会自动关掉分页，再开分页会自动关掉小汇总，两边都有 toast 说明，不做静默折中。',
+    '★ <b>边界不猜</b>：无订单 → 合计行仍显示「0 笔 / ¥0」（不消失）；某组只有一笔 → 小计照出，与大汇总相等；客户未匹配 / 交期未填 → <b>单独成组</b>（「未匹配客户」「未填交期」），绝不静默丢行；未收按<b>单笔夹 0</b> 求和、超收单独提示，金额按分取整（0.1 + 0.2 = 0.3）。',
+  ]},
+  { v:'v0.58', date:'2026-10-23', cat:'订单列表「汇总货款」· 勾选即只汇总所选（已由 v0.59 改为两级汇总）', items:[
+    '★ <b>汇总不再只能看全部</b>：订单列表标题右侧新增「<b>汇总货款</b>」勾选项。不勾选（默认）→ 汇总<b>当前筛选的全部订单</b>；勾上 → 只汇总<b>已勾选的订单</b>。给某客户 / 某业务员挑几笔单独算总额、核对报价，不用再导 Excel 求和。',
+    '★ <b>汇总结果固定在列表下方</b>（表格视图与卡片视图都在）：一行给出 <b>货款合计 / 已收 / 未收 / 回款率</b>，并写清这次算的是哪一批 ——「汇总范围 全部 12 笔」或「汇总范围 所选 3 笔 / 全部 12 笔」；出现超收时多一格「超收」。',
+    '★ <b>边界都说清楚，不猜</b>：无订单 → 0 笔 / ¥0 +「当前筛选没有命中订单」；勾了「汇总货款」却一笔没选 → 记 <b>¥0 并提示</b>（<b>不偷偷退回全部</b>，否则读数会被当成「全部」而误判），旁边给一键「全选当前筛选」；部分勾选 → 补「所选占全部 25%」；所选订单被筛选挡住 → 不计入并提示「另有 N 笔被隐藏」。',
+    '★ <b>分页不影响汇总范围</b>：10 / 页只看得到第一页时，汇总仍按<b>分页之前的整份筛选结果</b>算，条上注明「含分页未显示的行」—— 避免把第一页的合计当成了全量。',
+    '★ <b>口径与列表列一致</b>：货款 = 订单金额求和；已收含手续费核销（与「已收」列同口径）；未收按<b>单笔夹到 0</b> 求和（超收不倒挂去冲抵别的单，另起「超收」提示）；求和先按分取整，0.1 + 0.2 不会算出 0.30000000000000004。勾选状态<b>只存内存不落盘</b> —— 刷新后勾选集合本就清空，持久化「只汇总所选」只会让人下次打开看到 ¥0。',
+  ]},
+  { v:'v0.57', date:'2026-10-22', cat:'回款预警改按账期 · 出货日 + 账期 = 应收日', items:[
+    '★ <b>回款预警不再拿「合同交期」当收款日</b>：原来一笔单在合同交期一过就报「回款逾期」，可合同交期是<b>交货</b>期限，跟客户什么时候该付钱没关系 —— 10-01 出货、账期 21 天的单，实际 10-22 才到期，系统 10 月初就开始催。现在改成 <b>应收日 = 出货日 + 账期</b>：账期 21 天、10-01 出货 → <b>10-22 应收</b>，逾期 / 待收全部按这个日子算。',
+    '★ <b>分批出货按「每批各自起算」</b>：10-01 发 3 万、10-15 发 2 万、账期 21 天 → 第一笔 <b>10-22</b> 到期、第二笔 <b>11-05</b> 到期，早发的那批不会被晚发的拖后。回款不按批指定，所以按<b>先进先出</b>核销（先发的先收），最早那批未收清的到期日就是整单催款日；详情页每批发货都单独显示「应收日 + 未收 / 已结清」。',
+    '★ <b>账期在客户档案维护，订单可单独覆盖</b>：默认读客户档案的「账期天数」；订单表单与详情新增「账期（天）」，<b>留空 = 跟随客户</b>，填了就只覆盖本单（临时放宽 / 收紧某单用）。详情页「应收日」一行直接给出「应收 10-22 · 剩 3 天 / 逾期 2 天（另有 N 批未收）」。',
+    '★ <b>没设账期时退回老口径，不漏单</b>：客户和订单都没填账期时，按「最后发货日 + 预警规则里的兜底天数（默认 30）」报「发货未收款」，预警规则里把这一项改名为「<b>无账期兜底</b>」。三条回款预警（发货未收款 / 回款逾期 / 回款待收）一个没少，只是判据换了。',
+    '★ <b>还没出货就不催款</b>：账期从出货那天才开始走 —— 没有发货记录的订单不再出现在回款预警里（订金属于合同条款，未付时会以「待收订金」出现在回款中心，但不进逾期预警）。回款中心新增「<b>应收日</b>」列，顶部 KPI 的「已逾期未收 / 7 日内到期」也换成账期口径。',
+  ]},
+  { v:'v0.56', date:'2026-10-21', cat:'回款口径只留一处 · 超收与单号补防', cur:false, items:[
     '★ <b>修掉「一半生效一半不生效」的回款表单</b>：订单编辑表单里原来还有「订金付款日 / 尾款付款日 / 实收尾款金额 / 差额已结清」四个老字段。v0.55 起回款以<b>流水</b>为准，改前三个对已收<b>毫无影响</b>，可「差额已结清」偏偏仍会动未收 —— 同一组控件一半灵的、一半是摆设。现在<b>只要该单已有流水，这四个字段就整组收起</b>，分组标题改成「本单已有 N 笔流水 · 请到「回款」页逐笔登记」；<b>「订金金额」作为合同条款保留</b>（它影响尾款金额与回款率，与流水无关）。',
-    '★ <b>顺带堵住一个会改数的坑</b>：保存订单时原来无条件回写这四个字段。表单收起它们之后，<code>values</code> 里读到的就是空值 —— 一保存就会把<b>镜像付款日抹掉</b>、把「差额已结清」<b>重置成未结清</b>，未收金额凭空跳高（实测「订金金额 = 0 但记过订金流水」的单必中）。现在有流水的单保存时<b>完全不碰这四个键</b>。',
+    '★ <b>顺带堵住一个会改数的坑</b>：保存订单时原来无条件回写这四个字段。表单收起它们之后，`values` 里读到的就是空值 —— 一保存就会把<b>镜像付款日抹掉</b>、把「差额已结清」<b>重置成未结清</b>，未收金额凭空跳高（实测「订金金额 = 0 但记过订金流水」的单必中）。现在有流水的单保存时<b>完全不碰这四个键</b>。',
     '★ <b>表单顶部的回款预览条跟着换口径</b>：有流水的单显示「已收 / 未收 / N 笔流水」，不再显示「订金 未付 / 尾款 未付」—— 否则回款页明明收到钱了，表单上却说一分没收。',
     '★ <b>登记回款时超收要确认</b>：累计到账超过订单金额（预收下批货款、客户抹零补款都合法）不会被硬拦，但会先弹确认框写明「已收 + 本次 = 合计 > 订单金额（超 X）」。与发货的「超发确认」对齐 —— 分次回款最容易犯的错就是多打一位数。',
     '★ <b>自动出货单号不再自己撞自己</b>：单号留空时由系统生成，原来生成撞号后直接弹「单号已被占用」—— 号是系统起的，却要用户自己想一个。现在<b>生成时就循环避开已占用号段</b>，留空连开两单也不会互相打架。',
-    '★ <b>云端同步的表清单补上「回款」</b>：<code>includePayments</code> 这个开关早就在配置里默认开着，但设置页一直没有对应的勾选框 —— 想单独关掉回款同步无处可点。现在「同步设置 → 参与同步的表」里有「回款」了。',
+    '★ <b>云端同步的表清单补上「回款」</b>：`includePayments` 这个开关早就在配置里默认开着，但设置页一直没有对应的勾选框 —— 想单独关掉回款同步无处可点。现在「同步设置 → 参与同步的表」里有「回款」了。',
   ]},
   { v:'v0.55', date:'2026-10-20', cat:'分次回款流水 · 分批发货多单号', cur:false, items:[
     '★ <b>回款可以分次数登记</b>：原来是订单上「订金一笔 + 尾款一笔」两个固定字段，装不下第三笔。现在改成<b>回款流水</b>——一笔到账一条记录，各自记 <b>日期 / 金额 / 款项类型 / 回款方式 / 流水号 / 备注</b>。已收 = 各笔合计，未收 = 订单金额 − 已收，回款率按笔推进。分批出货、多次汇款的标准场景终于对得上了。',
@@ -3147,42 +3497,42 @@ const CHANGELOG = [
     '★ 回款流水进 S3 快照、回收站与整组删除：删订单时它的流水跟着进回收站，可整组还原；清空业务数据时一并清掉，不留孤儿记录。',
   ]},
   { v:'v0.54', date:'2026-10-20', cat:'工作台可重命名 · 顶栏当日日期星期', cur:false, items:[
-    '★ <b>工作台可以重命名</b>：侧栏左上角标题旁边出现<b>铅笔</b>（鼠标移上去才显形），双击标题也行 —— 弹层里改名，保存后<b>侧栏标题、浏览器标签页、桌面通知标题、思源同步库说明</b>一起变（它们引用同一个常量 <code>APP_NAME</code>）。名字存 <code>ot.appname.v1</code>，刷新 / 换页都还记得，清空保存即恢复默认「订单追踪台」。',
-    '★ <b>改名不动任何技术标识</b>：导出文件的 <code>_format</code> 盐值、IndexedDB 库名、<code>ot.*</code> 存储键全都与名字无关 —— 改名不会让已有订单 / 产品 / 图片「对不上」，也不会让 S3 同步失败。',
-    '★ <b>名字做了清洗与限长</b>：控制字符（换行、Tab）一律剔除 —— 否则侧栏标题会塌成两行、<code>document.title</code> 也会折行；连续空格压成一个，最长 24 字，超长用省略号收尾。',
-    '★ <b>顶栏显示当日日期与星期</b>：如「<code>2026年10月20日 星期二</code>」，周末把星期标红；窄屏自动收成「<code>10-20 周二</code>」不挤占按钮。日期取<b>本地时区</b>（不走 UTC，东八区早上 8 点前不会显示成前一天）；跨零点由<b>任意操作 / 切回标签页 / 页面重渲染</b>自动校准，同一日只短路比较、不碰 DOM。',
+    '★ <b>工作台可以重命名</b>：侧栏左上角标题旁边出现<b>铅笔</b>（鼠标移上去才显形），双击标题也行 —— 弹层里改名，保存后<b>侧栏标题、浏览器标签页、桌面通知标题、思源同步库说明</b>一起变（它们引用同一个常量 `APP_NAME`）。名字存 `ot.appname.v1`，刷新 / 换页都还记得，清空保存即恢复默认「订单追踪台」。',
+    '★ <b>改名不动任何技术标识</b>：导出文件的 `_format` 盐值、IndexedDB 库名、`ot.*` 存储键全都与名字无关 —— 改名不会让已有订单 / 产品 / 图片「对不上」，也不会让 S3 同步失败。',
+    '★ <b>名字做了清洗与限长</b>：控制字符（换行、Tab）一律剔除 —— 否则侧栏标题会塌成两行、`document.title` 也会折行；连续空格压成一个，最长 24 字，超长用省略号收尾。',
+    '★ <b>顶栏显示当日日期与星期</b>：如「`2026年10月20日 星期二`」，周末把星期标红；窄屏自动收成「`10-20 周二`」不挤占按钮。日期取<b>本地时区</b>（不走 UTC，东八区早上 8 点前不会显示成前一天）；跨零点由<b>任意操作 / 切回标签页 / 页面重渲染</b>自动校准，同一日只短路比较、不碰 DOM。',
   ]},
   { v:'v0.53', date:'2026-10-20', cat:'操作按钮固定在题头 · 长表单不用滚到底', cur:false, items:[
     '★ <b>「保存」「取消」搬到表单题头</b>：产品库的编辑表单字段多（基础信息 + 包装资料 + 产品图 + 包装文件），原来按钮压在最底部，<b>每次保存都得先滚到底</b>。现在和「编辑」「删除」放在同一行 —— 题头是<b>吸顶</b>的，内容滚多远按钮都在。',
-    '★ <b>产品详情题头的「编辑」「删除」本来就在吸顶行</b>（<code>.hd</code> 一直是 <code>position:sticky</code>），这次一并核对过遮罩模式与分屏模式两种形态，滚动时都不跑。',
-    '★ <b>标题给按钮让位</b>：<code>.hd</code> 里标题过长时用省略号收尾，按钮与关闭键标了 <code>flex:none</code> —— 420px 窄屏也不会因为标题长把「保存」挤出可视区。',
+    '★ <b>产品详情题头的「编辑」「删除」本来就在吸顶行</b>（`.hd` 一直是 `position:sticky`），这次一并核对过遮罩模式与分屏模式两种形态，滚动时都不跑。',
+    '★ <b>标题给按钮让位</b>：`.hd` 里标题过长时用省略号收尾，按钮与关闭键标了 `flex:none` —— 420px 窄屏也不会因为标题长把「保存」挤出可视区。',
     '★ <b>底部那行「保存 / 取消」直接删掉</b>，不做两处重复按钮 —— 同一表单两个保存键，误点哪个都容易懵。'
   ]},
   { v:'v0.52', date:'2026-10-20', cat:'供应商 SKU 可重复 · 产品库排序记忆', cur:false, items:[
     '★ <b>供应商产品库允许 SKU 重复</b>：新增 / 编辑供应商产品时不再拦「SKU 已存在」，同一个 SKU 可以建多条（对应不同工厂型号、不同报价、不同批次）。<b>客户产品库仍要求 SKU 唯一</b> —— 客户侧 SKU 是对客报价编码，重复了报价单和订单就指不清。',
     '★ <b>导入的定位口径跟着一起改</b>：客户产品按 SKU 命中即更新（老行为不变）；供应商产品改成按「<b>SKU + 归属供应商</b>」定位，且<b>只有唯一命中才更新</b>。同一组合已有两三条时（说明你是有意重复录入的），本次一律<b>追加</b>，不去猜该覆盖哪一条 —— 宁可多一行，也不静默改错价格。',
-    '★ <b>同 SKU 排序不再随机换位</b>：原来排序打平时只拿 SKU 兜底，重复 SKU 的行每次排序顺序都可能变；现在补了一级 <code>id</code> 兜底，同样的数据每次打开顺序完全一致。',
-    '★ <b>产品库排序有记忆了</b>：点列头排「价格降序」，刷新页面、关掉重开、切到别的页再回来，<b>还是价格降序</b> —— 客户产品库和供应商产品库各记各的，互不覆盖。存 <code>localStorage</code> 的 <code>ot.psort.v1</code>。',
-    '★ <b>排序记忆不复用 <code>ot.sort.v1</code></b>：那个键由订单 / 排产两页整体重写，产品库混进去会被下一次点订单页列头顺手抹掉。字段表校验照旧 —— 脏数据或旧版本写进去的键，一律退回「按更新时间倒序」。'
+    '★ <b>同 SKU 排序不再随机换位</b>：原来排序打平时只拿 SKU 兜底，重复 SKU 的行每次排序顺序都可能变；现在补了一级 `id` 兜底，同样的数据每次打开顺序完全一致。',
+    '★ <b>产品库排序有记忆了</b>：点列头排「价格降序」，刷新页面、关掉重开、切到别的页再回来，<b>还是价格降序</b> —— 客户产品库和供应商产品库各记各的，互不覆盖。存 `localStorage` 的 `ot.psort.v1`。',
+    '★ <b>排序记忆不复用 `ot.sort.v1`</b>：那个键由订单 / 排产两页整体重写，产品库混进去会被下一次点订单页列头顺手抹掉。字段表校验照旧 —— 脏数据或旧版本写进去的键，一律退回「按更新时间倒序」。'
   ]},
   { v:'v0.51', date:'2026-10-20', cat:'产品图放大预览 · 表格宽度摊平', cur:false, items:[
     '★ <b>产品图可以点开看大图</b>：列表缩略图、产品详情的主图、编辑表单里的图片，点一下弹出全屏预览（等比缩放到视口内，小图不会被强行放大）。<b>点任意处 / 右上「×」/ Esc</b> 关闭。',
     '★ <b>点缩略图不会再顺带打开详情</b>：列表整行绑着「点行开详情」，放大监听走<b>捕获阶段</b>并截住事件 —— 看大图就只看大图，要详情照旧点行里别的位置。',
-    '★ <b>修「搜索只剩两三个产品时页面变窄」</b>：根因是列宽总和小于容器宽时，表格就只占那么宽（<code>table-layout:fixed</code> 按列宽走），右边空出一大片 —— 搜索结果越少越明显，拖过列宽之后更容易出现。现在<b>列宽总和不足容器时按比例摊回</b>，表格始终撑满。',
+    '★ <b>修「搜索只剩两三个产品时页面变窄」</b>：根因是列宽总和小于容器宽时，表格就只占那么宽（`table-layout:fixed` 按列宽走），右边空出一大片 —— 搜索结果越少越明显，拖过列宽之后更容易出现。现在<b>列宽总和不足容器时按比例摊回</b>，表格始终撑满。',
     '★ <b>摊平只做加法</b>：列宽总和超过容器时一个字都不动（该出现的横向滚动条照旧出现），绝不压缩你拖好的列；产品图列宽被 CSS 钉死 56px，不参与分摊；四舍五入的余数补给最宽的一列，避免差 1px 又冒出横向滚动条。',
     '★ <b>摊平值不写进记忆</b>：拖动列宽存的是你亲手拖出来的值，摊平只是渲染时的补足 —— 换设备 / 重开页面不会把「补宽的列」当成你的偏好。',
     '★ <b>搜索后列表卡片不再往下塌</b>：结果从 20 条筛到 2 条时，表格高度取刷新前的值作下限，页面不会「缩一下」再弹回来；清空搜索自然长回去，缩小窗口由下一次渲染复位。'
   ]},
   { v:'v0.50', date:'2026-10-20', cat:'滚动位置保持 · 重渲染不再跳回顶部', cur:false, items:[
-    '★ <b>修「改个数据页面就弹回最上面」</b>。原来每次重渲染都用 <code>innerHTML</code> 整块换掉内容区：内容在一瞬间变空 → <code>scrollHeight</code> 归零 → 浏览器把 <code>scrollTop</code> 钳成 0，新内容填回来也不会自己回到原处。所以<b>改订购状态、点「重新载入」、切排序、在筛选里敲一个字</b>，都会把人踢回顶部。',
-    '★ <b>做法</b>：重建前先记下「已经滚过的容器」及其 <code>scrollTop / scrollLeft</code>，重建后按 <b>DOM 路径</b>找回来写回。只记滚过的（正常也就 1~3 处），开销可以忽略；路径认节点位置不认节点本身，所以重建多少次都命中。',
-    '★ <b>恢复排在高度自适应之后</b>：内容区高度是实测回写的，提前写 <code>scrollTop</code> 会被那一瞬间的中间高度钳住；再补一帧兜住缩略图 / 字体晚一帧才撑开的高度。补帧只补「还是 0」的位置，<b>不会覆盖你正在进行的滚动</b>。',
-    '★ <b>卡片内表格也一起保</b>：产品库 / 客户 / 供应商这类卡片里的表（<code>.tw.tscroll</code>）换 <code>thead</code> / <code>tbody</code> 时同样会被钳到 0，现在一并恢复 —— 筛选、排序、改状态后停在原处。',
+    '★ <b>修「改个数据页面就弹回最上面」</b>。原来每次重渲染都用 `innerHTML` 整块换掉内容区：内容在一瞬间变空 → `scrollHeight` 归零 → 浏览器把 `scrollTop` 钳成 0，新内容填回来也不会自己回到原处。所以<b>改订购状态、点「重新载入」、切排序、在筛选里敲一个字</b>，都会把人踢回顶部。',
+    '★ <b>做法</b>：重建前先记下「已经滚过的容器」及其 `scrollTop / scrollLeft`，重建后按 <b>DOM 路径</b>找回来写回。只记滚过的（正常也就 1~3 处），开销可以忽略；路径认节点位置不认节点本身，所以重建多少次都命中。',
+    '★ <b>恢复排在高度自适应之后</b>：内容区高度是实测回写的，提前写 `scrollTop` 会被那一瞬间的中间高度钳住；再补一帧兜住缩略图 / 字体晚一帧才撑开的高度。补帧只补「还是 0」的位置，<b>不会覆盖你正在进行的滚动</b>。',
+    '★ <b>卡片内表格也一起保</b>：产品库 / 客户 / 供应商这类卡片里的表（`.tw.tscroll`）换 `thead` / `tbody` 时同样会被钳到 0，现在一并恢复 —— 筛选、排序、改状态后停在原处。',
     '★ <b>该跳的地方还跳</b>：点侧栏切页仍然回到顶部 —— 那是主动换视图，继承上一页的位置反而莫名其妙。滚动位置<b>只在你主动操作时改变</b>：滚轮 / 拖滚动条 / 点右下角「回到顶部」。',
     '★ <b>结构真变了就不动</b>：列表被筛短、区块增删导致路径对不上时直接放弃恢复 —— 宁可停在浏览器算出来的合法位置，也不乱滚到别处。'
   ]},
   { v:'v0.49', date:'2026-10-19', cat:'导入编码修复 · 泰文 / UTF-16 / 粘贴导入', cur:false, items:[
-    '★ <b>修「导入后泰文变问号」</b>。两种成因，分开处理：① 文件其实是 <b>TIS-620 / Windows-874</b>（Excel 泰文版的默认 ANSI），原来一律按 GBK 解 → 得到一串乱码汉字，看着像「不认识泰文」；② 更常见的是<b>字在保存那一步就丢了</b> —— Excel「CSV(逗号分隔)」用系统 ANSI 写文件时，泰文/中文无法表示，直接写成 <code>?</code>，此时文件里就是问号，任何解码器都还原不了。',
+    '★ <b>修「导入后泰文变问号」</b>。两种成因，分开处理：① 文件其实是 <b>TIS-620 / Windows-874</b>（Excel 泰文版的默认 ANSI），原来一律按 GBK 解 → 得到一串乱码汉字，看着像「不认识泰文」；② 更常见的是<b>字在保存那一步就丢了</b> —— Excel「CSV(逗号分隔)」用系统 ANSI 写文件时，泰文/中文无法表示，直接写成 `?`，此时文件里就是问号，任何解码器都还原不了。',
     '★ <b>编码探测重写</b>：BOM（UTF-8 / UTF-16LE / UTF-16BE）→ UTF-8 严格解码 → 无 BOM 的 UTF-16（看 `0x00` 分布）→ GBK / BIG5 / Windows-874 按「替换符 + 控制字符最少、泰文最多」打分挑选。**编码可手动指定**（自动 / UTF-8 / GBK / BIG5 / TIS-620 / UTF-16），选过就记住（`ot.impenv.v1`）—— 做泰文业务只需选一次。',
     '★ <b>导入前先看预览</b>：选完文件不再直接落库，先弹预览层 —— <b>前 4 行原文 + 识别到的数据行数 + 分隔符 + 编码</b>。切编码即时重解、预览跟着变，乱码一眼就能看出来。<b>表头缺 SKU / 归属列、没有数据行时「导入」按钮直接禁用</b>。',
     '★ <b>新增「粘贴表格导入」</b>（本次泰文问题的根治方案）：在 Excel 里选中区域 <b>Ctrl+C</b>，粘进弹层 —— <b>走剪贴板（UTF-16），不经过任何文件编码，泰文一个字都不会丢</b>，也不用管另存为什么格式。',
@@ -3196,7 +3546,7 @@ const CHANGELOG = [
     '★ <b>产品库列宽可拖动并记忆</b>：拖列头右边缘实时改宽，松手写 `ot.colw.v1`；<b>客户产品 / 供应商产品各存一套</b>（`cprod` / `sprod`），互不覆盖，排序或搜索重绘后不丢。产品图列宽度是缩略图 + 内边距钉死的，不给把手（免得「拖了没反应」）。',
     '★ <b>文字对齐左 / 中 / 右</b>：工具栏三段切换，整表生效并记忆（`ot.palign.v1`）。只影响产品库两张表；数字列原本默认右对齐，手动切过之后以你的选择为准。',
     '★ <b>产品列表导入导出</b>：导出<b>导入模版</b>（20 列表头 + 1 行示例）、导出<b>当前列表</b>（与页面同排序、同筛选结果）、<b>导入 CSV</b>。导入按 <b>SKU upsert</b>：同库内 SKU 相同 → 更新，不同 → 新增；归属按 名称 / 简称 / 编码 匹配，<b>匹配不到整行跳过并报行号</b>，不造孤儿产品。',
-    '导入的<b>状态时间口径与表单一致</b>：订购状态没变就保留原 <code>statusAt</code>，变了才刷今天 —— 批量导入不会把整库的「订购状态更新时间」一次性刷平。中文 Excel 另存的 <b>GBK 编码 CSV 也能读</b>（UTF-8 解码失败自动改 GBK）。',
+    '导入的<b>状态时间口径与表单一致</b>：订购状态没变就保留原 `statusAt`，变了才刷今天 —— 批量导入不会把整库的「订购状态更新时间」一次性刷平。中文 Excel 另存的 <b>GBK 编码 CSV 也能读</b>（UTF-8 解码失败自动改 GBK）。',
     '导出的 CSV 带 BOM，Excel 双击打开中文不乱码；模版里那行示例是<b>真实可导入</b>的完整值，导入前删掉即可。'
   ]},
   { v:'v0.47', date:'2026-10-19', cat:'产品库 · 客户产品 / 供应商产品 / 供应商档案', cur:false, items:[
@@ -3222,12 +3572,12 @@ const CHANGELOG = [
     '<b>老数据不丢、口径单一</b>：车间 / 实际开工 / 实际完工 / 生产数量 / 已完成数量不再出现在界面上，但老记录里的值<b>原样保留</b>；当你编辑某条老记录时，进度会按其<b>当前显示值</b>预填、保存即完成口径迁移（进度不会跳变），数量随之归零 —— 从此不再有「藏在背后的第二条进度口径」。',
     '<b>列宽记忆跟着列数走</b>：列宽是按序号存的，列数变了之后旧宽度会错位到别的列上，现在长度对不上就整份丢弃、回到自然宽度。',
     '★ <b>单号重复提示栏可以动手了</b>：每组重复单号后面带「<b>跳转</b>」（直接打开该单号的排产详情；组里的每个订单号也都能点，各自跳到自己那条记录）与「<b>忽略</b>」。',
-    '★ <b>「忽略」是永久的</b>：点过忽略的单号<b>刷新、重开页面都不再提示</b>（写进本地记忆 <code>ot.moignore.v1</code>，单号大小写与首尾空白视为同一个）；提示栏底部会显示「已忽略 N 个单号」并给一个「<b>恢复全部</b>」把提示放回来。若重复的单号都被忽略了，提示栏缩成一行回执，不会把版面占着，恢复入口仍在。',
+    '★ <b>「忽略」是永久的</b>：点过忽略的单号<b>刷新、重开页面都不再提示</b>（写进本地记忆 `ot.moignore.v1`，单号大小写与首尾空白视为同一个）；提示栏底部会显示「已忽略 N 个单号」并给一个「<b>恢复全部</b>」把提示放回来。若重复的单号都被忽略了，提示栏缩成一行回执，不会把版面占着，恢复入口仍在。',
     '<b>「交期对比」保留为查询维度</b>：它不再出现在排产信息里，但筛选条件面板里的「交期对比 = 已逾期未完工」仍可用（不占字段位），排产卡片视图上的交期标签也保留。',
   ]},
   { v:'v0.44', date:'2026-09-30', cat:'列头排序状态记忆 · 刷新不丢', items:[
     '★ <b>列头排序会「记住」了</b>：点订单表 / 排产表的列头排序后，<b>刷新或重开页面仍保持</b>刚才那一列与升降序，不用每次进来重排。卡片视图的「排序」下拉（含表格列头没有的「自定义顺序」「签订日」）同样记忆。',
-    '★ <b>记忆按页面各存各的</b>：订单页排「金额降序」、排产页排「进度降序」，两者互不影响、互不覆盖；写入 <code>localStorage</code> 的 <code>ot.sort.v1</code>，与列宽记忆（<code>ot.colw.v1</code>）各用各的键。',
+    '★ <b>记忆按页面各存各的</b>：订单页排「金额降序」、排产页排「进度降序」，两者互不影响、互不覆盖；写入 `localStorage` 的 `ot.sort.v1`，与列宽记忆（`ot.colw.v1`）各用各的键。',
     '<b>脏数据不崩</b>：读取时会校验「字段仍在当前字段表里 + 方向合法」，旧版本 / 手改过 / 损坏的记忆一律退回该页默认排序（订单＝交期升序，排产＝计划完工升序），不会把列表弄乱或让页面报错。',
   ]},
   { v:'v0.43', date:'2026-09-30', cat:'排产单号多值 · 单号独立详情', items:[
@@ -3236,74 +3586,74 @@ const CHANGELOG = [
     '★ <b>每个排产单号有自己的独立详情</b>：在「排产」页点一行 / 卡片，或从订单详情里点单号，打开的是<b>这个工单</b>的视图（车间、计划 / 实际开工完工、数量、进度条、交期对比、交期倒计时），而不是订单详情；面板里可以一键「返回订单」，同单的其它单号也能直接横跳。',
     '★ <b>排产单号全局唯一</b>：跨订单也不许重复（大小写不敏感、忽略首尾空白）。排产表单、订单表单、思源导入三条写入路径全部把关，冲突时<b>明确报出占用它的订单号</b>且不落库。存量若已有重复，「排产」页顶部会给一条<b>只提示、不改数据</b>的提示条。',
     '★ <b>签约后没排产会提醒</b>：订单状态是「已签约」却一条排产记录都没有 → 订单列表状态列与看板卡片打「<b>待排产</b>」标，订单页工具栏同时给出待排产笔数；状态已推进到排产之后却没有记录（数据缺失）则打「<b>缺单号</b>」标。',
-    '<b>数据口径收口</b>：排产单号的唯一可编辑来源是<b>排产记录</b>，<code>orders.moNo</code> 退化为<b>派生只读快照</b>（导出、搜索、看板、思源推送照旧可用，但不再手工编辑）—— 从此不会出现「订单上写的单号」与「排产记录里的单号」两处对不上。',
+    '<b>数据口径收口</b>：排产单号的唯一可编辑来源是<b>排产记录</b>，`orders.moNo` 退化为<b>派生只读快照</b>（导出、搜索、看板、思源推送照旧可用，但不再手工编辑）—— 从此不会出现「订单上写的单号」与「排产记录里的单号」两处对不上。',
     '<b>批量修改不再改排产单号</b>：批量查找替换会绕过唯一校验、并让快照与记录不一致，已从可替换字段中移除；要改单号请到「排产」页逐条编辑，或在订单详情里用标签调整。',
     '<b>思源导入遇单号冲突不再静默覆盖</b>：跳过该条并在同步日志里报出「单号 + 占用方订单号」。',
   ]},
   { v:'v0.42', date:'2026-09-30', cat:'品牌名收口 · 测试契约统一', items:[
-    '★ <b>通知标题与思源库说明收口到单点常量</b>：桌面通知（测试通知 / 严重预警）与思源同步库的文档说明原先写死「订单追踪工作台」，v0.39 改名后成了漏网的旧名 —— 现一律引用 <code>APP_NAME</code>，以后改品牌名不会再漏。',
-    '★ <b>PWA 应用名对齐</b>：<code>manifest.webmanifest</code> 的 <code>name</code> 由「订单追踪工作台」改为「订单追踪台」（根目录与部署包两份同步），装到桌面 / 手机后的应用名与应用内一致。',
+    '★ <b>通知标题与思源库说明收口到单点常量</b>：桌面通知（测试通知 / 严重预警）与思源同步库的文档说明原先写死「订单追踪工作台」，v0.39 改名后成了漏网的旧名 —— 现一律引用 `APP_NAME`，以后改品牌名不会再漏。',
+    '★ <b>PWA 应用名对齐</b>：`manifest.webmanifest` 的 `name` 由「订单追踪工作台」改为「订单追踪台」（根目录与部署包两份同步），装到桌面 / 手机后的应用名与应用内一致。',
     '★ <b>三套回归脚本的汇总输出统一为标准契约</b>：23 / 28 / 29 号此前各用一套自己的格式（「通过 N / 失败 M」「通过 N 项 · 失败 M 项」），开发目录的全量运行器解析不到，长期被标成「异常」并<b>少计 36 条断言</b>（包内运行器本就兼容这三套，所以两边总数一直差 36）。现在统一输出「结果：N/M 通过」，任何运行器都能解析。',
     '★ <b>全量运行器的兼容规则补齐</b>：原兼容规则漏了「项」与分隔符之间的空格（实际输出是「项 · 失败」），且不认「通过 N / 失败 M」—— 这才是那三套被判「异常」的直接原因。现按优先级补齐多条规则，并排除「汇总行被当成失败行」的噪音。',
-    '<b>口令盐值确认冻结</b>：<code>passKeyBytes</code> 的盐值仍保持原样不动（跟着品牌名改会让此前「记住口令」的密文全部解不开），并保留断言守护。',
+    '<b>口令盐值确认冻结</b>：`passKeyBytes` 的盐值仍保持原样不动（跟着品牌名改会让此前「记住口令」的密文全部解不开），并保留断言守护。',
   ]},
   { v:'v0.41', date:'2026-09-30', cat:'排产页搜索栏收敛', items:[
     '★ <b>排产页工具栏的搜索框移除</b>：与筛选按钮并排的关键字输入（工单号 / 订单号 / 客户）撤掉，<b>顶部全局筛选栏的「关键字」成为唯一入口</b>（排产页照旧是独立作用域，不串订单页）。原本页内搜索比顶部多认一个「工单号」，现把工单号匹配<b>补进顶部关键字在排产页的语义</b>里 —— 能力不丢，入口只剩一个。',
     '<b>顶部关键字在排产页的语义补上「工单号」</b>：工单号命中与订单命中<b>并联</b>放行 —— 不能串在订单筛选之后，否则有关键字时订单先被筛空、工单号一个都搜不到（回归探针实测复现后修复）。',
-    '页内搜索相关死代码一并清理：<code>pKw</code> 变量 / 输入绑定 / <code>OT.setPKw</code> 导出全部移除，关键字状态只活在筛选作用域里。',
+    '页内搜索相关死代码一并清理：`pKw` 变量 / 输入绑定 / `OT.setPKw` 导出全部移除，关键字状态只活在筛选作用域里。',
   ]},
   { v:'v0.40', date:'2026-09-29', cat:'图表表达修复 · 状态分布重构', items:[
     '★ <b>月度销售趋势补上「系列图例」</b>：实线 = 金额、虚线 = 笔数（读右轴）。此前这张卡<b>完全没有图例</b>，那条虚线其实是一条无名线；同时补了<b>右轴笔数刻度与轴单位</b> —— 两条线各自归一化到满高却只画了左轴，笔数的量级根本读不出来；虚线此前<b>也没有悬停提示</b>，现在悬停能看到区间合计笔数。',
     '★ <b>订单状态分布改「阶段条」形态</b>：状态 01→06 本身就是一条<b>有序流水线</b>，环形图的圆既没有起点也没有方向，形态上把「卡在哪一段」这层信息丢了。改为横向阶段条：灰色轨道<b>铺满整条链</b>（0 单的段也留位，链条不断），右侧直接给出「金额 · 笔数 · 占比」；环形占不满画布、两头大片留白的毛病一并解决（环形仍保留，画布收窄到 520，环占满画布）。',
     '★ <b>状态分布新增「金额 / 笔数」双口径</b>：此前固定按金额，一笔大单就能把其余段压成细丝、看上去「只有一格」。切到笔数即按笔数重算条形长度与占比，悬停提示也跟着当前口径排头，并标出「N/6 段有单」。',
-    '★ <b>月度归集口径跟随「基准」</b>：卡片副标题一直写着「按签订日 / 合同交期 / 回款实收日归集」，但月份分组<b>恒取签订日</b> —— 一套口径三个说法，切到合同交期时 x 轴月份与筛选范围对不上。现在 month 维度真正按 <code>basis</code> 取值：回款口径取该单<b>最后一笔回款日</b>（订金 / 尾款中较晚者），保证<b>一笔订单只落 1 个月</b>，不重复计入。',
+    '★ <b>月度归集口径跟随「基准」</b>：卡片副标题一直写着「按签订日 / 合同交期 / 回款实收日归集」，但月份分组<b>恒取签订日</b> —— 一套口径三个说法，切到合同交期时 x 轴月份与筛选范围对不上。现在 month 维度真正按 `basis` 取值：回款口径取该单<b>最后一笔回款日</b>（订金 / 尾款中较晚者），保证<b>一笔订单只落 1 个月</b>，不重复计入。',
     '图表图例补「N 笔」：此前只给金额占比，看不出笔数结构。',
     '<b>状态分布改用语义色</b>：通用色板的第 4 位是系统灰，正好落在「已发货」上 —— 有单的段看上去像个空档。现在按流水线顺序配一套语义色（与列表状态标签同一语言），<b>0 单的段直接用轨道色</b>，不再假装「有一点点数据」。'
   ]},
   { v:'v0.39', date:'2026-09-29', cat:'标题精简 · 客户订单数口径修复', items:[
-    '★ <b>侧栏标题改为「订单追踪台」</b>，下方<b>只留版本号</b>，原先那行「vX · 一句话说明」不再占位置（要看详细说明请到「系统版本」页）。标题同时接入单点常量 <code>APP_NAME</code>，由 <code>applyVersion()</code> 一并写入 DOM，不再只靠静态 HTML 兜底。',
+    '★ <b>侧栏标题改为「订单追踪台」</b>，下方<b>只留版本号</b>，原先那行「vX · 一句话说明」不再占位置（要看详细说明请到「系统版本」页）。标题同时接入单点常量 `APP_NAME`，由 `applyVersion()` 一并写入 DOM，不再只靠静态 HTML 兜底。',
     '★ <b>修「客户页订单数对不上」</b>：客户列表的「订单数」此前取自<b>被顶部筛选收窄过的</b>订单集，而同一行的删除保护提示、「暂无订单」统计、侧栏「订单」徽标取的都是<b>全量</b>——同一行里两套口径，顶部一有筛选就对不上。现在客户页的行内数字<b>统一按「该客户全部订单」算</b>，与侧栏徽标同口径：<b>每个客户的订单数恒等于它实际关联的订单条数</b>。',
-    '★ <b>订单 ↔ 客户 自动匹配（三级）</b>：关联以 <code>customerId</code> 为准，但历史导入（Excel / U9C / 思源）里这个字段可能落成<b>客户编码</b>或<b>客户全称 / 简称</b>——这类订单此前在客户页<b>一笔都算不到</b>。现按 <code>id → code → name/shortName</code> 三级解析（沿用 v0.13 思源客户匹配的既有口径）自动归位；删除保护也一并改走这套解析，避免按编码关联的订单被误判成「无关联」而放行删除。',
+    '★ <b>订单 ↔ 客户 自动匹配（三级）</b>：关联以 `customerId` 为准，但历史导入（Excel / U9C / 思源）里这个字段可能落成<b>客户编码</b>或<b>客户全称 / 简称</b>——这类订单此前在客户页<b>一笔都算不到</b>。现按 `id → code → name/shortName` 三级解析（沿用 v0.13 思源客户匹配的既有口径）自动归位；删除保护也一并改走这套解析，避免按编码关联的订单被误判成「无关联」而放行删除。',
     '★ <b>对不上的订单不再悄悄消失</b>：客户页汇总行新增「订单 N 笔」与「⚠ N 笔订单未匹配到客户」（标红 + 悬停说明），让「各家订单数之和 + 未匹配数 ＝ 全部订单数」一眼对得平；<b>只提示、绝不自动改写订单数据</b>。',
     '<b>口径说明</b>：客户页的「订单数 / 订单金额 / 已回款 / 未回款」四列统一为该客户全量口径（顶部筛选不再收窄它们，它作用于看板 / 订单 / 回款 / 排产）。这样才能保证同一行里的数字互相自洽，也让「客户订单数」在任何筛选状态下都等于实际订单数。'
   ]},
   { v:'v0.38', date:'2026-09-29', cat:'iOS 界面改版 · 跟随系统深浅色 · 智能录入助手', cur:false, items:[
-    '★ <b>界面整体换成 iOS 风格</b>：配色改用 Apple 系统色（systemBlue / Red / Orange / Yellow / Green / Teal / Gray），卡片圆角放大到 12px、控件圆角 10px、控件统一高 34px，按钮 / 分段控件 / 标签胶囊 / 输入框 / 提示条按 iOS 观感重绘。<b>只改外观，功能与数据一字未动</b>——全部红线（<code>#sheet</code> / <code>.hd</code> / <code>.bd</code> / 内容区唯一滚动 / 列表页零滚动 / <code>fitPageH()</code> 实测填充）依旧成立。',
-    '★ <b>跟随系统深浅色</b>：新增 <code>@media (prefers-color-scheme: dark)</code> 深色档，<b>只重定义一套 token</b>，组件不需要第二套规则；浅色下 <code>-600</code> 用作正文深档、深色下自动切到亮档，避免文字沉进背景。切换系统外观即时生效，不用刷新。',
-    '★ <b>图表同步换肤</b>：SVG 图表的调色板与墨色拆成两份（<code>PALETTE_LIGHT/DARK</code> + <code>INK_LIGHT/DARK</code>），由 <code>applyScheme()</code> 读取系统偏好写入；<code>matchMedia</code> 变化时自动重渲染，深色下坐标轴与网格不再是刺眼白。',
-    '★ <b>修掉一个隐蔽的「深色失效」Bug</b>：深色 <code>@media</code> 块此前被<b>嵌在浅色 <code>:root{}</code> 声明块内部</b>，真实浏览器按 CSS 嵌套规则把内层 <code>:root</code> 编译成 <code>:root :root</code>（html 的后代）——<b>永远匹配不到元素</b>，等于深色档根本没生效。现把整块提到顶层，深色 token 与 <code>color-scheme</code> 正常落地。',
+    '★ <b>界面整体换成 iOS 风格</b>：配色改用 Apple 系统色（systemBlue / Red / Orange / Yellow / Green / Teal / Gray），卡片圆角放大到 12px、控件圆角 10px、控件统一高 34px，按钮 / 分段控件 / 标签胶囊 / 输入框 / 提示条按 iOS 观感重绘。<b>只改外观，功能与数据一字未动</b>——全部红线（`#sheet` / `.hd` / `.bd` / 内容区唯一滚动 / 列表页零滚动 / `fitPageH()` 实测填充）依旧成立。',
+    '★ <b>跟随系统深浅色</b>：新增 `@media (prefers-color-scheme: dark)` 深色档，<b>只重定义一套 token</b>，组件不需要第二套规则；浅色下 `-600` 用作正文深档、深色下自动切到亮档，避免文字沉进背景。切换系统外观即时生效，不用刷新。',
+    '★ <b>图表同步换肤</b>：SVG 图表的调色板与墨色拆成两份（`PALETTE_LIGHT/DARK` + `INK_LIGHT/DARK`），由 `applyScheme()` 读取系统偏好写入；`matchMedia` 变化时自动重渲染，深色下坐标轴与网格不再是刺眼白。',
+    '★ <b>修掉一个隐蔽的「深色失效」Bug</b>：深色 `@media` 块此前被<b>嵌在浅色 `:root{}` 声明块内部</b>，真实浏览器按 CSS 嵌套规则把内层 `:root` 编译成 `:root :root`（html 的后代）——<b>永远匹配不到元素</b>，等于深色档根本没生效。现把整块提到顶层，深色 token 与 `color-scheme` 正常落地。',
     '★ <b>新增「智能录入助手」页</b>（侧栏「业务」组 + 顶栏 ✨ 快捷入口）：把订单信息写成一句话就能建单，例如「帮我新增订单，单号是123456，金额是222.00，客户是xxx，交货日期2026.6.30」。',
-    '★ <b>字段顺序 / 说法 / 完整度都能灵活适配</b>：同义说法表覆盖 12 个字段（订单号 / 客户 / 金额 / 合同交期 / 税金 / 签订日期 / 状态 / 排产单号 / 产品摘要 / 业务员 / 付款条件 / 贸易条款）；值写在关键词前或后都取得到（「9月30号交货」「¥8800 订单」同样认）；金额容忍 <code>¥</code> / 千分位 / <code>万</code> / <code>k</code>，日期容忍 <code>2026.6.30</code> / <code>2026年6月30日</code> / <code>6/30</code> / <code>今天</code> 等写法。',
+    '★ <b>字段顺序 / 说法 / 完整度都能灵活适配</b>：同义说法表覆盖 12 个字段（订单号 / 客户 / 金额 / 合同交期 / 税金 / 签订日期 / 状态 / 排产单号 / 产品摘要 / 业务员 / 付款条件 / 贸易条款）；值写在关键词前或后都取得到（「9月30号交货」「¥8800 订单」同样认）；金额容忍 `¥` / 千分位 / `万` / `k`，日期容忍 `2026.6.30` / `2026年6月30日` / `6/30` / `今天` 等写法。',
     '★ <b>「提示不猜」是硬约束</b>：必填缺项（客户 / 金额 / 合同交期）标红追问并禁用提交；同一字段读到多个值会列出来由你定；客户名对不上时给 <b>候选列表</b>（点一下即选），库里没有则需你确认才新建——<b>绝不自动建档、绝不错误录入</b>。',
     '★ <b>录入前先确认</b>：解析结果以「识别结果 · 请确认」卡片逐字段展示（可直接改），点「确认录入」才落库；写入前会自动存一份快照，可到「数据历史」回滚到「智能录入前」。<b>纯本地规则解析，零联网、不上传任何内容</b>。',
-    '回归：新增 <code>54_v0.38_iOS主题与深浅色.js</code> 与 <code>55_v0.38_智能录入助手.js</code>；并把 <code>36</code>（页面总数 11 → 12）与真机核对清单同步。全量回归 0 FAIL。'
+    '回归：新增 `54_v0.38_iOS主题与深浅色.js` 与 `55_v0.38_智能录入助手.js`；并把 `36`（页面总数 11 → 12）与真机核对清单同步。全量回归 0 FAIL。'
   ]},
   { v:'v0.37', date:'2026-09-29', cat:'思源双向同步重构 · 专用同步库 8 列', cur:false, items:[
     '★ <b>整块重写思源同步，目标只有两个字：降复杂度</b>。旧方案（v0.18 / v0.19 系列）要工作台去猜库里已有哪些列、按列名做中文别名匹配、再维护一张三段字段映射表，任何一处对不上就整条链路卡死。新方案换成 <b>「一个专用库 + 8 个固定列 + 扁平表」</b>：工作台<b>一键建库建列</b>，两端列名逐字一致，读 / 写 / 比对共用同一套字段。',
-    '★ <b>查到并修掉真正的病根</b>：v0.19.3 记的「思源写接口在本机静默失效」是<b>错误结论</b>——真因是<b>建列接口名写错了</b>：旧代码请求 <code>/api/av/addAttributeViewColumn</code>，而思源 3.8.x 里<b>没有这个接口</b>，真名是 <code>/api/av/addAttributeViewKey</code>。请求一直打在错误路径上，自然「建了 0 列」。v0.37 起全部改走实测通过的接口。',
+    '★ <b>查到并修掉真正的病根</b>：v0.19.3 记的「思源写接口在本机静默失效」是<b>错误结论</b>——真因是<b>建列接口名写错了</b>：旧代码请求 `/api/av/addAttributeViewColumn`，而思源 3.8.x 里<b>没有这个接口</b>，真名是 `/api/av/addAttributeViewKey`。请求一直打在错误路径上，自然「建了 0 列」。v0.37 起全部改走实测通过的接口。',
     '<b>专用同步库固定 8 列</b>：订单号 / 客户 / 排产单号 / 货款 / 交货日期 / 状态 / 产品摘要 / 业务员。<b>订单号为主键</b>，一张订单一行、扁平存储，不再为每张订单拆出一堆子块。',
-    '★ <b>三步走的同步卡片</b>：<b>① 一键连接</b>（本机 <code>127.0.0.1:6806</code> + Token，可留空）→ <b>② 读取并比对</b> → <b>③ 应用变更</b>。比对结果按 <b>待推送 / 待回填 / 冲突 / 仅思源有</b> 四类分别列出。',
+    '★ <b>三步走的同步卡片</b>：<b>① 一键连接</b>（本机 `127.0.0.1:6806` + Token，可留空）→ <b>② 读取并比对</b> → <b>③ 应用变更</b>。比对结果按 <b>待推送 / 待回填 / 冲突 / 仅思源有</b> 四类分别列出。',
     '★ <b>冲突一律交你决定，绝不自动合并</b>：同一订单号两端都有但取值不同时，逐条显示「工作台值 → 思源值」，由你选「保留工作台」还是「采用思源」，选完才落库。仅思源存在的行列在下方，可选 <b>导入为新订单 / 忽略</b>，<b>不会自动删除本地数据</b>。',
-    '<b>旧思源链路整体移除</b>：字段映射表、中文别名匹配、导出 HTML 导入器、<code>SiyuanDataSource</code> 适配器、限流退避与建列续做等一整批代码全部删除；「数据源」页现在只剩「本地 / 模拟」两张卡 + 思源同步卡 + 本地备份卡。',
+    '<b>旧思源链路整体移除</b>：字段映射表、中文别名匹配、导出 HTML 导入器、`SiyuanDataSource` 适配器、限流退避与建列续做等一整批代码全部删除；「数据源」页现在只剩「本地 / 模拟」两张卡 + 思源同步卡 + 本地备份卡。',
     '顺手<b>更正更新日志里 v0.19.3 的错误结论</b>（「写接口静默失效」→「建列接口名写错」）——它是当年绕远路的源头，留档以免再被误导。',
-    '回归：重写 25 / 26 / 33 / 35 / 37 五套，新增 <code>53_v0.37_思源同步重构.js</code>，并适配 06 / 30 / 31；全量回归 0 FAIL。'
+    '回归：重写 25 / 26 / 33 / 35 / 37 五套，新增 `53_v0.37_思源同步重构.js`，并适配 06 / 30 / 31；全量回归 0 FAIL。'
   ]},
   { v:'v0.36', date:'2026-09-28', cat:'布局修复 · 分屏宽度与内容区高度自适应', cur:false, items:[
-    '★ <b>修「分屏宽度拖不动」</b>：详情/表单分屏中间的拖宽把手此前<b>根本抓不住</b>——CSS 写的是 <code>flex:0 0 0</code>，而 <code>flex-basis:0</code> 会覆盖同一行里的 <code>width:7px</code>，把手被压成 <b>0 宽</b>，鼠标永远落在它下面的面板上。改为 <code>flex:0 0 auto</code> 让宽度真正生效，并用 <code>::after</code> 把命中区向两侧各扩 5px（共 19px）；元素自身净占 1px，<b>对布局几乎零影响</b>。（v0.34 的验证是直接向把手派发 PointerEvent，绕过了命中测试，所以一直是「假绿」。）',
-    '★ <b>修「列表页底部留白」</b>：列表在首屏内自成滚动区的高度上限此前写死为 <code>calc(100dvh - 376px)</code>，而各页「表头 + 筛选栏 + KPI」的高度并不相同——订单页与排产页共用同一个 376，实测底部余量却差 41px，所以必然要么留白、要么多滚一行。改为渲染后用 <code>fitPageH()</code> <b>实测回写</b>：以「内容区内边距盒底」为目标线，让滚动区正好长到这条线；撑满后仍有富余时，让末个内容容器长到目标线。<b>只增不减</b>——内容本来就装不下时一律不动，绝不制造溢出。',
+    '★ <b>修「分屏宽度拖不动」</b>：详情/表单分屏中间的拖宽把手此前<b>根本抓不住</b>——CSS 写的是 `flex:0 0 0`，而 `flex-basis:0` 会覆盖同一行里的 `width:7px`，把手被压成 <b>0 宽</b>，鼠标永远落在它下面的面板上。改为 `flex:0 0 auto` 让宽度真正生效，并用 `::after` 把命中区向两侧各扩 5px（共 19px）；元素自身净占 1px，<b>对布局几乎零影响</b>。（v0.34 的验证是直接向把手派发 PointerEvent，绕过了命中测试，所以一直是「假绿」。）',
+    '★ <b>修「列表页底部留白」</b>：列表在首屏内自成滚动区的高度上限此前写死为 `calc(100dvh - 376px)`，而各页「表头 + 筛选栏 + KPI」的高度并不相同——订单页与排产页共用同一个 376，实测底部余量却差 41px，所以必然要么留白、要么多滚一行。改为渲染后用 `fitPageH()` <b>实测回写</b>：以「内容区内边距盒底」为目标线，让滚动区正好长到这条线；撑满后仍有富余时，让末个内容容器长到目标线。<b>只增不减</b>——内容本来就装不下时一律不动，绝不制造溢出。',
     '内容区高度自适应覆盖到所有页面：实测桌面 1920 / 1440 / 1366 与宽平板 1024 下，订单、排产、回款、预警、客户、卡片视图的底部余量<b>全部归零</b>（此前 80~273px），看板页保持原样。',
     '视口变化（窗口缩放、横竖屏切换）与分屏拖宽后都会<b>重新实测</b>，不再依赖启动时的一次性计算。',
     '窄屏（≤920px）不接管高度：整页滚动是既定设计，把手也照旧隐藏（触摸端直接上下滑更顺手）。',
-    '回归：新增 <code>52_v0.36_布局自适应与分屏宽度.js</code>（jsdom 34 项），并新增真机验证 <code>_verify_v036_layout.js</code>（55 项，含<b>真实鼠标</b>拖把手 200px 实测 + 六个页面 × 四个视口的底部余量实测）。'
+    '回归：新增 `52_v0.36_布局自适应与分屏宽度.js`（jsdom 34 项），并新增真机验证 `_verify_v036_layout.js`（55 项，含<b>真实鼠标</b>拖把手 200px 实测 + 六个页面 × 四个视口的底部余量实测）。'
   ]},
   { v:'v0.35', date:'2026-09-28', cat:'表格分页与列宽拖拽 · 详情改为可直接编辑属性面板', items:[
-    '★ <b>订单表 / 排产表支持拖列宽</b>：鼠标停在表头列分隔线上会变成左右箭头，<b>拖到哪宽到哪、实时生效</b>（不用松手就跟着变）；松手即记住，<b>下次打开还是你调过的宽度</b>。实现上只注入一个 <code>&lt;colgroup&gt;</code> 与一个空 <code>&lt;span&gt;</code> 把手，<b>不新增 &lt;th&gt;</b>，所以列数（11 列）与列头排序的既有行为完全不受影响。',
+    '★ <b>订单表 / 排产表支持拖列宽</b>：鼠标停在表头列分隔线上会变成左右箭头，<b>拖到哪宽到哪、实时生效</b>（不用松手就跟着变）；松手即记住，<b>下次打开还是你调过的宽度</b>。实现上只注入一个 `&lt;colgroup&gt;` 与一个空 `&lt;span&gt;` 把手，<b>不新增 &lt;th&gt;</b>，所以列数（11 列）与列头排序的既有行为完全不受影响。',
     '★ <b>表格分页（默认关闭）</b>：工具栏多了「分页」开关与「每页 10 / 20 / 50 条」。<b>默认不勾选，行为与从前一模一样</b>（一次列出全部，表尾仍显示「共 N 条」）；勾上后表尾出现页码条（首页/上一页/页码/下一页/末页 + 「显示 1–10 条，共 68 条」）。订单页与排产页<b>各持一份分页状态</b>，互不影响。',
     '★ <b>订单详情改为「可直接编辑」的属性面板</b>（Notion / 思源式）：不再是一堆只读卡片，而是<b>按分组列出全部字段及取值</b>（订单信息 / 金额与回款 / 贸易与条款 / 排产 / 发货与物流 / 跟进记录 / 附件）。<b>点字段就能改</b> —— 文本框失焦或回车提交、下拉与日期即时提交，写回后原地刷新面板，不用再进「编辑」表单转一圈。',
     '详情顶部保留 <b>「关键信息 + 常用操作」一条</b>：左边三格（合同交期 / 未收 / 排产条数），右边四个入口（编辑 / 新增排产 / 登记发货 / 添加跟进），一进详情就能触达。',
     '★ <b>金额口径回到 v0.10 的不变量</b>：面板里的「实收」是<b>真实到账金额（绝不含核销）</b>；手续费 / 尾差核销<b>单独列一行</b>并标注「已结清（不计入实收）」。这样「货款 10125、实收 10115、核销 10」在详情里一眼分得清。',
     '排产记录重新带上<b>进度条</b>（满条转绿），与排产页同一口径。',
-    '契约零改动：<code>#sheet</code> / <code>.hd</code> / <code>.bd</code> / <code>[data-close]</code> / <code>--sheet-w</code> 分屏壳照旧，v0.34 的「分屏详情 + 宽度可拖」断言全部保持绿色。'
+    '契约零改动：`#sheet` / `.hd` / `.bd` / `[data-close]` / `--sheet-w` 分屏壳照旧，v0.34 的「分屏详情 + 宽度可拖」断言全部保持绿色。'
   ]},
   { v:'v0.34', date:'2026-09-28', cat:'详情与表单改为分屏布局', cur:false, items:[
     '订单/客户详情与所有表单入口：宽屏下从居中浮层改为右侧分屏，左侧列表/主视图保持可见且可继续点选',
@@ -3313,10 +3663,10 @@ const CHANGELOG = [
   ]},
   { v:'v0.33', date:'2026-09-26', cat:'详情与表单统一为抽屉卡片 · 宽度可拖', cur:false, items:[
     '★ <b>所有「点击打开」的面板统一成右侧抽屉卡片</b>：订单详情、客户详情，以及新增 / 编辑订单、客户、业务员、登记发货、登记回款、排产工序、添加跟进、批量修改 —— 共 11 个入口，全部从「居中的浮层」改成<b>贴右缘滑出的卡片</b>。居中浮层原先只有 920 / 1360 两档固定宽度，宽表格被挤在屏幕中间、左右各空一大片；现在卡片贴右边、内容整体靠右展开，视线从列表到详情不再横跨整个屏幕。',
-    '★ <b>宽度可拖，且记得住</b>：卡片左缘有一条把手，<b>向左拖变宽、向右拖变窄</b>；宽度按「详情」与「表单」各存一份（详情 840 / 表单 520 为首次默认），<b>关掉浏览器重开还是你调过的宽度</b>，不用每次重拖。可拖范围 <code>[380, min(1280, 视口−72)]</code> —— 背后永远留得住一条遮罩，点一下就关。',
+    '★ <b>宽度可拖，且记得住</b>：卡片左缘有一条把手，<b>向左拖变宽、向右拖变窄</b>；宽度按「详情」与「表单」各存一份（详情 840 / 表单 520 为首次默认），<b>关掉浏览器重开还是你调过的宽度</b>，不用每次重拖。可拖范围 `[380, min(1280, 视口−72)]` —— 背后永远留得住一条遮罩，点一下就关。',
     '窄屏（≤920px）抽屉<b>整屏显示、无圆角、把手隐藏</b>：手机上本来就没有拖拽的习惯，宽度微调只在桌面端生效，不占触控面积。',
     '卡片从右缘<b>滑入</b>（180ms），不再是硬切；卡片内主体独立滚动、标题栏钉在顶部，滚长内容时标题与「×」始终在手边。',
-    '零结构改动：<code>#sheet</code> / <code>#mask.on</code> / <code>.hd</code> / <code>.bd</code> / <code>[data-close]</code> 全部照旧，<code>#sheet.wide</code> 语义保留为「宽版详情」—— 历史版本的回归断言不受影响。'
+    '零结构改动：`#sheet` / `#mask.on` / `.hd` / `.bd` / `[data-close]` 全部照旧，`#sheet.wide` 语义保留为「宽版详情」—— 历史版本的回归断言不受影响。'
   ]},
   { v:'v0.32', date:'2026-09-24', cat:'设置收进浮层 · 首屏更清爽', items:[
     '★ <b>「预警规则」不再占页面一块</b>：它是一组「设完就走」的阈值与开关，原先却长期占着预警页一整行。现在收成工具栏上的 <b>「⚙ 预警规则」入口</b>，点开在居中浮层里设置，<b>保存后浮层自动收起</b>，页面上立刻能看到按新阈值重算的结果。引擎被关掉时入口变橙红警示色 —— 不点进去也知道规则没在跑。',
@@ -3336,8 +3686,8 @@ const CHANGELOG = [
     '窄屏（≤920px）行为<b>完全不变</b>：仍是抽屉侧栏 + 表格横向滚动，本次改动只在桌面端生效。'
   ]},
   { v:'v0.30', date:'2026-09-24', cat:'设计系统 token 化 · 可访问性修正', items:[
-    '★ <b>全站文字对比度按 WCAG 2.2 AA 重新核过一遍</b>：原先 <b>11px 的第三级灰字只有 2.53:1</b>（连大字号 3:1 的门槛都够不着），主色做正文只有 4.38:1，语义色里橙色最低只有 <b>3.05:1</b> —— 都不达标。现在第三级灰字调到 <code>#697585</code>（4.68:1）；未达标的语义色统一下沉到各自的 <b>600 深档</b>做文字（红 5.91 / 橙 6.16 / 琥珀 6.49 / 绿 5.62 / 青 5.57）。浅底状态标签、KPI 数字、表单报错、交期倒计时跟着换档 —— 颜色更深更稳，长时间看数据不累。',
-    '★ <b>新增「纯装饰灰」<code>--decor</code></b>：把原来那支太浅的灰（<code>#99a4b3</code>）降级为只用于分隔线与占位符号，不再承载任何文字。「灰得好看」与「读得清楚」各归其位。',
+    '★ <b>全站文字对比度按 WCAG 2.2 AA 重新核过一遍</b>：原先 <b>11px 的第三级灰字只有 2.53:1</b>（连大字号 3:1 的门槛都够不着），主色做正文只有 4.38:1，语义色里橙色最低只有 <b>3.05:1</b> —— 都不达标。现在第三级灰字调到 `#697585`（4.68:1）；未达标的语义色统一下沉到各自的 <b>600 深档</b>做文字（红 5.91 / 橙 6.16 / 琥珀 6.49 / 绿 5.62 / 青 5.57）。浅底状态标签、KPI 数字、表单报错、交期倒计时跟着换档 —— 颜色更深更稳，长时间看数据不累。',
+    '★ <b>新增「纯装饰灰」`--decor`</b>：把原来那支太浅的灰（`#99a4b3`）降级为只用于分隔线与占位符号，不再承载任何文字。「灰得好看」与「读得清楚」各归其位。',
     '★ <b>补上键盘焦点环</b>：此前全站<b>完全没有</b>焦点样式，纯键盘操作时看不出光标在哪 —— 现在任何可聚焦元素都有 2px 主色外圈。<b>支持系统「减弱动效」偏好</b>：系统开了减弱动效，过渡与动画即刻归零。',
     '★ <b>补齐三套设计 token</b>：<b>类型刻度</b>（11 / 12 / 13 / 14 / 16 / 20 / 28 七级，8px 基线）、<b>动效词表</b>（120 / 180 / 260ms + 统一缓动）、<b>层级与移动端安全区</b>。今后调样式从变量取，不再各处散写数值。',
     '按钮补上<b>按下反馈</b>（按压缩到 0.97，120ms）；侧栏滑出改用动效 token，与其它过渡手感一致。',
@@ -3361,7 +3711,7 @@ const CHANGELOG = [
     '每列有自己的<b>默认方向</b>：金额 / 已收 / 未收这类数值列先看大额（降序），日期与文本列先看小值（升序）；换列时自动套用，不用再手动点方向。',
     '<b>未填值恒排最后</b>：没填交期或空字段的行不会因为切到降序就翻到最前面，一屏空行的情况不再出现。',
     '表格与卡片<b>共用同一份排序</b>：卡片视图没有列头，工具栏给了一个「排序」下拉（选字段、同一字段再点一次切方向），里面还保留了表格列头没有的「自定义顺序」。',
-    '排序逻辑收敛到一处（字段表 + <code>toggleSort</code>）：列头点击与卡片下拉走同一条路径，不会出现「列头说按交期、下拉说按金额」。',
+    '排序逻辑收敛到一处（字段表 + `toggleSort`）：列头点击与卡片下拉走同一条路径，不会出现「列头说按交期、下拉说按金额」。',
     '「已收」列排序按<b>实收 + 核销</b>算，与列上显示的金额同口径，不是只按实收。'
   ]},
   { v:'v0.27', date:'2026-09-19', cat:'订单卡片视图 · 说明收进 i', items:[
@@ -3371,7 +3721,7 @@ const CHANGELOG = [
     '★ <b>页面上的操作说明与注释全部收进小圆圈「i」图标</b>：鼠标悬停浮出、点击可钉住（再点或点空白处关闭）。覆盖各页顶部用法说明、表单字段说明、批量修改 / 数据源 / 同步 / 数据历史 / 版本页的口径注释。',
     '说明文字仍保留在 DOM 里（只是不铺在页面上），所以既保持可检索、也让靠文本的回归断言继续有效。风险类提示（只读数据源、file:// 被 CORS 阻断、清空数据）用<b>红圈 i</b>，比普通说明更显眼，不会被当成无事发生。',
     '保留直接显示的只有<b>动态内容</b>：计数 / 金额 / 解析结果、空状态占位、<b>生成出来的建列清单</b>、以及数据源报错——那些本身就是要看的对象，不是注释。',
-    '订单「已交付」判定抽成单一函数 <code>orderDelivered()</code>，表格与卡片共用，避免「表格说已交付、卡片说逾期」这类口径漂移。',
+    '订单「已交付」判定抽成单一函数 `orderDelivered()`，表格与卡片共用，避免「表格说已交付、卡片说逾期」这类口径漂移。',
     '顺手清掉同步卡片标题里写死的旧版本号（原为「思源双向同步（专用库 · v0.24）」）。'
   ]},
   { v:'v0.26', date:'2026-09-19', cat:'交期区间修复 · 排产卡片', items:[
@@ -3413,12 +3763,12 @@ const CHANGELOG = [
     '修<b>「订单页一筛，排产页跟着空」</b>：排产的基准集合原本走的是订单的筛选结果，所以顶栏一设条件，排产列表就被连带筛掉（且看不出原因）。现在<b>排产页有自己独立的一份筛选</b>——在排产页改筛选栏只影响排产，订单页 / 看板 / 预警 / 回款 那边纹丝不动，反之亦然。',
     '筛选栏在排产页会挂一个<b>「本页独立」</b>标记，页面顶部也写明这条规则，避免「改了没反应」的误判；订单页仍与看板联动（在订单页筛出本月，回看板看的就是这批单的汇总，这是刻意保留的）。',
     '顶栏右上的 <b>「载入」改名为「重新载入」</b>并补悬停说明：它的作用是从当前数据源<b>重新读一遍全部数据并刷新界面</b>（纯读、不改数据）。还加了反馈——点击后按钮进入「载入中…」禁用态，结束提示实际读到的订单条数与数据源名称，不再让人猜它到底做了什么。',
-    '侧栏副标题文案改为<b>单点维护</b>（<code>APP_TAG</code>）：此前 JS 与静态兜底各写一份，改版本时容易漏掉一处、显示成旧说明。'
+    '侧栏副标题文案改为<b>单点维护</b>（`APP_TAG`）：此前 JS 与静态兜底各写一份，改版本时容易漏掉一处、显示成旧说明。'
   ]},
   { v:'v0.21', date:'2026-09-15', cat:'体验优化', items:[
     '「云端同步」页新增<b>配置导入 / 导出</b>：把连接参数（Endpoint / Region / Bucket / Prefix / 地址风格 / 触发模式 / 同步内容勾选等）导出成一个 JSON 文件，换设备或换浏览器时导入即可，不用再手抄一遍。',
     '导出<b>默认不含密钥</b>；需要连密钥一起搬时，勾选「导出时包含 AccessKey 与密钥密文」—— 密钥在文件里仍是<b>加密密文</b>，没有原「加密口令」解不开。导出文件等同于一份凭据，请妥善保管。',
-    '导入是<b>先看差异再落盘</b>：弹窗逐项列出「字段：旧值 → 新值」，确认后才写入；格式不对直接拒绝，<b>白名单外的键一律忽略</b>（不会把 <code>_resolved*</code> 之类的运行时字段写进本地配置）。',
+    '导入是<b>先看差异再落盘</b>：弹窗逐项列出「字段：旧值 → 新值」，确认后才写入；格式不对直接拒绝，<b>白名单外的键一律忽略</b>（不会把 `_resolved*` 之类的运行时字段写进本地配置）。',
     '界面配色<b>整体降饱和</b>：主色与红 / 橙 / 绿 / 青等语义色统一往灰调靠，长时间看数据更柔和；<b>红绿语义不变</b>（红 = 风险 / 未收，绿 = 正常 / 已收）。',
     '按钮与输入框<b>圆角收小</b>（8px → 4px，卡片 10px → 6px，小按钮 3px），整体更利落。',
     '卡片与填写框<b>相对对齐</b>：输入类控件统一 32px 高、标签统一行高，同一行内与跨卡片的填写框顶底对齐；字段里的单个复选框（如「启用同步」）不再比同行输入框高一截；卡片头 / 卡片体左右内边距统一为 15px。'
@@ -3434,13 +3784,13 @@ const CHANGELOG = [
     '「清理演示数据」走<b>硬删除、不进回收站</b> —— 批量维护不是误操作，否则演示数据会把回收站灌满、把真实的误删记录挤掉。'
   ]},
   { v:'v0.19.3', date:'2026-09-14', cat:'思源同步', items:[
-    '★ <b>【v0.37 更正】「已建 0 列」的真正原因不是「内核写接口静默失效」</b>：是<b>建列接口名写错了</b>——旧代码请求 <code>/api/av/addAttributeViewColumn</code>，而思源 3.8.x 的真实接口是 <code>/api/av/addAttributeViewKey</code>，前者<b>根本不存在</b>。当时把「请求打在错误路径上」误判成「HTTP 200 静默失效」，据此放弃了自动建列，白绕了两版远路。',
+    '★ <b>【v0.37 更正】「已建 0 列」的真正原因不是「内核写接口静默失效」</b>：是<b>建列接口名写错了</b>——旧代码请求 `/api/av/addAttributeViewColumn`，而思源 3.8.x 的真实接口是 `/api/av/addAttributeViewKey`，前者<b>根本不存在</b>。当时把「请求打在错误路径上」误判成「HTTP 200 静默失效」，据此放弃了自动建列，白绕了两版远路。',
     '同步方式改为<b>「思源手动建库建列 + 工作台绑定读写」</b>：工作台<b>不再自动建库、不再自动补列</b>，只负责校验列是否齐全、建立列映射、以及拉取 / 推送行数据。',
     '新增「<b>列出思源里的数据库</b>」按钮：直接查思源底层块表，列出全部真实数据库，点 avId 即可填入，不用再手抄。',
     '新增<b>真实库闸门</b>：绑定前先确认该 avId 在思源里真实存在（游离库的写操作会被静默丢弃），避免绑上了却写不进。',
-    '读列改用正确接口 <code>getAttributeViewKeysByAvID</code>：此前用的 <code>getAttributeView</code> 对真实库返回空，只对游离库有内容，是读数错乱的根源。',
+    '读列改用正确接口 `getAttributeViewKeysByAvID`：此前用的 `getAttributeView` 对真实库返回空，只对游离库有内容，是读数错乱的根源。',
     '缺列时给出<b>可照抄的建列清单</b>（列名 + 类型），用户照着在思源里补；校验通过（列齐全）后按钮状态与徽标转绿。',
-    '修一处映射漏建：<code>orderNo</code> 同时属于订单组与排产组，旧代码用「取首条」匹配导致排产组外键列永远建不起来，已改为全量匹配。'
+    '修一处映射漏建：`orderNo` 同时属于订单组与排产组，旧代码用「取首条」匹配导致排产组外键列永远建不起来，已改为全量匹配。'
   ]},
   { v:'v0.19.2', date:'2026-09-14', cat:'思源同步', items:[
     '尝试用「轮次补试 + 单列 30 秒等待」修复「已建 0 列」，未奏效 —— 真实成因是建列接口名写错（见 v0.19.3 的 v0.37 更正），本版方案已废弃。',
@@ -3560,6 +3910,19 @@ const PAGES = [
 ];
 const NAV_GRP = { dashboard:'分析', alert:'分析', assist:'业务', source:'系统', sync:'系统', history:'系统', version:'系统' };
 
+/* v0.61 · 侧栏收起状态（设备级偏好，只存本地，不跟数据源同步） */
+const SB_LS = 'ot_sb_collapsed';
+let sbCollapsed = (() => { try { return localStorage.getItem(SB_LS) === '1'; } catch(e){ return false; } })();
+/* 收起态只改 body 上的 --sw（侧栏宽度与 #main 左边距共用它），再补按钮文案 */
+function applySbCollapsed(){
+  document.body.classList.toggle('sb-collapsed', !!sbCollapsed);
+  const b = $('#btnSbToggle');
+  if(!b) return;
+  b.title = sbCollapsed ? '展开导航栏' : '收起导航栏';
+  const ar = b.querySelector('.ar');
+  if(ar) ar.textContent = sbCollapsed ? '»' : '«';
+}
+
 function renderSidebar(st){
   let h = '', last = null;
   PAGES.forEach(p => {
@@ -3577,7 +3940,7 @@ function renderSidebar(st){
       const n = Store.alerts ? Store.alerts.filter(a => a.lvl === 'red').length : 0;
       if(n) cnt = `<span class="cnt" style="background:var(--fill-red);color:var(--on-accent)">${n}</span>`;
     }
-    h += `<a data-pg="${p.id}" class="${st.ui.page===p.id?'on':''}"><span class="ico">${p.ico}</span>${p.name}${cnt}</a>`;
+    h += `<a data-pg="${p.id}" class="${st.ui.page===p.id?'on':''}" title="${p.name}"><span class="ico">${p.ico}</span><span class="tx">${p.name}</span>${cnt}</a>`;
   });
   $('#sbNav').innerHTML = h;
   $$('#sbNav a').forEach(a => a.onclick = () => goto(a.dataset.pg));
@@ -3693,6 +4056,419 @@ function statusStageRows(st, orders){
   const m = new Map(aggBy(st, orders, 'status').map(r => [r.key, r]));
   return FLOW.map(k => m.get(k) || { key:k, label:String(k).slice(3), amount:0, count:0, paid:0, unpaid:0 });
 }
+/* ==========================================================================
+   v0.63 · 订单数量分析（单量趋势 + 维度分布）
+
+   与上面那套「销售金额」视角互补：看板主图算的是钱，这块算的是**单量与件数**。
+   三条口径写死，避免以后各说各话：
+   ① 基础集永远是 filteredOrders(st) —— 顶部筛选（业务员 / 客户 / 状态 / 关键字 /
+      条件行 / 日期）全部生效；模块内只在此基础上**再收窄**，从不另起一套过滤。
+   ② 时间范围独立可选（跟随筛选 / 近 30·90·365 天 / 本年 / 全部），
+      但「归集基准日」沿用全局 basis（签订日 / 合同交期 / 回款实收日），不新造概念。
+   ③ 地区维度只认客户档案的 region，空值一律归「未填写」——不拿地址猜、不从名称猜，
+      猜出来的分组经不起对账。
+   ========================================================================== */
+const QAN_RANGES  = [['follow','跟随筛选'],['d30','近 30 天'],['d90','近 90 天'],['d365','近 365 天'],['year','本年'],['all','全部']];
+const QAN_GRANS   = [['month','月'],['week','周'],['day','日']];
+const QAN_DIMS    = [['status','状态'],['region','地区'],['owner','业务员'],['customer','客户']];
+const QAN_METRICS = [['count','订单笔数'],['qty','商品件数']];
+const QAN_TYPES   = [['bar','柱状'],['line','折线']];
+const QAN_DISTS   = [['bars','条形'],['table','表格']];
+const QAN_DEF = { range:'follow', gran:'month', dim:'status', metric:'count', type:'bar', dist:'bars', st:[] };
+/* 失败安全：配置来自 localStorage / 老版本快照时会缺字段、甚至被写脏，
+   一律按白名单回落默认值 —— 一个拼错的 range 不该让整个看板打不开。 */
+function qanCfg(st){
+  const src = (st.chart && st.chart.qan) || {};
+  const c = Object.assign({}, QAN_DEF, src);
+  c.st = Array.isArray(src.st) ? src.st.filter(k => FLOW.indexOf(k) >= 0) : [];
+  if(!QAN_RANGES.some(x => x[0] === c.range))   c.range  = QAN_DEF.range;
+  if(!QAN_GRANS.some(x => x[0] === c.gran))     c.gran   = QAN_DEF.gran;
+  if(!QAN_DIMS.some(x => x[0] === c.dim))       c.dim    = QAN_DEF.dim;
+  if(!QAN_METRICS.some(x => x[0] === c.metric)) c.metric = QAN_DEF.metric;
+  if(!QAN_TYPES.some(x => x[0] === c.type))     c.type   = QAN_DEF.type;
+  if(!QAN_DISTS.some(x => x[0] === c.dist))     c.dist   = QAN_DEF.dist;
+  return c;
+}
+function qanSet(st, patch){ Store.setChart({ qan: Object.assign(qanCfg(st), patch) }); }
+/* 客户档案里的国家/地区。只按 id / 编码两级认人，认不出或没填都算「未填写」 */
+function custRegionOf(st, cid){
+  const cs = st.data.customers || [];
+  const c = cs.find(x => x.id === cid) || cs.find(x => x.code && x.code === cid);
+  return String((c && c.region) || '').trim() || REGION_NONE;
+}
+/* 把「全部 / 跟随筛选（无日期限制）」这类天文边界收敛到**数据真实区间**，
+   否则「日均单量」会拿公元 0 年当分母，趋势也会被铺成几千个空桶。 */
+function qanClampRange(st, from, to, label, follow){
+  const basis = (st.filters && st.filters.basis) || 'sign';
+  const ds = (st.data.orders || []).map(o => basisDateOf(o, basis)).filter(Boolean).sort();
+  let f = (from && from > '1900-01-01') ? from : (ds[0] || fmt(today()));
+  let t = (to && to < '9000-01-01') ? to : (ds[ds.length - 1] || fmt(today()));
+  if(f > t){ const x = f; f = t; t = x; }
+  return { from:f, to:t, label:label, follow:!!follow };
+}
+function qanRange(st){
+  const c = qanCfg(st);
+  const t = today(), D = 864e5;
+  if(c.range === 'follow'){
+    const r = resolveRange(st.filters);
+    return qanClampRange(st, r.from, r.to, '跟随筛选', true);
+  }
+  if(c.range === 'd30')  return qanClampRange(st, fmt(new Date(t.getTime() - 29*D)),  fmt(t), '近 30 天');
+  if(c.range === 'd90')  return qanClampRange(st, fmt(new Date(t.getTime() - 89*D)),  fmt(t), '近 90 天');
+  if(c.range === 'd365') return qanClampRange(st, fmt(new Date(t.getTime() - 364*D)), fmt(t), '近 365 天');
+  if(c.range === 'year') return qanClampRange(st, fmt(new Date(t.getFullYear(), 0, 1)), fmt(t), t.getFullYear() + ' 年');
+  return qanClampRange(st, '', '', '全部');
+}
+function qanDays(r){
+  const a = new Date(r.from + 'T00:00:00'), b = new Date(r.to + 'T00:00:00');
+  if(isNaN(a.getTime()) || isNaN(b.getTime())) return 1;
+  return Math.max(1, Math.round((b - a) / 864e5) + 1);
+}
+function qanGran(st, r){
+  const c = qanCfg(st), days = qanDays(r);
+  /* 日粒度只在 62 天内成立：再长就是几百根柱子，标签叠成一条黑线、也读不出趋势。
+     超了就自动按周聚合，并在副标题写明 —— 静默改口径比不改更糟。 */
+  if(c.gran === 'day' && days > 62) return { gran:'week', degraded:true, days };
+  return { gran:c.gran, degraded:false, days };
+}
+function qanOrders(st){
+  const c = qanCfg(st), r = qanRange(st);
+  let list = filteredOrders(st);
+  if(!r.follow){
+    const basis = (st.filters && st.filters.basis) || 'sign';
+    list = list.filter(o => { const d = basisDateOf(o, basis); return !!d && d >= r.from && d <= r.to; });
+  }
+  if(c.st.length) list = list.filter(o => c.st.indexOf(o.status) >= 0);
+  return list;
+}
+/* 时间桶键：月 = YYYY-MM ｜ 周 = 该周周一的 YYYY-MM-DD ｜ 日 = YYYY-MM-DD */
+function qanBucketKey(date, gran){
+  const d = String(date || '').slice(0, 10);
+  if(!d) return '';
+  if(gran === 'month') return d.slice(0, 7);
+  if(gran === 'day')   return d;
+  const t = new Date(d + 'T00:00:00');
+  if(isNaN(t.getTime())) return d;
+  const wd = (t.getDay() + 6) % 7;            /* 周一当一周之首，和国内排产习惯一致 */
+  t.setDate(t.getDate() - wd);
+  return fmt(t);
+}
+function qanLabelOf(key, gran){
+  const k = String(key || '');
+  if(gran === 'month') return k.slice(2).replace('-', '/');    /* 26/09 */
+  return k.slice(5).replace('-', '/');                          /* 09/28 */
+}
+/* 连续时间桶：没有订单的区间也要留一根 0 柱，否则「中间断了一大段」看不出来 */
+function qanBuckets(list, gran, from, to, basis){
+  const map = new Map();
+  list.forEach(o => {
+    const d = basisDateOf(o, basis); if(!d) return;
+    const k = qanBucketKey(d, gran); if(!k) return;
+    if(!map.has(k)) map.set(k, { key:k, count:0, qty:0, filled:0 });
+    const r = map.get(k);
+    r.count++;
+    const q = qtyOf(o);
+    if(q > 0){ r.qty += q; r.filled++; }
+  });
+  const keys = [];
+  const f = from, t = to;
+  if(f && t && f <= t){
+    if(gran === 'day'){
+      let cur = new Date(f + 'T00:00:00'), end = new Date(t + 'T00:00:00'), guard = 0;
+      while(cur <= end && guard++ < 800){ keys.push(fmt(cur)); cur = new Date(cur.getTime() + 864e5); }
+    }else if(gran === 'week'){
+      let cur = new Date(qanBucketKey(f, 'week') + 'T00:00:00');
+      const end = new Date(t + 'T00:00:00'); let guard = 0;
+      while(cur <= end && guard++ < 600){ keys.push(fmt(cur)); cur = new Date(cur.getTime() + 7*864e5); }
+    }else{
+      let y = +f.slice(0, 4), m = +f.slice(5, 7);
+      const ey = +t.slice(0, 4), em = +t.slice(5, 7); let guard = 0;
+      while((y < ey || (y === ey && m <= em)) && guard++ < 600){
+        keys.push(y + '-' + pad(m));
+        m++; if(m > 12){ m = 1; y++; }
+      }
+    }
+  }
+  return { from:f, to:t, rows: keys.map(k => map.get(k) || { key:k, count:0, qty:0, filled:0 }) };
+}
+function qanDimRows(st, list, dim){
+  const d = dim || 'status';
+  const keyOf = {
+    status  : o => o.status,
+    region  : o => custRegionOf(st, o.customerId),
+    owner   : o => o.ownerId || '',
+    customer: o => o.customerId || ''
+  }[d] || (o => o.customerId);
+  const labelOf = {
+    status  : k => String(k).slice(3) || '未知',
+    region  : k => k,
+    owner   : k => ((st.data.owners.find(u => u.id === k) || {}).name || '未分配'),
+    customer: k => ((st.data.customers.find(c => c.id === k) || {}).shortName || '未知客户')
+  }[d] || (k => k);
+  const map = new Map();
+  list.forEach(o => {
+    const k = keyOf(o) || 'unknown';
+    if(!map.has(k)) map.set(k, { key:k, label:labelOf(k), count:0, qty:0, filled:0 });
+    const r = map.get(k);
+    r.count++;
+    const q = qtyOf(o);
+    if(q > 0){ r.qty += q; r.filled++; }
+  });
+  let rows;
+  if(d === 'status'){
+    /* 状态是有序流水线：6 段全铺，0 单的段也留着，链条断了才看得见 */
+    rows = FLOW.map(k => map.get(k) || { key:k, label:String(k).slice(3), count:0, qty:0, filled:0 });
+  }else{
+    rows = [...map.values()].sort((a, b) => (b.count - a.count) || (b.qty - a.qty) || String(a.label).localeCompare(String(b.label)));
+    if(rows.length > 12){
+      const rest = rows.slice(12);
+      const other = { key:'__other', label:'其他 ' + rest.length + ' 项', count:0, qty:0, filled:0 };
+      rest.forEach(r => { other.count += r.count; other.qty += r.qty; other.filled += r.filled; });
+      rows = rows.slice(0, 12).concat(other);
+    }
+  }
+  const total = rows.reduce((a, r) => a + r.count, 0);
+  rows.forEach(r => { r.share = total ? r.count / total : 0; });
+  return rows;
+}
+function qanDashColor(rows, dim){
+  if(dim === 'status') return Chart.stColors(rows);
+  return rows.map((r, i) => PALETTE[i % PALETTE.length]);
+}
+function qanTrendSVG(rows, opt){
+  const metric = opt.metric, type = opt.type, gran = opt.gran;
+  /* v0.66：画布宽跟着卡片走（opt.cw 由 bindQan 实测传入），窄屏把左边距收窄，
+     并把标签密度按「每格至少 30 单位」自动降采样 —— 手机上一格只有 20 单位，
+     12 个月份的标签会把横轴糊成一片。 */
+  const narrow = (opt.cw || 860) < CH_W_KEEP;
+  const W = opt.cw || 860, H = 252, PL = narrow ? 40 : 56, PR = narrow ? 14 : 20, PT = 20, PB = 40;
+  const iw = W - PL - PR, ih = H - PT - PB;
+  const valOf = r => metric === 'qty' ? r.qty : r.count;
+  const maxV = Math.max(1, ...rows.map(valOf));
+  const n = rows.length || 1;
+  const step = iw / n;
+  const bw = Math.min(40, Math.max(3, step * 0.58));
+  const Y = v => PT + ih - (v / maxV) * ih;
+  const numTxt = v => metric === 'qty' ? Number(v).toLocaleString('zh-CN') : String(v);
+  const unit = metric === 'qty' ? '件' : '笔';
+  const X = i => PL + step * i + step / 2;
+  /* 标签密度两条约束取大的那个：桶太多（>18）按老规矩降到 12 个；
+     画布太窄（每格 < 30 单位）也降采样，手机横轴才读得出「哪天」。 */
+  const every = Math.max(n > 18 ? Math.ceil(n / 12) : 1, Math.ceil(30 / Math.max(1, step)));
+  let s = `<svg viewBox="0 0 ${W} ${H}" style="display:block;width:100%;height:auto" role="img">`;
+  for(let i = 0; i <= 4; i++){
+    const y = PT + ih - ih / 4 * i;
+    s += `<line x1="${PL}" y1="${y}" x2="${W - PR}" y2="${y}" stroke="${INK.grid}"/>`;
+    s += `<text x="${PL - 8}" y="${y + 4}" font-size="10" fill="${INK.axis}" text-anchor="end">${numTxt(Math.round(maxV / 4 * i))}</text>`;
+  }
+  if(type === 'line'){
+    const pts = rows.map((r, i) => `${X(i)},${Y(valOf(r))}`).join(' ');
+    s += `<polygon points="${PL},${PT + ih} ${pts} ${X(n - 1)},${PT + ih}" fill="${INK.area}"/>`;
+    s += `<polyline points="${pts}" fill="none" stroke="${PALETTE[0]}" stroke-width="2.4" stroke-linejoin="round"/>`;
+    rows.forEach((r, i) => {
+      const tip = `${qanLabelOf(r.key, gran)}｜${r.count} 笔｜${numTxt(r.qty)} 件`;
+      s += `<circle cx="${X(i)}" cy="${Y(valOf(r))}" r="3.4" fill="${INK.on}" stroke="${PALETTE[0]}" stroke-width="2"
+             data-tip="${esc(tip)}"><title>${esc(tip)}</title></circle>`;
+    });
+  }else{
+    rows.forEach((r, i) => {
+      const v = valOf(r);
+      const hgt = v > 0 ? Math.max(2, PT + ih - Y(v)) : 0;
+      const tip = `${qanLabelOf(r.key, gran)}｜${r.count} 笔｜${numTxt(r.qty)} 件`;
+      if(hgt > 0){
+        s += `<rect x="${X(i) - bw / 2}" y="${Y(v)}" width="${bw}" height="${hgt}" rx="3"
+               fill="${PALETTE[0]}" opacity=".92" data-tip="${esc(tip)}"><title>${esc(tip)}</title></rect>`;
+      }else{
+        /* 0 值也给一个可悬停的细条，否则「这天没单」和「这格没画」分不出来 */
+        s += `<rect x="${X(i) - bw / 2}" y="${PT + ih - 2}" width="${bw}" height="2" fill="${INK.grid}"
+               data-tip="${esc(tip)}"><title>${esc(tip)}</title></rect>`;
+      }
+      if(n <= 14) s += `<text x="${X(i)}" y="${Y(v) - 5}" font-size="10" fill="${INK.axis}" text-anchor="middle">${numTxt(v)}</text>`;
+    });
+  }
+  rows.forEach((r, i) => {
+    if(i % every) return;
+    s += `<text x="${X(i)}" y="${H - PB + 16}" font-size="10.5" fill="${INK.label}" text-anchor="middle">${esc(qanLabelOf(r.key, gran))}</text>`;
+  });
+  s += `<line x1="${PL}" y1="${PT + ih}" x2="${W - PR}" y2="${PT + ih}" stroke="${INK.base}"/>`;
+  s += `<text x="${PL - 8}" y="${PT - 6}" font-size="10" fill="${INK.axis}" text-anchor="end">${unit}</text>`;
+  return s + '</svg>';
+}
+function qanBarsSVG(rows, opt){
+  const metric = opt.metric, dim = opt.dim;
+  /* v0.66：窄画布下左标签栏 106→64（标签留前 5 字）、右侧数值栏 186→64
+     （只留占比），条区才不会被两头吃光。宽画布仍是 106 / 186 / 画布 860。 */
+  const narrow = (opt.cw || 860) < CH_W_KEEP;
+  const RH = 33, LW = narrow ? 64 : 106, PADT = 10, RW = narrow ? 64 : 186;
+  const vw = narrow ? (opt.cw || 860) : 860, vh = PADT * 2 + Math.max(1, rows.length) * RH;
+  const x0 = LW + (narrow ? 10 : 14), BW = Math.max(60, vw - x0 - RW);
+  const valOf = r => metric === 'qty' ? r.qty : r.count;
+  const maxV = Math.max(1, ...rows.map(valOf));
+  const total = rows.reduce((a, r) => a + valOf(r), 0);
+  const numTxt = v => metric === 'qty' ? Number(v).toLocaleString('zh-CN') : String(v);
+  const colors = qanDashColor(rows, dim);
+  let s = `<svg viewBox="0 0 ${vw} ${vh}" style="display:block;width:100%;height:auto" role="img">`;
+  rows.forEach((r, i) => {
+    const cy = PADT + i * RH + RH / 2;
+    const v = valOf(r);
+    const bw = v > 0 ? Math.max(3, v / maxV * BW) : 0;
+    const pct = (total ? v / total * 100 : 0).toFixed(1);
+    const tip = `${r.label}｜${r.count} 笔｜${numTxt(r.qty)} 件｜占 ${pct}%`;
+    s += `<text x="${LW}" y="${cy + 4}" font-size="11.5" fill="${v ? INK.label : INK.axis}" text-anchor="end">${esc(String(r.label).slice(0, narrow ? 5 : 9))}</text>`;
+    s += `<rect x="${x0}" y="${cy - 9}" width="${BW}" height="18" rx="5" fill="${INK.grid}"/>`;
+    if(bw > 0) s += `<rect x="${x0}" y="${cy - 9}" width="${bw}" height="18" rx="5" fill="${colors[i]}" opacity=".95"
+      data-tip="${esc(tip)}"><title>${esc(tip)}</title></rect>`;
+    const right = narrow
+      ? pct + '%'
+      : (metric === 'qty'
+          ? `${numTxt(r.qty)} 件 · ${r.count} 笔 · ${pct}%`
+          : `${r.count} 笔 · ${pct}%`);
+    s += `<text x="${x0 + BW + 12}" y="${cy + 4}" font-size="11.5" fill="${v ? INK.ink : INK.axis}" style="font-variant-numeric:tabular-nums">${right}</text>`;
+  });
+  return s + '</svg>';
+}
+/* 图例：占比自己算，**不能借 Chart.legend** —— 那套是按 r.amount 算占比的，
+   本模块的分组行只有笔数 / 件数、没有金额字段，借过来会印出一排 NaN%。 */
+function qanLegendHTML(rows, colors){
+  const total = rows.reduce((a, r) => a + r.count, 0) || 1;
+  return rows.map((r, i) => {
+    const sw = (colors && colors[i]) || PALETTE[i % PALETTE.length];
+    return `<span><i style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${sw};margin-right:5px"></i>${esc(r.label)}
+      <span class="muted">${(r.count / total * 100).toFixed(1)}% · ${r.count} 笔</span></span>`;
+  }).join('');
+}
+function qanTableHTML(rows, metric){
+  const total = rows.reduce((a, r) => a + r.count, 0) || 1;
+  return `<div class="tw"><table><thead><tr><th>维度</th><th class="num">订单笔数</th><th class="num">占比</th>
+    <th class="num">商品件数</th><th class="num">已填件数</th></tr></thead><tbody>`
+    + rows.map(r => `<tr><td>${esc(r.label)}</td><td class="num">${r.count}</td>
+      <td class="num">${(r.count / total * 100).toFixed(1)}%</td>
+      <td class="num">${qtyFmt(r.qty)}</td><td class="num">${r.filled} 笔</td></tr>`).join('')
+    + '</tbody></table></div>';
+}
+function qanViewHTML(st){
+  const c = qanCfg(st);
+  const r = qanRange(st);
+  const g = qanGran(st, r);
+  const list = qanOrders(st);
+  const allN = (st.data.orders || []).length;
+  const qtySum = list.reduce((a, o) => a + qtyOf(o), 0);
+  const qtyN = list.filter(o => qtyOf(o) > 0).length;
+  const perDay = g.days > 0 ? list.length / g.days : 0;
+  const regionN = new Set(list.map(o => custRegionOf(st, o.customerId))).size;
+  const custN = new Set(list.map(o => o.customerId || '')).size;
+  const dimRows = qanDimRows(st, list, c.dim);
+  const granRows = qanBuckets(list, g.gran, r.from, r.to, (st.filters && st.filters.basis) || 'sign').rows;
+  const basisTxt = { sign:'签订日', delivery:'合同交期', pay:'回款实收日' }[(st.filters && st.filters.basis) || 'sign'] || '签订日';
+  const dimTxt = (QAN_DIMS.find(x => x[0] === c.dim) || QAN_DIMS[0])[1];
+  const share = allN ? (list.length / allN * 100) : 0;
+  const peak = granRows.reduce((a, b) => (valOfQ(b, c.metric) > valOfQ(a, c.metric) ? b : a), granRows[0] || { count:0, qty:0, key:'' });
+  const unfilledReg = (st.data.customers || []).filter(x => !String(x.region || '').trim()).length;
+
+  let h = `<div class="qan">
+  <div class="sec">订单数量分析 · 单量趋势与维度分布（按${basisTxt}归集）</div>
+  <div class="toolbar" style="flex-wrap:wrap;gap:8px;align-items:center">
+    <div class="seg" id="qanRange">${QAN_RANGES.map(x =>
+      `<button data-r="${x[0]}" class="${c.range === x[0] ? 'on' : ''}">${x[1]}</button>`).join('')}</div>
+    <div class="seg" id="qanMetric">${QAN_METRICS.map(x =>
+      `<button data-m="${x[0]}" class="${c.metric === x[0] ? 'on' : ''}">${x[1]}</button>`).join('')}</div>
+    <div class="spacer"></div>
+    <span class="muted" style="font-size:11.5px;display:inline-flex;align-items:center;gap:4px">${r.label}${c.st.length ? ' · 已筛 ' + c.st.length + ' 个状态' : ''} · ${list.length} 笔${infoI('这一块只看<b>单量与件数</b>，与上方按金额统计的卡片互不覆盖。<br>基础数据 = 顶部筛选后的订单；这里的时间范围 / 状态下拉是<b>在它之上再收窄</b>。<br>「订单笔数」按订单条数算；「商品件数」按每单的<b>订单数量</b>字段求和（未填的不计入，也不按 0 冒充）。')}</span>
+  </div>
+  <div class="qan-chips" id="qanStatus" style="margin:-4px 0 12px">
+    <button class="qan-chip ${c.st.length ? '' : 'on'}" data-s="__all">全部状态</button>
+    ${FLOW.map(k => `<button class="qan-chip ${c.st.indexOf(k) >= 0 ? 'on' : ''}" data-s="${esc(k)}">${String(k).slice(3)}</button>`).join('')}
+  </div>
+  <div class="grid qan-kpi">
+    <div class="card"><div class="lb">订单总数</div><div class="vl">${list.length}</div>
+      <div class="sb2">占全部 ${allN} 笔的 ${share.toFixed(1)}%</div></div>
+    <div class="card"><div class="lb">商品件数</div><div class="vl">${qtyFmt(qtySum) === '—' ? 0 : Number(qtySum).toLocaleString('zh-CN')}</div>
+      <div class="sb2">${qtyN} 笔已填数量${list.length - qtyN > 0 ? ' · ' + (list.length - qtyN) + ' 笔未填' : ''}</div></div>
+    <div class="card"><div class="lb">日均单量</div><div class="vl">${perDay.toFixed(2)}</div>
+      <div class="sb2">${g.days} 天窗口 · 单位：笔/天</div></div>
+    <div class="card"><div class="lb">覆盖地区</div><div class="vl">${regionN}</div>
+      <div class="sb2">${custN} 家客户${unfilledReg ? ' · ' + unfilledReg + ' 家客户未填地区' : ''}</div></div>
+  </div>
+  <div class="grid c2" style="margin-top:12px">
+    <div class="card"><div class="hd"><h3>单量趋势</h3>
+        <div class="seg" id="qanGran">${QAN_GRANS.map(x =>
+          `<button data-g="${x[0]}" class="${c.gran === x[0] ? 'on' : ''}">${x[1]}</button>`).join('')}</div>
+        <div class="seg" id="qanType">${QAN_TYPES.map(x =>
+          `<button data-t="${x[0]}" class="${c.type === x[0] ? 'on' : ''}">${x[1]}</button>`).join('')}</div>
+        <div class="spacer"></div>
+        <span class="muted" style="font-size:11px">${granRows.length} 个${(QAN_GRANS.find(x => x[0] === g.gran) || QAN_GRANS[0])[1]}桶${g.degraded ? '（范围长，已按周聚合）' : ''}</span></div>
+      <div class="bd" style="padding:8px 6px 0"><div id="qanTrend"></div></div>
+      <div class="legend" style="display:flex;flex-wrap:wrap;gap:9px;padding:8px 15px 13px;font-size:12px">
+        <span><i style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${PALETTE[0]};margin-right:5px"></i>${c.metric === 'qty' ? '商品件数' : '订单笔数'}（每${(QAN_GRANS.find(x => x[0] === g.gran) || QAN_GRANS[0])[1]}）</span>
+        <span class="muted">峰值 ${peak && peak.key ? qanLabelOf(peak.key, g.gran) + ' · ' + (c.metric === 'qty' ? Number(peak.qty).toLocaleString('zh-CN') + ' 件' : peak.count + ' 笔') : '—'}</span>
+      </div></div>
+    <div class="card"><div class="hd"><h3>单量分布</h3>
+        <div class="seg" id="qanDim">${QAN_DIMS.map(x =>
+          `<button data-d="${x[0]}" class="${c.dim === x[0] ? 'on' : ''}">${x[1]}</button>`).join('')}</div>
+        <div class="seg" id="qanDist">${QAN_DISTS.map(x =>
+          `<button data-v="${x[0]}" class="${c.dist === x[0] ? 'on' : ''}">${x[1]}</button>`).join('')}</div>
+        <div class="spacer"></div>
+        <span class="muted" style="font-size:11px">${dimTxt} · ${dimRows.length} 组</span></div>
+      <div class="bd" style="padding:8px 6px 0"><div id="qanDistBox"></div></div>
+      <div class="legend" style="display:flex;flex-wrap:wrap;gap:9px;padding:8px 15px 13px;font-size:12px">
+        ${c.dim === 'status'
+          ? qanLegendHTML(dimRows, qanDashColor(dimRows, 'status'))
+          : (dimRows.length <= 1
+              ? `<span class="muted">${dimRows.length ? '所有订单都归在「' + esc(dimRows[0].label) + '」——到「客户档案」补上各自的国家/地区就会分开统计' : '暂无可分组的订单'}</span>`
+              : `<span class="muted">按${dimTxt}分组的订单笔数；最多列 12 组，其余合并为「其他」</span>`)}
+      </div></div>
+  </div>
+</div>`;
+  return h;
+}
+function valOfQ(r, metric){ return metric === 'qty' ? (r.qty || 0) : (r.count || 0); }
+function bindQanTips(root){
+  if(!root) return;
+  const tip = $('#tip'); if(!tip) return;
+  root.querySelectorAll('[data-tip]').forEach(n => {
+    n.onmouseenter = e => { tip.innerHTML = n.getAttribute('data-tip'); tip.style.opacity = 1;
+      tip.style.left = Math.min(e.clientX + 14, innerWidth - 220) + 'px'; tip.style.top = (e.clientY - 10) + 'px'; };
+    n.onmousemove = e => { tip.style.left = Math.min(e.clientX + 14, innerWidth - 220) + 'px'; tip.style.top = (e.clientY - 10) + 'px'; };
+    n.onmouseleave = () => { tip.style.opacity = 0; };
+  });
+}
+function bindQan(st){
+  const c = qanCfg(st), r = qanRange(st), g = qanGran(st, r);
+  const list = qanOrders(st);
+  const basis = (st.filters && st.filters.basis) || 'sign';
+  const granRows = qanBuckets(list, g.gran, r.from, r.to, basis).rows;
+  const dimRows = qanDimRows(st, list, c.dim);
+  /* 空态要分清是「时间范围挑空了」还是「筛选筛空了」——前者用户改一下范围就有，
+     后者得回去松筛选，一句「没有数据」会让人以为坏了。 */
+  const empty = '<div class="empty">' + ((c.range === 'follow' || c.range === 'all')
+    ? '当前筛选条件下没有订单'
+    : '这个时间范围内没有订单 —— 试试「全部」或把范围放宽') + '</div>';
+  const tBox = $('#qanTrend');
+  if(tBox) tBox.innerHTML = list.length
+    ? qanTrendSVG(granRows, { metric:c.metric, type:c.type, gran:g.gran, cw:chartCanvasW(tBox) })
+    : empty;
+  const dBox = $('#qanDistBox');
+  if(dBox) dBox.innerHTML = list.length
+    ? (c.dist === 'table' ? qanTableHTML(dimRows, c.metric)
+                          : qanBarsSVG(dimRows, { metric:c.metric, dim:c.dim, cw:chartCanvasW(dBox) }))
+    : empty;
+  bindQanTips(tBox); bindQanTips(dBox);
+
+  $$('#qanRange button').forEach(x => x.onclick = () => qanSet(st, { range:x.dataset.r }));
+  $$('#qanMetric button').forEach(x => x.onclick = () => qanSet(st, { metric:x.dataset.m }));
+  $$('#qanGran button').forEach(x => x.onclick = () => qanSet(st, { gran:x.dataset.g }));
+  $$('#qanType button').forEach(x => x.onclick = () => qanSet(st, { type:x.dataset.t }));
+  $$('#qanDim button').forEach(x => x.onclick = () => qanSet(st, { dim:x.dataset.d }));
+  $$('#qanDist button').forEach(x => x.onclick = () => qanSet(st, { dist:x.dataset.v }));
+  $$('#qanStatus .qan-chip').forEach(x => x.onclick = () => {
+    const k = x.dataset.s;
+    if(k === '__all'){ qanSet(st, { st: [] }); return; }
+    const cur = qanCfg(st).st.slice();
+    const i = cur.indexOf(k);
+    if(i >= 0) cur.splice(i, 1); else cur.push(k);
+    qanSet(st, { st: cur });
+  });
+}
 function viewDashboard(st){
   const orders = filteredOrders(st);
   const k = calcKPI(st, orders);
@@ -3714,6 +4490,9 @@ function viewDashboard(st){
     <div class="card"><div class="lb">客单价</div><div class="vl">${money(Math.round(k.avg))}</div><div class="sb2">销售额 ÷ 订单数</div></div>
     <div class="card"><div class="lb">逾期未交付</div><div class="vl ${k.overdue?'bad':''}">${k.overdue}</div><div class="sb2">已过交期仍未完工</div></div>
   </div>`;
+  /* v0.63 · 单量视角：紧跟 KPI 之后、金额维度分析之前 —— 先看「做了多少单」，
+     再看「钱从哪来」，两块各管一件事，互不遮挡。 */
+  h += qanViewHTML(st);
   h += `<div class="sec">维度分析 · 与顶部筛选实时联动</div>
   <div class="grid c2">
     <div class="card"><div class="hd">
@@ -3784,7 +4563,26 @@ function bindDashboard(st){
   Chart.render($('#chartStatus'), stRows, { type:st.chart.statusType, metric:st.chart.statusMetric, dim:'status', vw:520,
     colors:Chart.stColors(stRows) });
   Chart.render($('#chartTrend'), aggBy(st, orders, 'month', { basis }), { type:'area', metric:'both', dim:'month' });
+  /* v0.63 · 订单数量分析（图表自己画，不走 Chart 引擎的金额口径） */
+  bindQan(st);
 }
+
+/* v0.66 · 视口一变就得重画图。
+   手机档的画布是「按卡片实测宽度」画的（见 chartCanvasW），横竖屏切换、拉窗口、
+   收起侧栏之后如果不重画，就会拿 390 时算出的 356 画布去铺 572 —— 缩放 1.61，
+   又糊又挤（真机第一次跑就撞上了）。只重画图表与图表自己的开关，不动页面别处；
+   rAF 合并连续的 resize。 */
+let _chartRaf = 0;
+window.addEventListener('resize', () => {
+  if(_chartRaf) return;
+  const run = () => {
+    _chartRaf = 0;
+    if(!$('#chartMain')) return;          /* 当前不是看板页 → 什么也不用做 */
+    try { bindDashboard(Store.state); } catch(_e){ /* 画不出来也不该炸整页 */ }
+  };
+  if(window.requestAnimationFrame) _chartRaf = window.requestAnimationFrame(run);
+  else setTimeout(run, 0);
+});
 
 /* ---------- 订单 ---------- */
 /* ==========================================================================
@@ -3802,6 +4600,7 @@ const ORD_SORT_FIELDS = [
   { k:'owner',    t:'业务员',     d:'asc'  },
   { k:'status',   t:'状态',       d:'asc'  },
   { k:'delivery', t:'交期',       d:'asc'  },
+  { k:'qty',      t:'数量',       d:'desc' },   /* v0.61：与表头「数量」列同一列序 */
   { k:'amount',   t:'金额',       d:'desc' },
   { k:'got',      t:'已收',       d:'desc' },
   { k:'unpaid',   t:'未收',       d:'desc' },
@@ -3916,17 +4715,94 @@ function bindSortClicks(root){
    v0.35 · 可拖列宽 + 分页（订单表 / 排产表共用）
    —— 列宽：把手收在本列 th 内（th 带 sticky+z-index 自成层叠上下文，跨到相邻列会被后一列
       的 th 盖住、鼠标点不中）；把手是空 <span>，不新增 <th>、不进 th.textContent ——
-      列数（11）与列头 ▲/▼ 的历史断言不受影响。
+      列数（v0.61 起 12：多一个「数量」列）与列头 ▲/▼ 的历史断言不受影响。
    —— 分页：默认关 = 现有行为（一次列出全部）。只在表格视图生效；ordViewList / prodViewList
       仍返回全量，只有渲染切片。因此「行数 === 全量」类历史断言在默认关下照旧成立。
    ========================================================================== */
 const COLW_KEY = 'ot.colw.v1';
 const COL_MIN = 56, COL_MAX = 900;
+/* v0.62 · 等比压缩的下限：分屏后平均每列不足这么宽就不压，交给横向滚动
+   （再压下去每个单元格都只剩省略号，看不出是哪一列）。 */
+const COL_FIT_MIN = 44;
 /* v0.48：产品库两张表各记一套列宽（cprod / sprod）—— 客户产品列宽拖宽了，
    切到供应商产品不该跟着变形；两表列数恰好都是 10，但含义不同，必须分开存。 */
 const tblColW = { ord: [], prod: [], cprod: [], sprod: [] };
+/* v0.62 · 拆成「基准」与「渲染」两层，这是修「分屏缩了回不来」的关键：
+   colBase = 与容器无关的基准宽（用户拖出来的 / 首次探测的自然宽），只增不改；
+   tblColW = 当前 DOM 上的渲染宽（基准套上缩放系数后的结果）。
+   ★ 旧版每次都拿「已注入 <col> 固定宽」的表格实测当自然宽，容器一窄就把窄值
+     当成新的自然宽写回内存 —— 宽回来时基准已经丢了，所以永远缩不回去。 */
+const colBase  = { ord: [], prod: [], cprod: [], sprod: [] };
+const colScale = { ord: 1, prod: 1, cprod: 1, sprod: 1 };
 const _colw = (() => { try { return JSON.parse(localStorage.getItem(COLW_KEY) || '{}') || {}; } catch(e){ return {}; } })();
-function colwSave(kind){ _colw[kind] = { w: tblColW[kind].slice() }; try{ localStorage.setItem(COLW_KEY, JSON.stringify(_colw)); }catch(e){} }
+/* 落盘的是**基准**，不是渲染宽：否则在分屏态拖一次列宽，就会把压缩后的窄值
+   存成用户的「意图宽度」，下次全屏打开还是窄的。 */
+function colwSave(kind){
+  const w = (colBase[kind] && colBase[kind].length) ? colBase[kind] : tblColW[kind];
+  _colw[kind] = { w: w.slice() };
+  try{ localStorage.setItem(COLW_KEY, JSON.stringify(_colw)); }catch(e){}
+}
+/* 无约束自然宽：临时把表格放开成 max-content 量一遍，量完立刻还原。
+   ★ 同一个 task 内同步读写，浏览器不会绘制中间态 —— 用户看不到闪动。
+   ★ 量不出来（jsdom 度量恒为 0 / 表格还在 display:none 的容器里）返回 null，
+     **不写进基准**：否则一次量不到就把所有列永久钉成下限宽，比原来的 bug 更难救。 */
+function probeColNatural(tbl, ths){
+  const cg = tbl.querySelector('colgroup');
+  const cgHTML = cg ? cg.innerHTML : null;
+  const prevTL = tbl.style.tableLayout, prevW = tbl.style.width;
+  try{
+    if(cg) cg.innerHTML = '';
+    tbl.style.tableLayout = 'auto';
+    tbl.style.width = 'max-content';
+    const out = ths.map(th => Math.round(th.getBoundingClientRect().width));
+    if(out.some(w => w > 0)) return out.map(w => (w > 0 ? w : COL_MIN));
+  }catch(e){}
+  finally{
+    tbl.style.tableLayout = prevTL;
+    tbl.style.width = prevW;
+    if(cg && cgHTML != null) cg.innerHTML = cgHTML;
+  }
+  return null;
+}
+/* 容器变窄时等比压缩（这是「分屏时字段正常缩小」该走的唯一路径）：
+   整表按同一系数缩，列与列的比例关系不变；四舍五入的余数补给最宽的一列，
+   保证总和严格等于容器宽 —— 差 1px 就会多出一条几乎看不见的横向滚动条。 */
+function shrinkColToWrap(widths, wrapW){
+  const sum = widths.reduce((a, b) => a + b, 0);
+  if(!wrapW || sum <= wrapW) return [widths, 1];
+  if(wrapW / widths.length < COL_FIT_MIN) return [widths, 1];   /* 太窄：不压，让横向滚动兜底 */
+  const k = wrapW / sum;
+  const out = widths.map(w => Math.max(1, Math.round(w * k)));
+  const rest = wrapW - out.reduce((a, b) => a + b, 0);
+  if(rest && out.length){
+    let m = 0;
+    out.forEach((w, i) => { if(w > out[m]) m = i; });
+    out[m] = Math.max(1, out[m] + rest);
+  }
+  return [out, k];
+}
+/* v0.62 · 容器宽度一变（开/关详情分屏、窗口缩放、侧栏收起展开）就重排一次列宽。
+   观察的是滚动容器的**外框宽度**：它由布局决定、不受表格内容影响，
+   所以重排不会反过来触发自己（另有一道 wrapW 差值 < 2px 的防线兜底）。 */
+let _colRO = null, _colROPend = 0, _colROLastW = -1;
+function watchColWrap(kind, wrap, wrapW){
+  if(!wrap || typeof ResizeObserver === 'undefined') return;
+  _colROLastW = wrapW;
+  if(!_colRO){
+    _colRO = new ResizeObserver(entries => {
+      const w = Math.round((entries[0] && entries[0].contentRect) ? entries[0].contentRect.width : 0);
+      if(!w || Math.abs(w - _colROLastW) < 2) return;
+      _colROLastW = w;
+      let pg = '';
+      try{ pg = String(Store.state.ui.page || ''); }catch(e){}
+      const k = pg === 'orders' ? 'ord' : (pg === 'prod' ? 'prod' : '');
+      if(!k) return;
+      cancelAnimationFrame(_colROPend);
+      _colROPend = requestAnimationFrame(() => { try{ setupColResize(k); }catch(e){} });
+    });
+  }
+  try{ _colRO.disconnect(); _colRO.observe(wrap); }catch(e){}
+}
 /* v0.51：列宽总和小于容器宽时，把差额按比例摊回去。
    症状：搜索只剩两三条、或者用户把各列都拖窄过之后，表格只占容器一部分，右边空
          一大片 —— 看起来像「页面变窄了」。
@@ -3959,40 +4835,71 @@ function fitColToWrap(widths, wrapW, skip){
 function setupColResize(kind){
   const tbl = $('#page .tw.tscroll > table'); if(!tbl) return;
   const ths = $$('#page .tw.tscroll > table > thead > tr > th'); if(!ths.length) return;
-  /* 自然宽度（此刻仍是 auto 布局）—— 首次的默认档。
-     直接用实测值、**不加 COL_MIN 下限**：否则被抬升的列会让首屏总宽超出容器，
-     一进页面就多出一条横向滚动条。COL_MIN 只作「拖动 / 恢复保存值」时的下限。
-     无布局信息时（jsdom 度量恒为 0）退回下限，保证可测。 */
-  const natural = ths.map(th => { const w = Math.round(th.getBoundingClientRect().width); return w > 0 ? w : COL_MIN; });
-  /* v0.45：列宽记忆是**按序号**存的数组。列数变了（v0.45 排产表 11 → 8 列）之后
-     再按序号套旧宽度，会把旧列的宽度错位到别的列上。长度对不上就整份丢弃，走自然宽度。 */
+  const n = ths.length;
+  const wrap = tbl.parentElement;
+  const wrapW = wrap ? Math.round(wrap.clientWidth) : 0;
+  /* v0.62 · ① 取基准宽（与容器无关）：
+     - 用户拖过的 → localStorage 里的值（列数不符就整份丢弃，见 v0.45 的错位教训）；
+     - 第一次见这套列 → max-content 探测一次，之后**永久复用**。
+     ★ 绝不再拿「已注入 <col> 固定宽」的表格实测当自然宽 —— 那是分屏缩了回不来的根因。 */
   const savedRaw = (_colw[kind] && _colw[kind].w) || null;
-  const saved = (savedRaw && savedRaw.length === ths.length) ? savedRaw : null;
-  const widths = ths.map((th, i) => {
-    if(saved && saved[i] != null) return Math.max(COL_MIN, Math.min(COL_MAX, Math.round(saved[i])));
-    return Math.max(1, Math.min(COL_MAX, natural[i]));
-  });
-  /* 首屏（无保存值时）把 11 列取整累积的 1~2px 余量从最宽的一列扣掉：
-     否则总宽会比容器宽出几个像素，overflow-x:auto 立刻多出一条几乎不可见的横向滚动条。
-     保存值（用户拖出来的）不动 —— 那时超出容器是该有的横向滚动。 */
-  const wrapW = tbl.parentElement ? Math.round(tbl.parentElement.clientWidth) : 0;
-  if(!saved && wrapW > 0){
-    const diff = widths.reduce((a, b) => a + b, 0) - wrapW;
-    if(diff > 0){
-      let idx = 0;
-      widths.forEach((w, i) => { if(w > widths[idx]) idx = i; });
-      widths[idx] = Math.max(1, widths[idx] - diff);
+  const saved = (savedRaw && savedRaw.length === n) ? savedRaw : null;
+  if(colBase[kind].length !== n){
+    const found = saved
+      ? saved.map(w => Math.max(COL_MIN, Math.min(COL_MAX, Math.round(Number(w) || COL_MIN))))
+      : probeColNatural(tbl, ths);
+    if(found) colBase[kind] = found;          /* 量不出来就先不缓存，等下次渲染再试 */
+  }
+  let widths = (colBase[kind].length === n) ? colBase[kind].slice() : ths.map(() => COL_MIN);
+  /* v0.60：底部汇总栏要装得下「全量金额」。列宽不够就从产品列借（产品列本来就省略号收尾，
+     借出去只是更早截断；动金额列则会让整表更宽）。总宽不变，所以不影响首屏是否出横向滚动条。
+     只在「没有保存列宽」时借 —— 用户亲手拖过的宽度是明确意图，不抢着改回去。 */
+  if(kind === 'ord' && !saved){
+    /* v0.61：先给「数量」列补宽（需求最小），再补三个金额列 —— 顺序反过来会先把产品列借空 */
+    const qneed = sumQtyNeedW();
+    if(qneed){
+      const gap = qneed - widths[6];
+      if(gap > 0){
+        const avail = Math.max(0, (widths[10] || 0) - COL_MIN);
+        const take = Math.min(gap, avail);
+        if(take > 0){ widths[10] -= take; widths[6] += take; }
+      }
+    }
+    const need = sumNumNeedW();
+    if(need){
+      const from = 10;                                  /* 产品列（v0.61 起在第 11 位） */
+      [7, 8, 9].forEach((ci, j) => {
+        const gap = need[j] - widths[ci];
+        if(gap <= 0) return;
+        const avail = Math.max(0, (widths[from] || 0) - COL_MIN);
+        const take = Math.min(gap, avail);
+        if(take > 0){ widths[from] -= take; widths[ci] += take; }
+      });
     }
   }
   /* v0.51：还窄就摊平到容器宽。有保存值时同样要摊 —— 这正是「搜索后只剩两个产品、
-     表格缩成一条、右边空一大片」的来源（用户拖过的列宽总和小于容器宽就会这样）。 */
-  fitColToWrap(widths, wrapW, ths.findIndex(th => th.classList.contains('pcell')));
+     表格缩成一条、右边空一大片」的来源（用户拖过的列宽总和小于容器宽就会这样）。
+     v0.62：反过来（容器变窄）走**等比压缩** —— 分屏、窗口缩小、侧栏展开都走这一条。
+     缩放系数单独记在 colScale 里，基准一像素不动，所以容器宽回来时能原样长回去。 */
+  const sumBase = widths.reduce((a, b) => a + b, 0);
+  if(wrapW > 0 && sumBase < wrapW){
+    widths = fitColToWrap(widths, wrapW, ths.findIndex(th => th.classList.contains('pcell')));
+    const sumFit = widths.reduce((a, b) => a + b, 0);
+    colScale[kind] = sumBase > 0 ? sumFit / sumBase : 1;
+  } else if(wrapW > 0){
+    const shr = shrinkColToWrap(widths, wrapW);
+    widths = shr[0]; colScale[kind] = shr[1];
+  } else {
+    colScale[kind] = 1;
+  }
   tblColW[kind] = widths.slice();
   /* 注入 <colgroup>（不是 <th>，不影响列数断言） */
   let cg = tbl.querySelector('colgroup');
   if(!cg){ cg = document.createElement('colgroup'); tbl.insertBefore(cg, tbl.firstChild); }
   cg.innerHTML = widths.map(w => `<col style="width:${w}px">`).join('');
   tbl.classList.add('rz-ready');
+  syncSumColW();   /* v0.60：主表列宽定稿后立刻抄给底部汇总栏 */
+  watchColWrap(kind, wrap, wrapW);   /* v0.62：容器宽度变化时自动重排（分屏 / 缩放 / 侧栏收起） */
   ths.forEach((th, i) => {
     th.classList.add('c-rz');
     /* 产品图列（.pcell）宽度被 CSS 钉死在 56px（缩略图 40 + 内边距），拖了看不出变化，
@@ -4004,13 +4911,25 @@ function setupColResize(kind){
     th.appendChild(h);
     h.addEventListener('pointerdown', e => {
       e.preventDefault(); e.stopPropagation();
-      const startX = e.clientX, startW = tblColW[kind][i], colEl = cg.children[i];
+      /* v0.62：拖的是**基准宽**，显示宽 = 基准 × colScale。
+         换算一下增量，分屏（scale<1）时鼠标移 10px 显示也移 10px，跟手不飘。 */
+      /* 基准还没建立（首次量宽失败，比如 jsdom）→ 先按当前渲染宽补一份，
+         否则往稀疏数组里赋值会把长度写歪，下次渲染就认不出这是同一套列。 */
+      if(!colBase[kind] || colBase[kind].length !== (tblColW[kind] || []).length)
+        colBase[kind] = (tblColW[kind] || []).slice();
+      const startX = e.clientX;
+      const kScale = colScale[kind] || 1;
+      const startW = (colBase[kind] && colBase[kind][i] != null) ? colBase[kind][i] : tblColW[kind][i];
+      const colEl = cg.children[i];
       h.classList.add('on'); document.body.classList.add('col-rz');
       try{ h.setPointerCapture(e.pointerId); }catch(_){}
       const move = ev => {
-        const w = Math.max(COL_MIN, Math.min(COL_MAX, Math.round(startW + (ev.clientX - startX))));
-        if(w === tblColW[kind][i]) return;
-        tblColW[kind][i] = w; if(colEl) colEl.style.width = w + 'px';
+        const wBase = Math.max(COL_MIN, Math.min(COL_MAX, Math.round(startW + (ev.clientX - startX) / (kScale || 1))));
+        if(wBase === (colBase[kind] ? colBase[kind][i] : null)) return;
+        if(colBase[kind]) colBase[kind][i] = wBase;
+        const wShow = Math.max(1, Math.round(wBase * kScale));
+        tblColW[kind][i] = wShow; if(colEl) colEl.style.width = wShow + 'px';
+        if(kind === 'ord') syncSumColW();   /* 拖一列同步一列，汇总栏不跟着错位 */
       };
       const up = ev => {
         h.classList.remove('on'); document.body.classList.remove('col-rz');
@@ -4066,7 +4985,12 @@ function pagerHTML(kind, total){
 }
 function bindPager(kind){
   const sw = $(kind === 'ord' ? '#oPaged' : '#pPaged');
-  if(sw) sw.onchange = e => { const g = pgGet(kind); pgSet(kind, e.target.checked, g[1], 1); Store.set({}); };
+  if(sw) sw.onchange = e => {
+    const g = pgGet(kind);
+    /* v0.60 · 分页与汇总栏不再互斥：小计跟当页走、合计跟全部走，分页反而让两行有区别 */
+    pgSet(kind, e.target.checked, g[1], 1);
+    Store.set({});
+  };
   const sz = $(kind === 'ord' ? '#oSize' : '#pSize');
   if(sz) sz.onchange = e => { const g = pgGet(kind); pgSet(kind, g[0], Number(e.target.value), 1); Store.set({}); };
   $$('#page .pager2 [data-pg]').forEach(b => b.onclick = e => {
@@ -4093,6 +5017,7 @@ function ordSortVal(o, k, st){
     case 'owner':    { const u = st.data.owners.find(x => x.id === o.ownerId);       return u ? (u.name || '') : ''; }
     case 'status':   return String(o.status || '');
     case 'delivery': return o.contractDelivery || '';
+    case 'qty':      return qtyOf(o);
     case 'amount':   return Number(o.amount) || 0;
     case 'got':      return paidTotalOf(o);
     case 'unpaid':   return unpaidOf(o);
@@ -4116,7 +5041,7 @@ function exportCSV(rows, name){
 }
 function exportOrders(st){
   const list = filteredOrders(st).slice().sort((a,b) => (b.signDate||'').localeCompare(a.signDate||''));
-  const head = ['订单号','客户','业务员','状态','签订日','合同交期','实际交付','订单金额','税金','实收','已回款','未回款','手续费核销','付款条件','贸易条款','排产单号','产品摘要'];
+  const head = ['订单号','客户','业务员','状态','签订日','合同交期','实际交付','订单数量','订单金额','税金','实收','已回款','未回款','手续费核销','付款条件','贸易条款','排产单号','产品摘要'];
   const rows = [head];
   list.forEach(o => {
     const c = st.data.customers.find(x => x.id === o.customerId) || {};
@@ -4124,7 +5049,7 @@ function exportOrders(st){
     const got = paidTotalOf(o), recv = receivedOf(o), wo = writeOffOf(o);
     const plan = o.amount || 0;
     rows.push([ o.orderNo, c.name || '', u.name || '', String(o.status).slice(3), o.signDate, o.contractDelivery,
-      o.actualDelivery, o.amount, Number(o.taxAmount||0)||0, recv, got, Math.max(0, plan-got), wo,
+      o.actualDelivery, qtyOf(o) || '', o.amount, Number(o.taxAmount||0)||0, recv, got, Math.max(0, plan-got), wo,
       payTermLabel(o.paymentTerm), tradeTermLabel(o.tradeTerm), o.moNo, o.productSummary ]);
   });
   exportCSV(rows, '订单明细');
@@ -4167,12 +5092,13 @@ function viewOrders(st){
       ${oView === 'card'
         ? sortMenuBtnHTML('oSortBtn', 'ord') + infoI('卡片视图没有列头，用这里的「排序」选字段，同一字段再点一次切换 升序 ↔ 降序。<b>卡片与表格共用同一份排序</b>，切回表格时列头箭头会跟上。')
         : infoI('点击列头排序：同一列再点一次切换 升序 ↔ 降序。右侧 ▲/▼ 就是当前排序状态；未填值的行恒排最后。')}</div>`;
-  if(oView === 'card') return h + orderCardViewHTML(st, orders) + '</div>';
+  if(oView === 'card') return h + orderCardViewHTML(st, orders) + ordGrandBarHTML(st) + '</div>';
   h += `<div class="bd np"><div class="tw tscroll"><table>
     <thead><tr><th class="ck"><input type="checkbox" id="oAll" ${allSel?'checked':''} title="全选当前筛选结果"></th>
     ${thSort('ord','orderNo','订单号')}${thSort('ord','customer','客户')}${thSort('ord','owner','业务员')}${thSort('ord','status','状态')}${thSort('ord','delivery','交期')}
-    ${thSort('ord','amount','金额','num')}${thSort('ord','got','已收','num')}${thSort('ord','unpaid','未收','num')}<th>产品</th><th>操作</th></tr></thead><tbody>`;
-  pgSlice('ord', orders).forEach(o => {
+    ${thSort('ord','qty','数量','num')}${thSort('ord','amount','金额','num')}${thSort('ord','got','已收','num')}${thSort('ord','unpaid','未收','num')}<th>产品</th><th>操作</th></tr></thead><tbody>`;
+  /* v0.60 · 汇总栏常驻表格底部（tfoot 吸底），没有开关可关 */
+  const paint = o => {
     const c = st.data.customers.find(x => x.id === o.customerId) || {};
     const u = st.data.owners.find(x => x.id === o.ownerId) || {};
     const got = paidTotalOf(o);
@@ -4184,17 +5110,20 @@ function viewOrders(st){
       : d < 0 ? `<span class="tag solid-red">逾期 ${-d} 天</span>`
       : d <= 15 ? `<span class="tag t-orange">T-${d} 天</span>` : `<span class="tag t-gray">T-${d} 天</span>`;
     const on = ordSel.has(o.id);
-    h += `<tr data-oid="${o.id}" class="${on?'sel':''}"><td class="ck"><input type="checkbox" class="ock" data-oid="${o.id}" ${on?'checked':''}></td>
+    return `<tr data-oid="${o.id}" class="${on?'sel':''}"><td class="ck"><input type="checkbox" class="ock" data-oid="${o.id}" ${on?'checked':''}></td>
       <td><b>${esc(o.orderNo)}</b></td><td>${esc(c.shortName||'')}</td>
       <td>${esc(u.name||'-')}</td>
       <td><span class="${stTag(o.status)}">${String(o.status).slice(3)}</span> ${dd} ${orderPlanTagHTML(st, o)}</td>
       <td class="muted">${o.contractDelivery||'-'}</td>
+      <td class="num qtyc" data-qty="${qtyOf(o)}">${qtyFmt(qtyOf(o))}</td>
       <td class="num">${money(o.amount)}</td><td class="num green">${money(got)}</td>
       <td class="num ${un>0?'red':''}">${money(un)}</td>
       <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis">${esc(o.productSummary||'')}</td>
       <td class="ops">${orderRowOpsHTML(o)}</td></tr>`;
-  });
-  return h + '</tbody></table></div></div>' + pagerHTML('ord', orders.length) + '</div>';
+  };
+  pgSlice('ord', orders).forEach(o => { h += paint(o); });
+  return h + '</tbody></table>' + ordSumDockHTML(st, orders) + '</div></div>'
+    + pagerHTML('ord', orders.length) + '</div>';
 }
 /* 行内常用操作：不点进详情也能直接发货 / 编辑（v0.29）。
    「发货」只在还没发货、也还没收款时出现，已完成的单不挂无意义入口。 */
@@ -4239,6 +5168,176 @@ function bindOrders(st){
   };
   const sn = $('#oSelNone'); if(sn) sn.onclick = () => { ordSel.clear(); Store.set({}); };
   const ub = $('#oUndo'); if(ub && batchUndo) ub.onclick = () => bxUndo();
+  syncSumColW();   /* v0.60：每次重渲染（勾选 / 排序 / 分页 / 换视图）后重抄列宽 */
+}
+
+/* ==========================================================================
+   模块 8.4b · 固定汇总栏（v0.60：U9 式「小计 + 合计」两条常驻栏）
+   —— v0.58 的「汇总货款」勾选、v0.59 的「小汇总按客户分组插行」都已移除。
+      要的不是散在表格中间的分组小计，而是<b>压在表格底部、滚动也不跑</b>的两条固定栏。
+   形态
+      · 表格底部一个独立块（#oSumFoot.sumdock），内含两行：上「小计」、下「合计」
+      · 这块是 .tw.tscroll 的<i>直接子元素</i> + position:sticky;bottom:0 → 纵向吸底，
+        横向和主表同在一个滚动容器里天然对齐
+      · <b>为什么不用 <tfoot>+sticky</b>：Chromium 里 tfoot / tbody 内 td 的 sticky 计算值
+        虽是 sticky，实际不吸底（实测真机滚到中间，两行仍停在视口外 y≈2061）；
+        换成滚动容器的子块后包含块变成整个 .tscroll，才有吸底的余量
+      · 卡片视图没有列 → 退化成底部合计条（.paysum），数字口径完全一致
+   口径
+      · 小计 = 已勾选行 ∩ 当前筛选；一笔没勾时 = 当前页可见行
+        → 标签直接写「所选 N 笔」/「当前页 N 笔」，不让用户猜两行差在哪
+      · 合计 = 当前筛选结果<b>分页之前</b>的全部行
+        → 分页时小计（当页）与合计（全部）才有区别，这正是 U9 的用法
+      · 货款 = Σ 订单金额；已收 = Σ paidTotalOf（含手续费核销）
+      · 未收 = Σ 单笔未收（单笔夹 0：超收不倒挂去冲抵别的单，另起「超收」）
+      · 回款率 = 已收 ÷ 货款（货款 0 → 0%，不除零）；金额按分取整
+   边界
+      · 无订单 → 两行都显示 0 笔 / ¥0，栏位不隐藏（忽隐忽现比空数字更慌）
+      · 勾了但被筛选挡住 → 不计入小计（按「所选 ∩ 当前筛选」算，与勾选条口径一致）
+      · 小计 ≡ 合计（不分页且没勾选）→ 允许，标签会说明两行都按「当前页」算
+      · 超收 → 只在行尾提示总额，不冲抵别的订单
+   ★ 行高写死 30px（SUM_ROW_H）：两行合计 60px 的吸底块高度按它算，CSS 与 JS 必须同步；
+     行高不写死会让 td 高度被内容撑开、两行高低不齐。
+   ========================================================================== */
+const SUM_ROW_H = 30;   /* 汇总行行高（px），与 CSS tfoot>tr>td{height:30px} 同步 */
+
+/* 求和：金额先按 100 分取整，避免 0.1 + 0.2 这类浮点尾差 */
+function ordPaySum(list){
+  const rows = list || [];
+  let amt = 0, got = 0, un = 0, over = 0, qty = 0, qtyN = 0;
+  rows.forEach(o => {
+    const a = Number(o && o.amount) || 0;
+    const g = paidTotalOf(o);
+    amt += a; got += g; un += unpaidOf(o);
+    if(g > a) over += g - a;
+    /* v0.61：数量只累加「填了值」的单，qtyN 记录有多少单填了 —— 汇总栏据此说明口径，
+       避免「60 笔共 1200 件」里混着 40 笔没填、被误读成平均每单 20 件 */
+    const q = qtyOf(o);
+    if(q > 0){ qty += q; qtyN++; }
+  });
+  const r2 = n => Math.round(n * 100) / 100;
+  amt = r2(amt); got = r2(got); un = r2(un); over = r2(over);
+  return { n: rows.length, amount: amt, got, un, over, qty, qtyN, rate: amt > 0 ? got / amt : 0 };
+}
+/* 汇总行：列结构与列表一致（ck + 订单号…交期 5 格 + 数量 + 金额/已收/未收 + 产品·操作 2 格）
+   tag = 「小计」/「合计」标签；hint = 口径说明（所选 N 笔 / 当前页 N 笔 / 全部 N 笔） */
+function sumRowHTML(kind, tag, s, hint){
+  const rate = (s.rate * 100).toFixed(1) + '%';
+  const sub = kind === 'sub';
+  const tail = `回款率 ${rate}${s.over > 0 ? ' · 超收 ' + money(s.over) : ''}`;
+  /* 数量口径：填了值的单才有数；一单没填就整格空着（写 0 件会让人以为这单真的 0 件） */
+  const qtyTxt = s.qtyN > 0 ? s.qty.toLocaleString('zh-CN') : '';
+  const qtyTitle = s.qtyN > 0 ? `已填数量的 ${s.qtyN} 笔合计` : '这批订单都还没填数量';
+  return `<tr class="${sub ? 'subsum' : 'grandsum'}" data-kind="${sub ? 'sub' : 'grand'}" data-n="${s.n}" data-amount="${s.amount}" data-got="${s.got}" data-un="${s.un}" data-over="${s.over}" data-rate="${rate}" data-qty="${s.qty}" data-qtyn="${s.qtyN}"><td class="ck"></td>
+      <td colspan="5"><span class="sumtag">${tag}</span>${hint ? `<em>${esc(hint)}</em>` : ''}</td>
+      <td class="num${s.qtyN > 0 ? '' : ' muted'}" title="${qtyTitle}">${qtyTxt}</td>
+      <td class="num" title="${money(s.amount)}">${money(s.amount)}</td>
+      <td class="num green" title="${money(s.got)}">${money(s.got)}</td>
+      <td class="num ${s.un > 0 ? 'red' : ''}" title="${money(s.un)}">${money(s.un)}</td>
+      <td colspan="2" class="${sub ? 'muted' : ''}">${tail}</td></tr>`;
+}
+const ORD_COLS = 12;   /* 主表列数：勾选 + 单号 + 客户 + 业务员 + 状态 + 交期 + 数量 + 金额 + 已收 + 未收 + 产品 + 操作 */
+/* 表格底部两条固定栏：小计（所选 / 当前页）+ 合计（分页之前全部）
+   —— 两条永远都在（没订单也给 0 笔），不做「没数据就隐藏」。
+   结构是「独立块 + colgroup」而不是 <tfoot>：原因见 CSS 里「为什么不用 tfoot」那段。 */
+function ordSumDockHTML(st, list){
+  const all = list || ordViewList(st);
+  const page = pgSlice('ord', all);
+  const picked = all.filter(o => ordSel.has(o.id));
+  const useSel = picked.length > 0;
+  const subList = useSel ? picked : page;
+  const sub = ordPaySum(subList), grand = ordPaySum(all);
+  const subHint = useSel ? `所选 ${subList.length} 笔` : `当前页 ${subList.length} 笔`;
+  const grandHint = `${all.length} 笔${page.length < all.length ? ' · 分页前全部' : ''}`;
+  const cols = '<col>'.repeat(ORD_COLS);
+  return `<div class="sumdock" id="oSumFoot"><table class="sumtab"><colgroup>${cols}</colgroup><tbody>`
+    + sumRowHTML('sub', '小计', sub, subHint)
+    + sumRowHTML('grand', '合计', grand, grandHint)
+    + `</tbody></table></div>`;
+}
+/* 把主表的<b>实测列宽</b>抄到汇总栏的 colgroup 上。
+   ★ 不能抄主表 col 的 style.width：主表是 auto 布局，col 的 width 只是建议值，实际列宽
+     会被内容撑开（本机 1440 宽实测：产品列建议 81px、实际 150px，整表多做 69px）。
+     抄建议值会让汇总栏比主表窄 69px，右下角「回款率」整段往左错位。
+   ★ 汇总栏是 fixed 布局，col 宽是多少就渲染多少 → 必须喂实测值。
+   ★ 量不到（jsdom 恒为 0）时退回抄 col 的 style.width，保证可测。 */
+function syncSumColW(){
+  const dock = $('#page .sumdock');
+  if(!dock) return;
+  const wrap = dock.parentElement;
+  const src = wrap && wrap.querySelector('table');
+  const tab = dock.querySelector('table');
+  if(!src || !tab) return;
+  const cols = dock.querySelectorAll('colgroup > col');
+  const cg = src.querySelector('colgroup');
+  const ths = src.querySelectorAll('thead > tr > th');
+  let total = 0;
+  for(let i = 0; i < cols.length; i++){
+    const th = ths[i];
+    const w = th ? th.getBoundingClientRect().width : 0;
+    if(w > 0){
+      cols[i].style.width = w + 'px';
+      total += w;
+    }else if(cg && cg.children[i]){
+      const cw = cg.children[i].style.width;
+      cols[i].style.width = cw;
+      total += parseFloat(cw) || 0;
+    }
+  }
+  if(total > 0) tab.style.width = Math.round(total) + 'px';
+}
+/* 汇总数字要多宽的列才放得下 —— 全量金额的位数比任何一行都多
+   （¥94,260,000.00 vs 单行 ¥2,720,000.00），按数据行算出的列宽装不下，
+   会被省略号截成 ¥94,260,00…。用隐藏 span 按汇总行的真实字体量一遍；
+   量不到（jsdom 恒为 0）就返回 null，交给省略号 + title 兜底。 */
+function sumNumNeedW(){
+  const all = ordViewList(Store.state);
+  if(!all.length) return null;
+  const s = ordPaySum(all);
+  const probe = document.createElement('span');
+  probe.style.cssText = 'position:absolute;left:-9999px;top:0;visibility:hidden;white-space:nowrap;' +
+    'font-size:var(--fs-base);font-weight:700;font-variant-numeric:tabular-nums';
+  document.body.appendChild(probe);
+  const need = [money(s.amount), money(s.got), money(s.un)].map(t => {
+    probe.textContent = t;
+    return Math.ceil(probe.getBoundingClientRect().width) + 26;   /* 左右 padding 24 + 2 余量 */
+  });
+  probe.remove();
+  return need.every(w => w > 30) ? need : null;
+}
+/* v0.61 · 数量列的汇总值也要放得下。
+   ★ 表头只写「数量」两个字，自然宽定出来约 60px；汇总行的全量件数（如 9,790）字号更大、位数更多，
+     不补宽就被截成「9,7…」—— 真机截图里就是这么翻的车。
+   ★ 一笔都没填数量时返回 null，列宽保持表头自然宽（那时汇总格是空的，不需要地方）。 */
+function sumQtyNeedW(){
+  const all = ordViewList(Store.state);
+  if(!all.length) return null;
+  const s = ordPaySum(all);
+  if(!s.qtyN) return null;
+  const probe = document.createElement('span');
+  probe.style.cssText = 'position:absolute;left:-9999px;top:0;visibility:hidden;white-space:nowrap;' +
+    'font-size:var(--fs-base);font-weight:700;font-variant-numeric:tabular-nums';
+  document.body.appendChild(probe);
+  probe.textContent = s.qty.toLocaleString('zh-CN');
+  const w = Math.ceil(probe.getBoundingClientRect().width) + 26;
+  probe.remove();
+  return w > 30 ? w : null;
+}
+/* 卡片视图没有列 → 退化成底部合计条（口径与合计行一致） */
+function ordGrandBarHTML(st){
+  const all = ordViewList(st), s = ordPaySum(all);
+  const rate = (s.rate * 100).toFixed(1) + '%';
+  return `<div class="paysum${all.length ? '' : ' is-empty'}" id="oPaySum"
+      data-n="${s.n}" data-all="${all.length}" data-amount="${s.amount}" data-got="${s.got}"
+      data-un="${s.un}" data-over="${s.over}" data-rate="${rate}">
+      <span class="ps-main">合计 <b>${money(s.amount)}</b></span>
+      <span class="ps-kv">${all.length} 笔</span>
+      <span class="ps-kv">已收<b>${money(s.got)}</b></span>
+      <span class="ps-kv${s.un > 0 ? ' bad' : ' good'}">未收<b>${money(s.un)}</b></span>
+      <span class="ps-kv">回款率<b>${rate}</b></span>
+      ${s.over > 0 ? `<span class="ps-kv bad">超收<b>${money(s.over)}</b></span>` : ''}
+      ${all.length ? '' : '<span class="ps-hint">当前筛选没有命中订单</span>'}
+    </div>`;
 }
 
 /* ==========================================================================
@@ -4575,6 +5674,7 @@ const OCARD_FIELDS = [
   { k:'status',  t:'状态' },
   { k:'cd',      t:'交期倒计时' },
   { k:'deliv',   t:'合同交期' },
+  { k:'qty',     t:'订单数量' },   /* v0.61 */
   { k:'amount',  t:'订单金额' },
   { k:'paid',    t:'已收' },
   { k:'unpaid',  t:'未收' },
@@ -4707,6 +5807,7 @@ function orderCardHTML(st, o){
   const cd = orderCountdown(o);
   const on = k => ocardFields.indexOf(k) >= 0;
   const kv = [];
+  if(on('qty'))    kv.push(['数量', qtyFmt(qtyOf(o))]);
   if(on('amount')) kv.push(['金额', money(o.amount)]);
   if(on('paid'))   kv.push(['已收', `<span class="ok">${money(got)}</span>`]);
   if(on('unpaid')) kv.push(['未收', `<span class="${un > 0 ? 'bad' : ''}">${money(un)}</span>`]);
@@ -4756,7 +5857,7 @@ let pView = 'table';          /* 'table' | 'card' */
 /* 交期倒计时（对着合同交期算）。已完工不再倒数，避免「已完工却显示余 -3 天」 */
 function delivCountdown(o, p){
   if(!o || !o.contractDelivery) return { txt:'未填交期', cls:'' };
-  if(p && prodDone(p))          return { txt:'已完工',   cls:'ok' };
+  if(p && prodDone(p, o))       return { txt:'已完工',   cls:'ok' };
   const d = diffToday(o.contractDelivery);
   if(d < 0)   return { txt:'已逾期 ' + (-d) + ' 天', cls:'bad' };
   if(d === 0) return { txt:'今天到期',                cls:'warn' };
@@ -4806,30 +5907,78 @@ function prodCardViewHTML(st, list){
   return h + `</div>`;
 }
 const PROD_RISK_LABEL = { ALL:'全部状态', overdue:'已逾期未完工', late:'预计晚于交期', tight:'卡交期', normal:'正常', done:'已完工' };
-const PROD_STATUS = ['待排产','生产中','已完工','已暂停'];
-/* v0.46：进度**完全由状态决定**（只读，不再手填、不再从数量推算）。
-   四个状态各有固定值；改这一处即可调整全局口径
-   （表单 / 列表 / 详情 / 卡片 / 排序 / 筛选 共用同一份）。 */
-const PROD_STATUS_PCT = { '待排产':0, '生产中':30, '已暂停':50, '已完工':100 };
-/* 是否已完工：优先看「实际完工日」；思源过来的记录没有实际完工日，
-   但状态已写成「已完工」（导入时按完工类状态落库），同样算已完工——
-   否则会被误报成「已逾期」，出现「状态=已完工 却显示逾期」的矛盾。 */
-function prodDone(p){ return !!(p && (p.actualFinish || p.opStatus === '已完工')); }
-/* 排产进度（0-100）。⚠ 必须与表单保存口径完全一致（见 PROD_STATUS_PCT）。
-   v0.46 起**状态优先**：待排产 0% / 生产中 30% / 已暂停 50% / 已完工 100%。
-   只有「没有状态 / 状态不在表里」的老数据才退回旧口径（信息不凭空丢）：
-     ① 有「生产数量」→ 已完成 ÷ 生产数量
-     ② 有实际完工日 → 100%
-     ③ 其余 → 手填的「完成进度」百分比 */
-function prodPct(p){
-  if(!p) return 0;
-  const s = String(p.opStatus || '');
-  if(Object.prototype.hasOwnProperty.call(PROD_STATUS_PCT, s)) return PROD_STATUS_PCT[s];
-  const q = Number(p.qty) || 0, d = Number(p.doneQty) || 0;
-  if(q > 0) return Math.max(0, Math.min(100, Math.round(d / q * 100)));
-  if(prodDone(p)) return 100;
-  const f = Number(p.progressPct);
-  return isFinite(f) ? Math.max(0, Math.min(100, Math.round(f))) : 0;
+/* v0.65：排产状态只剩三档 —— 而且它们不再是「记录上的字段」，是订单状态的折算结果。 */
+const PROD_STATUS = ['待排产','生产中','已完工'];
+/* 进度**完全由状态决定**（只读、不存字段）。改这一处即调整全局口径
+   （列表 / 详情 / 卡片 / 排序 / 筛选 共用同一份）。 */
+const PROD_STATUS_PCT = { '待排产':0, '生产中':30, '已完工':100 };
+/* ==========================================================================
+   v0.65 · 排产状态 = 订单状态（取消排产自己的状态字段）
+   --------------------------------------------------------------------------
+   起因：v0.62 加了「订单状态 → 排产状态同步」，v0.64 又修「同步时读到旧状态」——
+   两次都是在给**两份状态**打补丁。根子在于 production 上各存了一份 opStatus 与
+   progressPct：同一件事记两遍，就总有一天会不一致。这一版直接把那份删掉：
+
+     订单 status（唯一真源） --ORDER2PROD--> 排产显示状态 --PROD_STATUS_PCT--> 进度
+
+   映射口径不变（与思源导入同一套，不新增第二套）：
+     01 已签约 → 待排产 ｜ 02 已排产 → 生产中
+     03 已完工待发货 / 04 已发货 / 05 已收款 / 06 已完结 → 已完工
+
+   ● 不再有「同步」这个动作：改订单状态的同一刻，所有读到的地方就是新值 ——
+     既然没有第二份可落后，也就没有「漏同步」和「同步读到旧值」这两类 bug。
+   ● 反向回写自然不可能：排产页不再有任何改状态的入口。
+   ● 「已暂停」降级为布尔标记 paused —— 它不是第四种状态：挂起时照旧显示订单状态，
+     另挂一个「已挂起」角标；筛选里作为单独一项。
+   ========================================================================== */
+const ORDER2PROD = {
+  '01 已签约': '待排产',
+  '02 已排产': '生产中',
+  '03 已完工待发货': '已完工',
+  '04 已发货': '已完工',
+  '05 已收款': '已完工',
+  '06 已完结': '已完工'
+};
+/* 排产的**显示状态** = 所属订单状态折三档。
+   ★ 唯一来源：production 表里没有 opStatus，改订单状态即刻生效。
+   st 可省略（默认走 Store.state），这样纯函数式的调用点不必层层传参。 */
+function prodOrderOf(p, st){
+  st = st || (typeof Store !== 'undefined' ? Store.state : null);
+  const oid = p && p.orderId;
+  return ((st && st.data && st.data.orders) || []).find(x => x.id === oid) || {};
+}
+function prodStatusOf(p, st){
+  const o = prodOrderOf(p, st);
+  return ORDER2PROD[(o && o.status) || ''] || '待排产';
+}
+/* 带挂起的展示态：挂起优先（与历史上 pause 的最高优先级一致）。
+   用于「状态」列的筛选命中 —— 挂起时列里仍显示订单状态 + 独立的挂起角标。 */
+function prodStateOf(p, st){ return (p && p.paused) ? '已挂起' : prodStatusOf(p, st); }
+/* 「状态」列 / 详情面板的统一渲染：订单状态 tag（沿用订单页配色）+ 挂起角标。
+   ★ 挂起不是状态值，所以这里是两个并列 tag，而不是把状态换成「已挂起」——
+     挂起期间「这单现在到底在哪个阶段」必须一眼还能看见。 */
+function prodStateTagHTML(p, st){
+  const o = prodOrderOf(p, st);
+  const s = prodStatusOf(p, st);
+  return `<span class="${stTag(o.status)}" style="font-size:10.5px">${esc(s)}</span>`
+    + (p && p.paused ? `<span class="tag t-orange" style="font-size:10.5px;margin-left:4px"
+         title="这条排产被人工挂起；状态仍跟随订单">已挂起</span>` : '');
+}
+/* 排产进度 0-100，由订单状态映射：待排产 0 / 生产中 30 / 已完工 100。
+   ★ 不再保留「手填百分比」「已完成÷数量」两条备用口径 —— 它们本来就是给老数据兜底的，
+     而老数据这次一并以订单状态为准（用户已确认），两条并行的进度口径一并下线。 */
+function prodPct(p, st){
+  const s = prodStatusOf(p, st);
+  return Object.prototype.hasOwnProperty.call(PROD_STATUS_PCT, s) ? PROD_STATUS_PCT[s] : 0;
+}
+/* 是否已完工：有实际完工日 → 完工；否则看订单状态是否已过完工点。
+   （思源过来的记录没有实际完工日，但订单已经在 04 及以后，同样算完工 ——
+     否则会出现「状态=已完工 却显示逾期」的矛盾。） */
+function prodDone(p, o){
+  if(!p) return false;
+  if(p.actualFinish) return true;
+  if(o && o.status) return (ORDER2PROD[o.status] || '') === '已完工';
+  return prodStatusOf(p) === '已完工';
 }
 /* 计划完工 − 合同交期（天），无数据返回 null */
 function prodGap(p, o){
@@ -4838,7 +5987,7 @@ function prodGap(p, o){
 }
 /* 交期风险归类（互斥，优先级 done > overdue > late > tight > normal） */
 function prodRisk(p, o){
-  if(prodDone(p)) return 'done';
+  if(prodDone(p, o)) return 'done';
   const g = prodGap(p, o);
   if(p.planFinish && diffToday(p.planFinish) < 0) return 'overdue';
   if(g != null && g > 0) return 'late';
@@ -4848,7 +5997,7 @@ function prodRisk(p, o){
 /* 交期对比展示（tag 文案 + 配色）
    已完工 → 看「实际完工日 vs 合同交期」；未完工 → 看「计划完工日 vs 合同交期」（属预测，标「预计」）。 */
 function prodCmpTag(p, o){
-  if(prodDone(p)){
+  if(prodDone(p, o)){
     if(p.actualFinish && o.contractDelivery){
       const d = Math.round((new Date(p.actualFinish) - new Date(o.contractDelivery)) / 86400000);
       if(d > 0)   return { cmp:'完工晚 ' + d + ' 天', cls:'t-red' };
@@ -4885,7 +6034,7 @@ function prodViewList(st){
   let list = prodBaseList(st);
   const byId = id => st.data.orders.find(x => x.id === id) || {};
   const rk = selList(pRisk), rw = selList(pRow);
-  if(rw.length) list = list.filter(p => rw.indexOf(p.opStatus || '') >= 0);
+  if(rw.length) list = list.filter(p => rw.indexOf(prodStateOf(p, st)) >= 0);
   if(rk.length) list = list.filter(p => rk.indexOf(prodRisk(p, byId(p.orderId))) >= 0);
   /* v0.24：排产页的条件行作用于「排产记录」 */
   const pf = scopeFilters(st, 'prod');
@@ -4904,9 +6053,9 @@ function prodSortVal(p, k, st){
     case 'moNo':         return p.moNo || '';
     case 'orderNo':      return o.orderNo || '';
     case 'customer':     { const c = st.data.customers.find(x => x.id === o.customerId); return c ? (c.shortName || c.name || '') : ''; }
-    case 'opStatus':     return p.opStatus || '';
+    case 'opStatus':     return prodStateOf(p, st);
     case 'planStart':    return p.planStart || '';
-    case 'progress':     return prodPct(p);
+    case 'progress':     return prodPct(p, st);
     default:             return p.planFinish || '';
   }
 }
@@ -4920,7 +6069,7 @@ function viewProd(st){
         <button data-v="table" class="${pView==='table'?'on':''}">表格</button>
         <button data-v="card"  class="${pView==='card'?'on':''}">卡片</button></div>
       ${pView === 'table' ? pgControlsHTML('prod') : ''}
-      ${infoI(`排产记录${canEdit ? '可点行末「编辑」修改进度与日期' : '为只读镜像（当前数据源不可写）'}。关注 <b>计划完工日晚于合同交期</b> 与 <b>逾期未完工</b>。<br>顶栏筛选在本页是<b>独立的</b>（订单页筛了什么，这里照常全显示），点「重置」恢复全部。<br>工具栏可切<b>表格 / 卡片</b>：卡片按<b>合同交期</b>分月，一眼看清每月要交多少单、哪个月吃紧。`)}
+      ${infoI(`排产记录${canEdit ? '可点行末「编辑」修改日期与挂起' : '为只读镜像（当前数据源不可写）'}。关注 <b>计划完工日晚于合同交期</b> 与 <b>逾期未完工</b>。<br><b>状态与进度都跟随订单</b>：已签约→待排产 0%、已排产→生产中 30%、已完工待发货及以后→已完工 100%（本页没有改状态的入口，去订单详情改）。<br>顶栏筛选在本页是<b>独立的</b>（订单页筛了什么，这里照常全显示），点「重置」恢复全部。<br>工具栏可切<b>表格 / 卡片</b>：卡片按<b>合同交期</b>分月，一眼看清每月要交多少单、哪个月吃紧。`)}
       <div class="spacer"></div>
       ${pView === 'card'
         ? sortMenuBtnHTML('pSortBtn', 'prod') + infoI('卡片视图没有列头，用左侧「排序」选字段，同一字段再点一次切换 升序 ↔ 降序。<b>卡片与表格共用同一份排序</b>，切回表格时列头箭头会跟上。')
@@ -4939,12 +6088,12 @@ function viewProd(st){
   pv.forEach(p => {
     const o = st.data.orders.find(x => x.id === p.orderId) || {};
     const c = st.data.customers.find(x => x.id === o.customerId) || {};
-    const pct = prodPct(p);
+    const pct = prodPct(p, st);
     h += `<tr data-oid="${esc(p.orderId)}" data-pid="${esc(p.id)}"><td><b>${esc(p.moNo)}</b></td><td>${esc(o.orderNo||'')}</td><td>${esc(c.shortName||'')}</td>
-      <td><span class="tag t-gray" style="font-size:10.5px">${esc(p.opStatus||'—')}</span></td>
+      <td>${prodStateTagHTML(p, st)}</td>
       <td class="muted">${p.planStart||'-'}</td><td class="muted">${p.planFinish||'-'}</td>
       <td class="num"><div class="pbar" style="width:56px;display:inline-block;vertical-align:middle"><i class="${pct>=100?'good':''}" style="width:${pct}%"></i></div> ${pct}%</td>
-      ${canEdit?`<td class="ops">${prodDone(p) && !orderDelivered(o) && !orderShipped(o) ? `<button class='btn xs' data-pship='${esc(p.orderId)}'>发货</button>` : ''}<button class='btn xs' data-pedit='${p.id}'>编辑</button></td>`:''}</tr>`;
+      ${canEdit?`<td class="ops">${prodDone(p, o) && !orderDelivered(o) && !orderShipped(o) ? `<button class='btn xs' data-pship='${esc(p.orderId)}'>发货</button>` : ''}<button class='btn xs' data-pedit='${p.id}'>编辑</button></td>`:''}</tr>`;
   });
   if(!pv.length) h += `<tr><td colspan="${canEdit?8:7}" class="empty">当前筛选条件下没有排产记录</td></tr>`;
   return h + '</tbody></table></div></div>' + pagerHTML('prod', ps.length) + '</div>';
@@ -5004,23 +6153,25 @@ function viewPay(st){
   const todo = list0.filter(o => !isFullyPaid(o));
   const done = list0.filter(o => isFullyPaid(o));
   const list = payTab === 'todo' ? todo : done;
-  const ov = todo.filter(o => o.contractDelivery && diffToday(o.contractDelivery) < 0).reduce((a,o)=>a+unpaidOf(o),0);
-  const wk = todo.filter(o => o.contractDelivery && diffToday(o.contractDelivery) >= 0 && diffToday(o.contractDelivery) <= 7).reduce((a,o)=>a+unpaidOf(o),0);
+  /* v0.57 · 逾期 / 到期一律按账期口径（应收日 = 出货日 + 账期），不再拿合同交期凑数 */
+  const ov = todo.filter(o => payDueOf(o, st).overdueDays > 0).reduce((a,o)=>a+unpaidOf(o),0);
+  const wk = todo.filter(o => { const d = payDueOf(o, st); return !!d.due && !d.overdueDays && d.remainDays <= 7; })
+    .reduce((a,o)=>a+unpaidOf(o),0);
 
   let h = `<div class="grid kpi">
     <div class="card"><div class="lb">销售总额</div><div class="vl">${money(amtSum)}</div><div class="sb2">${list0.length} 笔订单 · 合同金额</div></div>
     <div class="card"><div class="lb">实收金额</div><div class="vl good">${money(recvSum)}</div><div class="sb2">${done.length} 笔已收齐 · ${payCnt} 笔回款流水 · 实收率 ${rateSum}%</div></div>
     <div class="card"><div class="lb">未收款</div><div class="vl ${unSum?'bad':''}">${money(unSum)}</div><div class="sb2">${todo.length} 笔待收</div></div>
     <div class="card"><div class="lb">手续费 · 尾差核销</div><div class="vl ${wfSum?'warn':''}">${money(wfSum)}</div><div class="sb2">已结清不追收 · 不计入实收</div></div>
-    <div class="card"><div class="lb">已逾期未收</div><div class="vl ${ov?'bad':''}">${money(ov)}</div><div class="sb2">交期已过仍欠</div></div>
-    <div class="card"><div class="lb">7 日内交期到期</div><div class="vl ${wk?'warn':''}">${money(wk)}</div><div class="sb2">提前沟通</div></div>
+    <div class="card"><div class="lb">已逾期未收</div><div class="vl ${ov?'bad':''}">${money(ov)}</div><div class="sb2">已过应收日（出货日 + 账期）</div></div>
+    <div class="card"><div class="lb">7 日内到期应收</div><div class="vl ${wk?'warn':''}">${money(wk)}</div><div class="sb2">按账期计算，提前沟通</div></div>
   </div>`;
   h += `<div class="card" style="margin-top:14px"><div class="hd">
       <button class="btn sm ${payTab==='todo'?'primary':''}" data-pt="todo">待收款 ${todo.length}</button>
       <button class="btn sm ${payTab==='done'?'primary':''}" data-pt="done">已收齐 ${done.length}</button>
-      ${infoI('<b>支持分次回款</b>：点「登记回款」进弹层，可以一笔一笔登记到账（日期 / 金额 / 类型 / 方式 / 流水号各记各的），已收 = 各笔合计，未收 = 订单金额 − 已收。<br>订金与尾款在这里只是<b>款项类型标签</b>；被扣手续费时勾「差额已结清」即可结案，不再计入未收。<br>老订单（只有「订金付款日 / 尾款付款日」两笔）在第一次登记新流水时会自动补成两笔记录，<b>历史金额不变</b>。')}
+      ${infoI('<b>支持分次回款</b>：点「登记回款」进弹层，可以一笔一笔登记到账（日期 / 金额 / 类型 / 方式 / 流水号各记各的），已收 = 各笔合计，未收 = 订单金额 − 已收。<br><b>应收日按账期算</b>：每批出货按自己的发货日 + 账期（订单上的「账期」优先，留空跟随客户档案），回款按先进先出冲抵，最早那批未收清的到期日就是催款日。客户和订单都没设账期时，退回「最后发货日 + 预警规则里的兜底天数」。<br>订金与尾款在这里只是<b>款项类型标签</b>；被扣手续费时勾「差额已结清」即可结案，不再计入未收。<br>老订单（只有「订金付款日 / 尾款付款日」两笔）在第一次登记新流水时会自动补成两笔记录，<b>历史金额不变</b>。')}
     </div><div class="bd np"><div class="tw tscroll"><table><thead><tr><th>订单号</th><th>客户</th><th class="num">金额</th>
-    <th class="num">已收</th><th class="num">未收</th><th class="num">笔数</th><th>最近回款</th><th>回款率</th><th>状态</th><th>操作</th>
+    <th class="num">已收</th><th class="num">未收</th><th class="num">笔数</th><th>最近回款</th><th>回款率</th><th>应收日</th><th>状态</th><th>操作</th>
     </tr></thead><tbody>`;
   list.forEach(o => {
     const c = st.data.customers.find(x => x.id === o.customerId) || {};
@@ -5033,6 +6184,14 @@ function viewPay(st){
     else if(Number(o.depositAmount||0) === 0 || o.depositPaidDate){ cls = 'tag t-orange'; txt = '待收尾款'; }
     else { cls = 'tag solid-red'; txt = '待收'; }
     const recvCell = `${money(recv)}${wo > 0 ? `<div class="muted" style="font-size:10.5px">核销 ${money(wo)}</div>` : ''}`;
+    /* v0.57 · 应收日：每批出货日 + 账期，先进先出核销，取最早未收清那批 */
+    const dd = payDueOf(o, st);
+    const dueCell = dd.due
+      ? `<b class="${dd.overdueDays ? 'red' : ''}">${dd.due.slice(5)}</b>
+         <div class="muted" style="font-size:10.5px">账期 ${dd.days} 天 ｜ ${
+           dd.overdueDays ? `<span class="red">逾期 ${dd.overdueDays} 天</span>`
+           : dd.remainDays === 0 ? '<span class="orange">今日到期</span>' : `剩 ${dd.remainDays} 天`}</div>`
+      : `<span class="muted">${dd.days ? '未出货' : '未设账期'}</span>`;
     h += `<tr data-oid="${o.id}"><td><b>${esc(o.orderNo||'')}</b></td><td>${esc(c.shortName||c.name||'')}</td>
       <td class="num">${money(o.amount)}</td>
       <td class="num"><b class="${recv ? 'green' : ''}">${recvCell}</b></td>
@@ -5040,10 +6199,11 @@ function viewPay(st){
       <td class="num">${n ? n + ' 笔' : '<span class="muted">—</span>'}</td>
       <td>${last || '<span class="muted">未回款</span>'}</td>
       <td class="num">${pct}%</td>
+      <td>${dueCell}</td>
       <td><span class="${cls}">${txt}</span></td>
       <td><button class="btn sm primary" data-pay="${o.id}">登记回款</button></td></tr>`;
   });
-  if(!list.length) h += `<tr><td colspan="10" class="empty">暂无记录</td></tr>`;
+  if(!list.length) h += `<tr><td colspan="11" class="empty">暂无记录</td></tr>`;
   return h + '</tbody></table></div></div></div>';
 }
 /* v0.55 · 回款登记弹层：汇总条 + 流水明细 + 「登记一笔」
@@ -5053,11 +6213,17 @@ function viewPay(st){
 function paySummaryHTML(o){
   const amt = Number(o.amount || 0), recv = receivedOf(o), un = unpaidOf(o), pct = payPctOf(o);
   const n = payListOf(o).length;
+  /* v0.57 · 应收日按账期：最早未收清批次 = 该批发货日 + 账期 */
+  const due = payDueOf(o);
+  const dueTxt = due.due
+    ? `<b class="${due.overdueDays ? 'red' : ''}">${due.due}</b><span class="muted" style="font-size:10.5px"> ${due.overdueDays ? '逾期 ' + due.overdueDays + ' 天' : '剩 ' + due.remainDays + ' 天'}</span>`
+    : `<b class="muted">—</b><span class="muted" style="font-size:10.5px"> ${due.days ? '未出货' : '无账期'}</span>`;
   return `<div class="payhd">
     <span class="pk"><em>订单金额</em><b>${money(amt)}</b></span>
     <span class="pk"><em>已收</em><b class="green">${money(recv)}</b></span>
     <span class="pk"><em>未收</em><b class="${un ? 'red' : ''}">${money(un)}</b></span>
     <span class="pk"><em>回款</em><b>${n} 笔</b></span>
+    <span class="pk"><em>应收日（账期 ${due.days || '—'} 天）</em>${dueTxt}</span>
     <span class="pbar" style="flex:1;min-width:90px"><i class="${pct >= 100 ? 'good' : ''}" style="width:${pct}%"></i></span>
   </div>`;
 }
@@ -5202,13 +6368,13 @@ function viewCust(st){
     </div>`;
   h += canWrite ? '' : infoI('当前数据源<b>只读</b>，无法新增 / 编辑 / 删除客户。请到「数据源」页切换到「本地手工录入」。', 'warn');
   h += `<div class="card"><div class="bd np"><div class="tw tscroll"><table>
-    <thead><tr><th>客户</th><th>等级</th><th>行业</th><th>联系人</th><th class="num">订单数</th>
+    <thead><tr><th>客户</th><th>等级</th><th>行业</th><th>国家/地区</th><th>联系人</th><th class="num">订单数</th>
     <th class="num">订单金额</th><th class="num">已回款</th><th class="num">未回款</th>
     <th class="num">账期</th><th>操作</th></tr></thead><tbody id="custBody">${custRowsHTML(list)}</tbody></table></div></div></div>`;
   return h;
 }
 function custRowsHTML(list){
-  if(!list.length) return `<tr><td colspan="10"><div class="empty">没有客户，点「新增客户」建立档案</div></td></tr>`;
+  if(!list.length) return `<tr><td colspan="11"><div class="empty">没有客户，点「新增客户」建立档案</div></td></tr>`;
   return list.map(x => {
     const c = x.c, off = String(c.active) === 'false';
     return `<tr data-cid="${c.id}">
@@ -5217,6 +6383,7 @@ function custRowsHTML(list){
       <td><span class="tag ${c.level==='A'?'t-green':c.level==='B'?'t-blue':'t-amber'}">${esc(c.level||'-')}</span>
         ${off?'<span class="tag t-gray" style="margin-left:4px">停用</span>':''}</td>
       <td>${esc(c.industry||'-')}</td>
+      <td>${c.region ? esc(c.region) : '<span class="muted">未填写</span>'}</td>
       <td>${esc(c.contact||'-')}<div class="muted" style="font-size:11px">${esc(c.phone||'')}</div></td>
       <td class="num">${x.n}</td>
       <td class="num">${money(x.s.amount)}</td>
@@ -5300,7 +6467,8 @@ function openCustomerSheet(cid){
       <div class="card" style="margin-bottom:14px"><div class="hd"><h3>档案信息</h3></div><div class="bd">
         <div class="frow">
           <div class="fld"><label>公司全称</label><input readonly value="${esc(c.name||'')}"></div>
-          <div class="fld"><label>客户编码</label><input readonly value="${esc(c.code||'')}"></div></div>
+          <div class="fld"><label>客户编码</label><input readonly value="${esc(c.code||'')}"></div>
+          <div class="fld"><label>国家/地区</label><input readonly value="${esc(c.region||'未填写')}"></div></div>
         <div class="frow">
           <div class="fld"><label>行业</label><input readonly value="${esc(c.industry||'-')}"></div>
           <div class="fld"><label>账期天数</label><input readonly value="${c.settleDays||'-'}"></div>
@@ -7038,8 +8206,8 @@ function alertRulesDlgHTML(cfg){
         <div class="frow">
           <div class="fld"><label>第一轮提醒（天）</label><input id="al30" type="number" value="${cfg.lead30}"></div>
           <div class="fld"><label>第二轮提醒（天）</label><input id="al15" type="number" value="${cfg.lead15}"></div>
-          <div class="fld"><label>发货未收款阈值（天）</label><input id="alShip" type="number" value="${cfg.shipUnpaidDays}"></div>
-          <div class="fld"><label>回款到期提前（天）</label><input id="alPay" type="number" value="${cfg.payDueSoon}"></div>
+          <div class="fld"><label>无账期兜底（天）</label><input id="alShip" type="number" value="${cfg.shipUnpaidDays}"></div>
+          <div class="fld"><label>应收日前提前（天）</label><input id="alPay" type="number" value="${cfg.payDueSoon}"></div>
         </div>
         <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-top:13px">
           <label class="switch"><input type="checkbox" id="alEn" ${cfg.enabled!==false?'checked':''}> 启用预警引擎</label>
@@ -7047,7 +8215,7 @@ function alertRulesDlgHTML(cfg){
           <button class="btn sm" id="alNotify">测试桌面通知</button>
           <button class="btn primary sm" id="alSave">保存规则</button>
         </div>
-        <div style="margin-top:13px">${infoI(`规则：① 距合同交期 ≤${cfg.lead30} 天提醒、≤${cfg.lead15} 天警示、过期即为逾期；② 已发货超 ${cfg.shipUnpaidDays} 天仍未收齐 → 严重；③ 计划收款日 ${cfg.payDueSoon} 天内到期或已逾期 → 警示 / 严重。`)}</div>
+        <div style="margin-top:13px">${infoI(`规则：① 交期（只管交货）：距合同交期 ≤${cfg.lead30} 天提醒、≤${cfg.lead15} 天警示、过期即为逾期。<br>② 回款（只管货款，按账期）：每批「出货日 + 账期」= 该批应收日，回款先进先出核销，最早未收清那批的应收日前 ${cfg.payDueSoon} 天 → 待收，已过 → 逾期。账期在<b>客户档案</b>里维护，订单上可单独覆盖；<b>合同交期不参与回款判断</b>。<br>③ 客户和订单都没设账期时兜底：最后发货日超 ${cfg.shipUnpaidDays} 天仍未收齐 → 严重。`)}</div>
       </div></div></div>`;
 }
 /* 工具栏上的「筛选」入口：带条件条数徽标 —— 浮层收起后也一眼知道有几条在生效 */
@@ -7282,64 +8450,34 @@ async function deleteShipment(orderId, shipId){
   toast('发货记录已移入回收站');
 }
 
-/* ---------- v0.46 · 进度只由状态决定（只读） ----------
-   排产信息收敛成五项、进度不再由数量推算之后，这里再进一步：
-   「进度」**完全**由状态映射（见 PROD_STATUS_PCT），不再手填 —— 表单里那个框常置灰，
-   切状态即自动跳到对应值。prodStatusPct 是纯函数（表单回填 / 保存 / 展示共用一份口径，
-   杜绝两处漂移），prodFormSyncProgress 只负责把结果同步回表单控件。 */
-function prodStatusPct(opStatus, pctIn){
-  const s = String(opStatus || '');
-  if(Object.prototype.hasOwnProperty.call(PROD_STATUS_PCT, s)) return PROD_STATUS_PCT[s];
-  /* 没有状态 / 未知状态（老数据）：退回手填值，越界封顶归零 */
-  const f = Number(pctIn);
-  if(!isFinite(f)) return 0;
-  return Math.max(0, Math.min(100, Math.round(f)));
-}
-function prodFormSyncProgress(f){
-  if(!f || !f.values) return;
-  const s = String(f.values.opStatus || '');
-  f.values.progressPct = prodStatusPct(s, f.values.progressPct);
-  const box = $('#formBody [data-fld="progressPct"]'); if(!box) return;
-  const inp = box.querySelector('[data-k="progressPct"]'); if(!inp) return;
-  inp.disabled = true;                       /* v0.46：只读，跟随状态自动变 */
-  box.classList.toggle('locked', true);
-  /* 只在真的不一致时才写 value —— 避免多余重排 / 光标跳动 */
-  const want = (f.values.progressPct == null) ? '' : String(f.values.progressPct);
-  if(String(inp.value) !== want) inp.value = want;
-}
-
 /* ---------- 排产记录：新增 / 编辑 / 删除 ----------
-   思源过来的排产记录只有单号 + 日期，没有数量，所以进度会显示 0%。
-   v0.46 起录入项为五项，进度**完全由状态决定**（见 PROD_STATUS_PCT）。 */
+   v0.65：「状态」与「完成进度」两项从表单里**彻底移除** ——
+   排产没有自己的状态（跟随订单），也就不该留一个「在这里改状态」的入口。
+   留下的只有单号 / 计划开工 / 计划完工，外加一个「挂起」开关。
+   （v0.46 那两个「状态决定进度、进度只读置灰」的辅助函数同时作废：
+     没有可填的进度框，也就不需要同步控件了。） */
 function openProdForm(orderId, prodId, backTo){
   const st = Store.state;
   const o = st.data.orders.find(x => x.id === orderId); if(!o) return;
   const editing = prodId && st.data.production.find(p => p.id === prodId);
   const def = editing || {};
-  const cur = editing ? prodPct(editing) : '';
   openForm({
     kind:'production', orderId, title: editing ? '编辑排产记录' : '新增排产记录', subtitle: o.orderNo || '',
-    tip: `一条排产记录只有 <b>排产单号 / 状态 / 计划开工 / 计划完工 / 进度</b> 五项。<br><b>进度由状态自动决定</b>（只读、不用填）：待排产 0%、生产中 30%、已暂停 50%、已完工 100%。<br>状态「已完工」＝该单已完工，<b>不再判为逾期</b>。<br>排产单号<b>全局唯一</b>（跨订单也不许重复），留空会自动生成一个。`,
+    tip: `一条排产记录只有 <b>排产单号 / 计划开工 / 计划完工</b> 三项，外加一个「挂起」开关。<br><b>状态与进度不在这里填</b> —— 它们直接跟随订单状态：已签约→待排产 0%、已排产→生产中 30%、已完工待发货及以后→已完工 100%。要改状态请到订单详情改，排产会立刻跟上。<br>「挂起」只是个标记（不是第四种状态）：挂起后这条排产会打上「已挂起」角标，状态照旧显示订单所处的阶段。<br>排产单号<b>全局唯一</b>（跨订单也不许重复），留空会自动生成一个。`,
     fields: [
       { key:'moNo', label:'排产单号（工单号）', ph:'留空自动生成', rule:'code' },
-      { key:'opStatus', label:'状态', type:'select', opts: PROD_STATUS.map(v => ({ v, t:v })),
-        help:'决定进度：待排产 0%、生产中 30%、已暂停 50%、已完工 100%（进度只读跟随状态）' },
+      { key:'paused', label:'挂起', type:'select', opts: [{ v:'0', t:'不挂起' }, { v:'1', t:'已挂起' }],
+        help:'只给这条排产打个标记，不改订单状态、也不改进度' },
       { key:'planStart', label:'计划开工', type:'date' },
-      { key:'planFinish', label:'计划完工', type:'date' },
-      { key:'progressPct', label:'完成进度（按状态自动）', type:'number', ph:'自动',
-        help:'只读：由状态决定 —— 待排产 0%、生产中 30%、已暂停 50%、已完工 100%' }
+      { key:'planFinish', label:'计划完工', type:'date' }
     ],
     values: {
       /* v0.43：新增时**不**预填订单上的单号 —— 单号全局唯一，
          预填会造成第二条记录与第一条撞号而被拦下。留空即自动生成。 */
       moNo: def.moNo || '',
-      planStart: def.planStart || '', planFinish: def.planFinish || o.contractDelivery || '',
-      /* v0.46：编辑时按**展示口径**预填进度（= 该状态对应的固定值），
-         带出来的就是它此刻显示的那个百分比，保存即完成口径迁移。 */
-      progressPct: cur === '' ? '' : cur,
-      opStatus: PROD_STATUS.indexOf(def.opStatus) >= 0 ? def.opStatus : '生产中'
+      paused: def.paused ? '1' : '0',
+      planStart: def.planStart || '', planFinish: def.planFinish || o.contractDelivery || ''
     },
-    onRedraw: f => prodFormSyncProgress(f),
     onSave: async v => {
       const moNo = String(v.moNo || '').trim()
         || ('MO-' + fmt(today()).replace(/-/g,'').slice(2) + Math.floor(Math.random()*900+100));
@@ -7350,14 +8488,11 @@ function openProdForm(orderId, prodId, backTo){
         toast('排产单号「' + moNo + '」已被订单 ' + (co.orderNo || clash.orderId) + ' 占用，请换一个');
         return false;   /* 不关表单，光标留给用户改单号 */
       }
-      const opStatus = v.opStatus || '生产中';
       const payload = {
         moNo,
+        paused: String(v.paused) === '1',
         planStart: v.planStart || '', planFinish: v.planFinish || '',
-        opStatus,
-        /* v0.46：进度口径只剩一处 —— 完全由状态决定（0 / 30 / 50 / 100）。 */
-        progressPct: prodStatusPct(opStatus, v.progressPct),
-        /* v0.45 起「车间 / 实际开工 / 实际完工 / 生产数量 / 已完成数量」不再在界面出现；
+        /* v0.45 起「车间 / 实际开工 / 实际完工 / 生产数量 / 已完成数量」不在界面出现；
            保存时一律归零，避免旧的数量口径在背后继续改写进度（隐藏的第二条口径）。 */
         workshop: '', actualStart: '', actualFinish: '', qty: 0, doneQty: 0
       };
@@ -7372,7 +8507,11 @@ function openProdForm(orderId, prodId, backTo){
       await syncOrderMoNo(st, orderId);      /* v0.43：回写订单上的派生快照 */
       if(backTo === 'prod' && keepId) openProdSheet(keepId);
       else openOrder(orderId);
-      toast(editing ? '排产记录已更新：' + moNo : '已新增排产记录：' + moNo);
+      /* 保存后没「同步动作」可报，直接把跟随来的结果告诉用户 ——
+         用户上一版最关心的就是「订单已排产、排产还是待排产」，这里当场给答案。 */
+      const after = prodStatusOf({ orderId }, Store.state);
+      toast((editing ? '排产记录已更新：' : '已新增排产记录：') + moNo
+        + '（状态跟随订单：' + after + ' ' + prodPct({ orderId }, Store.state) + '%）');
       return false;
     }
   });
@@ -7397,7 +8536,7 @@ function openProdSheet(prodId){
   const o = st.data.orders.find(x => x.id === p.orderId) || {};
   const c = st.data.customers.find(x => x.id === o.customerId) || {};
   const canEdit = !!(st.source && st.source.capabilities.write);
-  const pct = prodPct(p);
+  const pct = prodPct(p, st);
   const cd = delivCountdown(o, p);
   const sibs = orderProds(st, p.orderId);
 
@@ -7414,11 +8553,12 @@ function openProdSheet(prodId){
 
   /* v0.45：排产信息只保留「排产单号 / 状态 / 计划开工 / 计划完工 / 进度」五项。 */
   const infoRows = row('排产单号', ros('<b>' + esc(p.moNo || '—') + '</b>'))
-    + row('状态', ros('<span class="tag t-gray">' + esc(p.opStatus || '—') + '</span>'))
+    + row('状态', ros(prodStateTagHTML(p, st) + ' <span class="muted">跟随订单</span>'))
     + row('计划开工', ros(p.planStart || '—'))
     + row('计划完工', ros(p.planFinish || '—'))
     + row('进度', ros('<span class="pbar" style="width:120px;display:inline-block;vertical-align:middle">'
-        + '<i class="' + (pct >= 100 ? 'good' : '') + '" style="width:' + pct + '%"></i></span> ' + pct + '%'));
+        + '<i class="' + (pct >= 100 ? 'good' : '') + '" style="width:' + pct + '%"></i></span> ' + pct + '%'
+        + ' <span class="muted">由订单状态映射</span>'));
 
   const orderRows = row('订单号', ros('<span class="mo-jump" data-oidjump="' + esc(o.id) + '" title="打开订单详情">'
       + esc(o.orderNo || '—') + '</span>'))
@@ -7429,7 +8569,7 @@ function openProdSheet(prodId){
     + row('同单其它单号', ros(sibHTML));
 
   sheet('<div class="hd"><h3>' + esc(p.moNo || '排产记录') + '</h3>'
-      + '<span class="tag t-gray">' + esc(p.opStatus || '—') + '</span>'
+      + prodStateTagHTML(p, st)
       + '<span class="muted" style="font-size:11.5px">' + esc(o.orderNo || '')
       + (c.shortName ? ' · ' + esc(c.shortName) : '') + '</span>'
       + '<div class="spacer"></div><button class="close" data-close>×</button></div>'
@@ -7437,11 +8577,11 @@ function openProdSheet(prodId){
       + '<div class="odetop">'
         + kpi('计划完工', p.planFinish || '—')
         + kpi('进度', pct + '%')
-        + kpi('状态', p.opStatus || '—')
+        + kpi('挂起', p.paused ? '已挂起' : '否')
         + '<span class="spacer"></span>'
         + (canEdit
             ? '<button class="btn sm" id="pEdit">编辑</button>'
-              + (prodDone(p) && !orderDelivered(o) && !orderShipped(o)
+              + (prodDone(p, o) && !orderDelivered(o) && !orderShipped(o)
                   ? '<button class="btn sm primary" id="pShip">登记发货</button>' : '')
               + '<button class="btn sm del" id="pDel">删除</button>'
             : '')
@@ -7895,15 +9035,13 @@ function syBuildPlan(rows, st){
       depositAmount:dep, depositPaidDate:(dep > 0 && paid) ? payDate : '',
       balancePaidDate: paid ? payDate : '', balanceReceived:0, balanceSettled:false, _src:'siyuan'
     };
-    /* 排产：排产单号列按「、」拆分，逐个建一条无数量排产记录；
-       进度直接由状态决定（v0.46：prodStatusPct）。 */
-    const opStatus = status === '01 已签约' ? '待排产' : (status === '02 已排产' ? '生产中' : '已完工');
+    /* 排产：排产单号列按「、」拆分，逐个建一条无数量排产记录。
+       v0.65：不再抄一份状态/进度进去 —— 排产状态直接跟随这张订单的 status。 */
     /* v0.43：分隔符统一走 splitMoNos（兼容「/」，与手填 / 思源回填同一口径）；
        单号全局唯一，冲突的在落库那一步跳过并计数。 */
     const mos = moRaw ? splitMoNos(moRaw) : [];
     const prods = mos.map(m => ({ moNo:m, workshop:'', planStart:'', planFinish:deliv,
-      actualStart:'', actualFinish:'', qty:0, doneQty:0,
-      progressPct: prodStatusPct(opStatus, 0), opStatus }));
+      actualStart:'', actualFinish:'', qty:0, doneQty:0 }));
     items.push({ act: exist ? '更新' : '新增', id: exist ? exist.id : null, row:r,
       orderNo:no, customer:cname, amount:amount, tax:tax, status:status, mo:moRaw,
       order, prod:(prods[0] || null), prods, imgs: [] });
@@ -8264,9 +9402,9 @@ function bindSyncSiyuan(){
                   other:((Store.state.data.orders || []).find(x => x.id === taken.orderId) || {}).orderNo || taken.orderId });
                 continue;
               }
-              const np = { id: uid('P'), orderId:o.id, moNo:m, workshop:'', planStart:'',
+              const np = { id: uid('P'), orderId:o.id, moNo:m, workshop:'', paused:false, planStart:'',
                 planFinish:String(o.contractDelivery || ''), actualStart:'', actualFinish:'',
-                qty:0, doneQty:0, progressPct:0, opStatus:'待排产' };
+                qty:0, doneQty:0 };
               await src.create('production', np);
               (Store.state.data.production = Store.state.data.production || []).push(np);
             }
@@ -8693,6 +9831,15 @@ const RULES = {
     return bad ? CODE_MSG : null;
   },
   amount : v => (v === '' || v == null) ? '请填写订单金额' : (Number(v) > 0 ? null : '订单金额须大于 0'),
+  /* v0.61 · 订单数量：选填；填了就必须是正整数（件数是离散的，2.5 件没有意义） */
+  qty    : v => {
+    if(v === '' || v == null) return null;
+    const n = Number(v);
+    if(!isFinite(n)) return '订单数量请填数字';
+    if(n < 0) return '订单数量不能为负数';
+    if(!Number.isInteger(n)) return '订单数量须为整数';
+    return null;
+  },
   deposit: (v, vals) => {
     if(v === '' || v == null) return null;                       // 允许留空 = 无订金
     const n = Number(v);
@@ -8746,6 +9893,76 @@ function payPctOf(o){
   const amt = Number((o && o.amount) || 0);
   if(amt <= 0) return isFullyPaid(o) ? 100 : 0;
   return Math.max(0, Math.min(100, Math.round(paidTotalOf(o) / amt * 100)));
+}
+/* ==========================================================================
+   v0.57 · 账期与应收日（回款预警唯一基准）
+   --------------------------------------------------------------------------
+   账期 = 「出货之后多少天内付款」。客户账期 21 天、10-01 出货 → 应收日 10-22。
+   ★ 以前回款预警拿「合同交期」当收款日，那其实是**交货**期限，账期根本没参与，
+     于是 10-01 出货的单从 10 月初就开始催，客户其实还有 21 天。
+   ★ 分批出货：每批各自起算（自己那个发货日 + 账期）。回款不按批指定，
+     所以按「先进先出」核销 —— 先发的先收，最早那批未收清的到期日 = 整单催款日。
+   ★ 账期天数来源：订单 settleDays（覆盖）> 客户档案 settleDays > 0（无账期 →
+     退回「最后发货日 + 固定阈值」的老口径，避免客户没填账期就完全不提醒）。
+   ========================================================================== */
+const addDaysStr = (d, n) => {
+  if(!d) return '';
+  const x = new Date(d);
+  if(isNaN(x)) return '';
+  x.setDate(x.getDate() + Number(n || 0));
+  return fmt(x);
+};
+/* 该单生效的账期天数（0 = 没设账期）。st 可省略，默认读当前库 */
+function settleDaysOf(o, st){
+  st = st || Store.state;
+  const own = Number((o && o.settleDays) || 0);
+  if(own > 0) return own;
+  const c = ((st && st.data && st.data.customers) || []).find(x => x.id === (o && o.customerId));
+  const cd = Number((c && c.settleDays) || 0);
+  return cd > 0 ? cd : 0;
+}
+/* 账期来源：order（本单覆盖）/ customer（跟随客户档案）/ none */
+function settleSrcOf(o, st){
+  if(Number((o && o.settleDays) || 0) > 0) return 'order';
+  return settleDaysOf(o, st) > 0 ? 'customer' : 'none';
+}
+/* 应收批次：发货记录按发货日排队 → 回款按先进先出冲抵 → 每批留下「已收 / 未收 / 应收日」 */
+function payBatchesOf(o, st){
+  st = st || Store.state;
+  const days = settleDaysOf(o, st);
+  const amt0 = Number((o && o.amount) || 0);
+  let ss = ((st.data && st.data.shipments) || [])
+    .filter(s => s.orderId === (o && o.id) && s.shipDate)
+    .sort((a, b) => String(a.shipDate).localeCompare(String(b.shipDate))
+      || String(a.id).localeCompare(String(b.id)));
+  /* 没有发货行、但已登记实际交付日 → 当成一批（老数据常见） */
+  if(!ss.length && o && o.actualDelivery) ss = [{ id: '_actual', shipDate: o.actualDelivery, amount: amt0 }];
+  let amts = ss.map(s => Number(s.amount || 0));
+  /* 单批发货没填金额（老数据 / 快速登记）→ 视为整单一批，否则会算成「一分未发」 */
+  if(ss.length === 1 && !(amts[0] > 0)) amts = [amt0];
+  let pool = payListOf(o).reduce((a, p) => a + (Number(p.amount) || 0), 0);
+  const rows = ss.map((s, i) => {
+    const amt = amts[i];
+    const paid = Math.min(pool, amt);
+    pool -= paid;
+    return { shipId: s.id, shipNo: s.shipNo || '', shipDate: s.shipDate, amount: amt,
+      paid: Math.max(0, paid), un: Math.max(0, amt - Math.max(0, paid)),
+      due: days > 0 ? addDaysStr(s.shipDate, days) : '' };
+  });
+  return { days, rows, shipped: rows.reduce((a, r) => a + r.amount, 0) };
+}
+/* 整单应收日 = 最早「未收清」那一批的到期日。
+   { days, rows, batch, due, overdueDays(逾期>0), remainDays(未到期>0) }
+   还没出货 / 全部收清 / 无账期 → due 为空，不产生账期预警。 */
+function payDueOf(o, st){
+  const b = payBatchesOf(o, st);
+  const batch = b.rows.find(r => r.un > 0.005) || null;
+  const due = (batch && batch.due) || '';
+  const d = due ? diffToday(due) : 0;
+  return { days: b.days, rows: b.rows, batch, due,
+    overdueDays: due && d < 0 ? -d : 0,
+    remainDays: due && d >= 0 ? d : 0,
+    openCount: b.rows.filter(r => r.un > 0.005).length };
 }
 /* 把「流水列表」折算成订单上的镜像字段（订金付款日 / 尾款付款日 / 实收尾款）。
    镜像只为兼容思源推送、CSV 导出与老的「订金未付」筛选 —— 数学口径一律以流水为准。
@@ -8914,6 +10131,10 @@ function buildOrderFields(st, orderId){
       ph:'如 MO-2609-331',
       help:'一个订单可以有多个排产单号：输入后按「回车」生成一个标签，粘贴「MO-1/MO-2」也会自动拆开，点标签上的 × 移除。每个单号在「排产」页各自独立成一条记录。单号全局唯一，重复会被拦下。' },
     { key:'signDate', label:'签订日期', type:'date', required:true },
+    /* v0.61 · 订单数量：独立手工字段（选填）。不从产品明细 / 排产数量推算 —— 一单多款产品、
+       排产还拆多张工单，自动合计的数字跟合同上的总件数对不上，反而添乱。 */
+    { key:'qty', label:'订单数量', type:'number', required:false, ph:'件', rule:'qty',
+      help:'本单合同约定的总件数，只作记录与统计：订单列表有「数量」列，表格底部的小计 / 合计会累加，导出 Excel 也带这一列。留空即「未填」，不影响任何金额计算。' },
     { key:'amount', label:'订单金额', type:'number', required:true, ph:'元', rule:'amount',
       help:'填写后下方付款计划会自动算出尾款' },
     { key:'taxAmount', label:'税金', type:'number', required:false, ph:'元',
@@ -8921,13 +10142,18 @@ function buildOrderFields(st, orderId){
 
     { type:'group', label:'交付与状态' },
     { key:'contractDelivery', label:'合同交期', type:'date', required:true },
-    { key:'status', label:'订单状态', type:'select', required:true, opts: STATUS.map(s => ({ v:s, t:String(s).slice(3) })) },
+    { key:'status', label:'订单状态', type:'select', required:true,
+      opts: STATUS.map(s => ({ v:s, t:String(s).slice(3) })),
+      help:'改这里会同步更新该单所有排产记录的状态：已签约→待排产 / 已排产→生产中 / 已完工待发货及以后→已完工（排产「已暂停」不会被覆盖，推进到已完工时自动解除）' },
     { key:'productSummary', label:'产品摘要', type:'text', required:false, full:true },
 
     { type:'group', label:'贸易条款' },
     { key:'paymentTerm', label:'付款条件', type:'select', required:true, opts: PAY_TERMS,
       help:'选择信用证 L/C 后可上传信用证文件（选填）' },
     { key:'tradeTerm', label:'贸易条款', type:'select', required:true, opts: TRADE_TERMS, help:'Incoterms 2020' },
+    /* v0.57 · 账期：出货后多少天内付款，回款预警的唯一基准 */
+    { key:'settleDays', label:'账期（天）', type:'number', required:false, ph:'留空 = 跟随客户档案',
+      help:'出货后多少天内应付清。留空跟随客户档案里的「账期天数」；填了就覆盖本单。回款预警按「每批出货日 + 账期」算应收日（例：账期 21 天、10-01 出货 → 10-22 应收）。' },
     { type:'group', label:'附件（信用证 / 签约合同 / 其他，可多文件）' },
     { key:'attachments', label:'订单附件', type:'files', required:false, full:true,
       help:'支持 PDF / JPG / PNG，单文件 ≤ 10MB，可上传多份（信用证、签约合同等），每份可标记类型' },
@@ -9179,6 +10405,21 @@ function openForm(cfg){
 }
 
 /* ---------- 客户 / 业务员字段定义：与订单字段共用同一份渲染与校验 ---------- */
+/* v0.63 · 国家/地区候选：只作「可输入下拉」的建议项（datalist 会边输边过滤），
+   允许自由输入 —— 新兴市场随时冒出来，硬编码成 select 迟早挡住业务。
+   ★ 港澳台一律带「中国」前缀，不出现任何能被读成独立国家的写法。 */
+const REGIONS = [
+  '中国', '中国香港', '中国澳门', '中国台湾',
+  '美国', '加拿大', '墨西哥', '巴西', '阿根廷', '智利', '秘鲁',
+  '德国', '法国', '意大利', '西班牙', '葡萄牙', '荷兰', '比利时', '卢森堡',
+  '英国', '爱尔兰', '瑞士', '奥地利', '波兰', '捷克', '匈牙利', '罗马尼亚',
+  '瑞典', '挪威', '丹麦', '芬兰', '俄罗斯', '乌克兰', '土耳其',
+  '阿联酋', '沙特阿拉伯', '卡塔尔', '以色列', '埃及', '南非', '尼日利亚', '摩洛哥',
+  '日本', '韩国', '越南', '泰国', '马来西亚', '新加坡', '印度尼西亚', '菲律宾',
+  '印度', '巴基斯坦', '孟加拉国', '斯里兰卡', '哈萨克斯坦', '乌兹别克斯坦',
+  '澳大利亚', '新西兰'
+];
+const REGION_NONE = '未填写';
 function buildCustomerFields(){
   return [
     { key:'name', label:'客户名称', required:true, ph:'公司全称' },
@@ -9188,6 +10429,16 @@ function buildCustomerFields(){
       opts: () => { const s = new Set(INDUSTRIES); (Store.state.data.customers||[]).forEach(c => { if(c.industry) s.add(String(c.industry)); }); return [...s].map(v => ({ v, t:v })); },
       ph:'可选已有，也可直接输入新行业',
       help:'可直接输入新行业；保存后自动进入候选列表，按行业统计同步生效' },
+    /* v0.63 · 国家/地区：看板「订单数量分析」的地区维度按这个值分组。
+       候选里放常用国家/地区，也允许直接敲；留空的数据在看板里归入「未填写」。 */
+    { key:'region', label:'国家/地区', type:'combo',
+      opts: () => {
+        const s = new Set(REGIONS);
+        (Store.state.data.customers||[]).forEach(c => { if(c.region) s.add(String(c.region)); });
+        return [...s].map(v => ({ v, t:v }));
+      },
+      ph:'如 中国 / 中国香港 / 德国',
+      help:'用于看板按地区统计订单分布；留空会归入「未填写」，不影响其它功能' },
     { key:'settleDays', label:'账期天数', type:'number', ph:'天' },
     { key:'contact', label:'联系人' },
     { key:'phone', label:'联系电话' },
@@ -9215,13 +10466,14 @@ function openCustomerForm(id){
   const values = c ? {
     name:c.name || '', shortName:c.shortName || '', code:c.code || '',
     industry:c.industry || INDUSTRIES[INDUSTRIES.length-1],
+    region:c.region || '',
     settleDays:c.settleDays == null ? '' : c.settleDays,
     contact:c.contact || '', phone:c.phone || '', email:c.email || '',
     address:c.address || '', creditNote:c.creditNote || '',
     active: String(c.active !== false)
   } : {
     name:'', shortName:'', code:'', industry:INDUSTRIES[INDUSTRIES.length-1],
-    settleDays:30, contact:'', phone:'', email:'', address:'', creditNote:'', active:'true'
+    region:'', settleDays:30, contact:'', phone:'', email:'', address:'', creditNote:'', active:'true'
   };
   const total = totalSalesAmount(st.data);
   const share = c ? custShare(st, c) : 0;
@@ -9241,7 +10493,7 @@ function openCustomerForm(id){
       const payload = {
         name: nm, shortName: String(v.shortName || '').trim() || nm.slice(0, 8),
         code: String(v.code || '').trim(),
-        industry: v.industry, settleDays: Number(v.settleDays || 0),
+        industry: v.industry, region: String(v.region || '').trim(), settleDays: Number(v.settleDays || 0),
         contact: String(v.contact || '').trim(), phone: String(v.phone || '').trim(),
         email: String(v.email || '').trim(), address: String(v.address || '').trim(),
         creditNote: String(v.creditNote || '').trim(), active: v.active !== 'false'
@@ -9324,10 +10576,11 @@ function openOrderForm(id){
   const values = o ? {
     orderNo:o.orderNo || '', moNo:o.moNo || '',
     customerId:o.customerId || '', ownerId:o.ownerId || '', status:o.status || STATUS[0],
-    signDate:o.signDate || '', amount:o.amount == null ? '' : o.amount,
+    signDate:o.signDate || '', qty: qtyOf(o) || '', amount:o.amount == null ? '' : o.amount,
     taxAmount:o.taxAmount == null ? '' : o.taxAmount,
     contractDelivery:o.contractDelivery || '', paymentTerm:o.paymentTerm || 'TT',
-    tradeTerm:o.tradeTerm || 'FOB', productSummary:o.productSummary || '',
+    tradeTerm:o.tradeTerm || 'FOB', settleDays: Number(o.settleDays) > 0 ? Number(o.settleDays) : '',
+    productSummary:o.productSummary || '',
     remark:o.remark || '', attachments: Array.isArray(o.attachments) ? o.attachments.slice() : [],
     depositAmount: o.depositAmount == null ? '' : o.depositAmount,
     depositPaidDate: o.depositPaidDate || '', balancePaidDate: o.balancePaidDate || '',
@@ -9337,8 +10590,8 @@ function openOrderForm(id){
   } : {
     orderNo:'', moNo:'', customerId:(st.data.customers[0] || {}).id || '',
     ownerId:(st.data.owners[0] || {}).id || '', status:'01 已签约',
-    signDate:fmt(today()), amount:'', taxAmount:'', contractDelivery:fmt(shift(45)),
-    paymentTerm:'TT', tradeTerm:'FOB', productSummary:'', remark:'', attachments:[],
+    signDate:fmt(today()), qty:'', amount:'', taxAmount:'', contractDelivery:fmt(shift(45)),
+    paymentTerm:'TT', tradeTerm:'FOB', settleDays:'', productSummary:'', remark:'', attachments:[],
     depositAmount:'', depositPaidDate:'', balancePaidDate:'', balanceReceived:'', balanceSettled:false, _mode:'new'
   };
   openForm({
@@ -9516,10 +10769,14 @@ async function saveOrderForm(){
     orderNo: String(v.orderNo || '').trim(),
     customerId: v.customerId, ownerId: v.ownerId, status: v.status,
     signDate: v.signDate, amount: amt, currency: 'CNY',
+    /* v0.61 · 订单数量：选填整数，留空存 0（显示仍按「未填」处理 → 「—」） */
+    qty: Math.max(0, Math.round(Number(v.qty || 0) || 0)),
     taxAmount: Number(v.taxAmount || 0) || 0,
     contractDelivery: v.contractDelivery,
     productSummary: String(v.productSummary || '').trim(),
     paymentTerm: v.paymentTerm, tradeTerm: v.tradeTerm,
+    /* v0.57 · 账期留空 = 跟随客户档案（存空串，不存 0 —— 0 与「未填」要能区分） */
+    settleDays: Number(v.settleDays) > 0 ? Number(v.settleDays) : '',
     attachments: Array.isArray(v.attachments) ? v.attachments.filter(a => a && a.id) : [],
     remark: String(v.remark || '').trim(),
     depositAmount: dep
@@ -9557,7 +10814,7 @@ async function saveOrderForm(){
   payload.sortKey = computeInsertSortKey(st, 'end');
   plan.orderId = id;
   await src.create('orders', payload);
-  const res0 = await runOrderMoNos(st, plan);
+  const res0 = await runOrderMoNos(st, plan, payload.status);
   await cleanupFiles(f); closeSheet(); await reload();
   await syncOrderMoNo(st, id);
   const bal = balanceOf(payload);
@@ -9607,6 +10864,8 @@ function openOrder(id){
   const recv = receivedOf(o);   /* 实收：真实到账，绝不含核销（v0.10 口径） */
   const wo   = writeOffOf(o);   /* 手续费 / 尾差核销（勾选「差额已结清」才计） */
   const un   = unpaidOf(o);
+  /* v0.57 · 账期口径：每批出货日 + 账期，回款先进先出核销，最早未收清那批 = 催款日 */
+  const due  = payDueOf(o, st);
   const dep = Number(o.depositAmount || 0), bal = balanceOf(o);
   const canEdit = !!(st.source && st.source.capabilities.write);
   const RO = canEdit ? '' : ' readonly';
@@ -9650,7 +10909,9 @@ function openOrder(id){
     + row('业务员', sel('ownerId', st.data.owners))
     + row('签订日期', tx('signDate', 'date'))
     + row('合同交期', tx('contractDelivery', 'date'))
-    + row('实际交付日', tx('actualDelivery', 'date'));
+    + row('实际交付日', tx('actualDelivery', 'date'))
+    /* v0.61 · 订单数量：详情里也能直接点改（与表单 / 智能录入同一字段） */
+    + row('订单数量', tx('qty', 'number'));
 
   const moneyRows = row('订单金额', tx('amount', 'number'))
     + row('税金', tx('taxAmount', 'number'))
@@ -9658,7 +10919,21 @@ function openOrder(id){
     + row('尾款金额', ros(money(bal)))
     + row('实收', ros('<b class="green">' + money(recv) + '</b>'))
     + (wo > 0 ? row('手续费核销', ros('<b>' + money(wo) + '</b><span class="muted">已结清（不计入实收）</span>')) : '')
-    + row('未收', ros('<b class="' + (un ? 'red' : '') + '">' + money(un) + '</b>'));
+    + row('未收', ros('<b class="' + (un ? 'red' : '') + '">' + money(un) + '</b>'))
+    /* v0.57 · 账期：订单可覆盖客户档案；应收日 = 最早未收清批次的「发货日 + 账期」 */
+    + row('账期', '<input class="pp-in" data-pk="settleDays" type="number" min="0" placeholder="跟随客户"'
+        + ' value="' + (Number(o.settleDays) > 0 ? Number(o.settleDays) : '') + '"' + RO + '>'
+        + ros('<span class="muted">' + (settleSrcOf(o, st) === 'order' ? '本单覆盖客户账期'
+            : due.days ? '跟随客户 ' + due.days + ' 天' : '客户未设账期') + '</span>'))
+    + row('应收日', ros(due.due
+        ? '<b class="' + (due.overdueDays ? 'red' : '') + '">' + due.due + '</b> '
+          + '<span class="muted">' + (due.batch && due.batch.shipNo ? esc(due.batch.shipNo) + ' · ' : '')
+          + '账期 ' + due.days + ' 天</span> '
+          + (due.overdueDays ? '<b class="red">逾期 ' + due.overdueDays + ' 天</b>'
+            : due.remainDays === 0 ? '<b class="orange">今日到期</b>'
+            : '<span class="muted">剩 ' + due.remainDays + ' 天</span>')
+          + (due.openCount > 1 ? ' <span class="muted">（另有 ' + (due.openCount - 1) + ' 批未收）</span>' : '')
+        : '<span class="muted">' + (due.days ? '还没出货 —— 账期从出货日起算' : '未设账期（按兜底阈值提醒）') + '</span>'))
 
   const tradeRows = row('付款条件', sel('paymentTerm', PAY_TERMS))
     + row('贸易条款', sel('tradeTerm', TRADE_TERMS))
@@ -9671,11 +10946,12 @@ function openOrder(id){
     + row('产品摘要', tx('productSummary'))
     + row('备注', tx('remark'));
 
-  /* v0.45：每条排产记录同样只留「单号 / 状态 / 计划 / 进度」四段（车间与数量已下线）。 */
+  /* v0.45：每条排产记录同样只留「单号 / 状态 / 计划 / 进度」四段（车间与数量已下线）。
+     v0.65：状态与进度都取自订单本身，所以这里不再读记录上的任何状态字段。 */
   const prodRows = ps.length ? ps.map(p => {
-      const pct = prodPct(p);
+      const pct = prodPct(p, st);
       return '<div class="pp-rec"><div class="t"><b class="mo-jump" data-psheet="' + esc(p.id) + '" title="打开该排产单号的详情">' + esc(p.moNo) + '</b>'
-        + '<span class="tag t-gray" style="font-size:10.5px">' + esc(p.opStatus || '—') + '</span>'
+        + prodStateTagHTML(p, st)
         + '<span style="flex:1"></span>'
         + (canEdit ? '<button class="btn xs" data-prod="' + p.id + '" data-pact="edit">编辑</button> <button class="btn xs del" data-prod="' + p.id + '" data-pact="del">删除</button>' : '')
         + '</div><div class="s">计划 ' + (p.planStart || '-') + ' → ' + (p.planFinish || '-') + ' ｜ 进度 '
@@ -9685,10 +10961,21 @@ function openOrder(id){
       + (canEdit ? '还没有排产单号 —— 点右上角「+ 新增排产」补录；订单表单里也能一次填多个' : '暂无排产数据')
       + '</div>');
 
-  const shipRows = ss.length ? ss.map(s => '<div class="pp-rec"><div class="t"><b>' + esc(s.shipNo) + '</b>'
+  /* v0.57 · 每批发货显示自己的应收日（该批发货日 + 账期）与核销状态，
+     按发货日排序 —— 分批出货时「哪批该收了」一眼可见。 */
+  const batchOfShip = sid => (due.rows || []).find(r => r.shipId === sid) || null;
+  const ssSorted = ss.slice().sort((a, b) => String(a.shipDate || '').localeCompare(String(b.shipDate || ''))
+    || String(a.id).localeCompare(String(b.id)));
+  const shipRows = ssSorted.length ? ssSorted.map(s => {
+      const bt = batchOfShip(s.id);
+      return '<div class="pp-rec"><div class="t"><b>' + esc(s.shipNo) + '</b>'
         + '<span class="muted">' + (s.shipDate || '-') + '</span><span style="flex:1"></span>'
         + (canEdit ? '<button class="btn xs" data-ship="' + s.id + '" data-act="edit">编辑</button> <button class="btn xs del" data-ship="' + s.id + '" data-act="del">删除</button>' : '')
-        + '</div><div class="s">' + esc(s.carrier || '-') + ' ｜ 单号 ' + esc(s.logisticsNo || '-') + ' ｜ ' + (s.qty || 0) + ' 件 ｜ ' + money(s.amount) + '</div></div>').join('')
+        + '</div><div class="s">' + esc(s.carrier || '-') + ' ｜ 单号 ' + esc(s.logisticsNo || '-') + ' ｜ ' + (s.qty || 0) + ' 件 ｜ ' + money(s.amount)
+        + (bt && bt.due ? ' ｜ 应收 <b class="' + (bt.un > 0.005 ? 'red' : '') + '">' + bt.due + '</b>'
+            + (bt.un > 0.005 ? '（未收 ' + money(bt.un) + '）' : ' <span class="green">已结清</span>') : '')
+        + '</div></div>';
+    }).join('')
     : '<div class="empty">暂无发货记录</div>';
 
   /* v0.55 · 分批出货汇总：已发 / 剩余 / 超发 + 进度条，多个出货单号一目了然 */
@@ -9752,7 +11039,8 @@ function openOrder(id){
     const k = el.dataset.pk;
     el.addEventListener('change', () => {
       let v = el.value;
-      if(k === 'amount' || k === 'taxAmount' || k === 'depositAmount') v = Number(v) || 0;
+      if(k === 'amount' || k === 'taxAmount' || k === 'depositAmount' || k === 'qty') v = Number(v) || 0;
+      if(k === 'settleDays') v = Number(v) > 0 ? Number(v) : '';   /* 清空 = 跟随客户账期 */
       refresh(k, v);
     });
     if(el.tagName === 'INPUT' && !el.readOnly)
@@ -9762,6 +11050,9 @@ function openOrder(id){
   $('#dStatus').onchange = e => {
     const v = e.target.value;
     const full = STATUS.find(s => String(s).slice(3) === v);
+    /* 认不出就什么都不做：把 undefined 写进 status 会被迁移逻辑当成脏数据，
+       整笔订单直接从库里消失（下拉的 option 是去前缀短名，一旦有人改了模板就会踩到）。 */
+    if(!full) return;
     refresh('status', full);
   };
   const eb = $('#dEdit'); if(eb) eb.onclick = () => openOrderForm(id);
@@ -10004,6 +11295,10 @@ const NL_SYNS = [
   { k:'moNo',     ws:['排产单号','生产单号','制令单号','工单号','排产号','MO号'] },
   { k:'orderNo',  ws:['订单编号','订单号','合同编号','合同号','采购单号','采购编号','单号','PO号','编号'] },
   { k:'taxAmount',ws:['税金','税费','税额'] },
+  /* v0.61 · 订单数量。别名里刻意不放单字「件」，也不放单位 pcs：
+     前者会撞上「付款条件 / 事件 / 附件」，后者会把「1200pcs」里的数字和单位切开、
+     反而让兜底扫描匹配不到。口语写法（「共 1200 件」「3000pcs」）统一交给 nlScanQtys。 */
+  { k:'qty',      ws:['订单数量','总数量','合计数量','数量','件数','只数','台数','套数'] },
   { k:'amount',   ws:['订单金额','合同金额','合同额','总金额','货款','金额','总价','总额','价款','货值','价格'] },
   { k:'customer', ws:['客户名称','客户名','买方单位','买方','甲方','客户','公司名称','公司','单位','下单方'] },
   { k:'delivery', ws:['合同交期','交货日期','交付日期','交货时间','要求交期','出货日期','交货期','交期','交货'] },
@@ -10016,7 +11311,7 @@ const NL_SYNS = [
 ];
 /* 字段键 → 中文名（数组用的是真实字段名，命中用的是别名，两套都在这里对齐） */
 const NL_LABEL = {
-  orderNo:'订单号', moNo:'排产单号', amount:'订单金额', taxAmount:'税金',
+  orderNo:'订单号', moNo:'排产单号', amount:'订单金额', taxAmount:'税金', qty:'订单数量',
   customerId:'客户', customer:'客户', contractDelivery:'合同交期', delivery:'合同交期',
   signDate:'签订日期', status:'订单状态', productSummary:'产品摘要', product:'产品摘要',
   ownerId:'业务员', owner:'业务员', paymentTerm:'付款条件', payment:'付款条件',
@@ -10024,8 +11319,10 @@ const NL_LABEL = {
 };
 /* 必填项用真实字段名，避免「读取用别名、校验用字段名」两套导致漏判 */
 const NL_REQUIRED = ['customerId', 'amount', 'contractDelivery'];
-/* 名字类字段：值里一旦出现日期 / 金额的痕迹就断开，免得把「甲 9月30号」整个当客户名 */
-const NL_NAME_BREAK = /[¥￥]|\d{1,4}\s*[-/.年]\s*\d{1,2}|\d{1,2}\s*[日月号]|\d[\d,]*\s*(?:元|万|块)/;
+/* 名字类字段：值里一旦出现日期 / 金额 / 数量的痕迹就断开，免得把「甲 9月30号」整个当客户名。
+   v0.61：补上「件 / 台 / 套 / 只 / 个 / pcs」这类数量单位（同样要求前面有数字，
+   所以「某某配件厂」「某某台商」不会被误断）。 */
+const NL_NAME_BREAK = /[¥￥]|\d{1,4}\s*[-/.年]\s*\d{1,2}|\d{1,2}\s*[日月号]|\d[\d,]*\s*(?:元|万|块|件|台|套|只|个|pcs)/;
 
 /* 全角 → 半角（数字 / 拉丁字母 / : , ; /）——1:1 映射，不改变长度，偏移量仍可复用 */
 function nlWiden(s){
@@ -10141,6 +11438,19 @@ function nlScanAmounts(seg){
     let v = Number(String(m[1] || m[2]).replace(/,/g, ''));
     if(/万/.test(m[0])) v *= 10000;
     push(v, m[0], m.index, m[0].length);
+  }
+  return res;
+}
+/* v0.61 · 兜底扫描「订单数量」：只认「数字 + 数量单位」（共 1200 件 / 3000pcs / 5 台）。
+   ★ 必须有单位：光秃秃的数字与单号、电话、年份区分不开，宁可留空让人补，也不猜。
+   ★ 负向回顾 (?<![\d.,]) 防止在「12000」内部再截出一个「2000」、或小数后半段被当成整数。 */
+function nlScanQtys(seg){
+  const res = [];
+  const re = /(?<![\d.,])([0-9][0-9,]*)\s*(?:件|台|套|只|个|pcs)/gi;
+  let m;
+  while((m = re.exec(seg))){
+    const v = Number(String(m[1]).replace(/,/g, ''));
+    if(isFinite(v) && v > 0 && !res.some(x => x.v === v)) res.push({ v, i:m.index, len:m[0].length });
   }
   return res;
 }
@@ -10263,6 +11573,11 @@ function nlParseOrder(text){
     const n = nlNum(literal.taxAmount);
     if(isFinite(n) && n >= 0) fields.taxAmount = n;
   }
+  /* v0.61 · 订单数量：件数是整数，「1200 件」「1,200」都收；读到 0 或非数字只提示不落值 */
+  if(literal.qty != null){
+    const n = nlNum(literal.qty);
+    if(isFinite(n) && n > 0) fields.qty = Math.round(n); else note('qty');
+  }
   if(literal.delivery != null){
     const d = nlDate(literal.delivery);
     if(d) fields.contractDelivery = d; else note('delivery');
@@ -10295,6 +11610,19 @@ function nlParseOrder(text){
       ds.forEach(a => { if(uniq.indexOf(a.v) < 0) uniq.push(a.v); });
       if(uniq.length > 1) ambiguous.push({ k:'contractDelivery', values:uniq });
       ds.filter(a => a.v === ds[0].v).forEach(a => extras.push([a.s, a.e]));
+    }
+  }
+  /* v0.61 · 数量兜底：「共 1200 件」「3000pcs」这种只写了数字 + 单位、没带关键词的说法。
+     放在金额 / 日期兜底之后：三段扫描认的单位互不重叠（¥元万块 / 年月日 / 件台套只个pcs），
+     唯一可能撞车的是「1200 件 8800 元」，那时各取各的，互不抢。 */
+  if(fields.qty == null){
+    const qs = scanIn(nlScanQtys);
+    if(qs.length){
+      fields.qty = qs[0].v;
+      const uniq = [];
+      qs.forEach(a => { if(uniq.indexOf(a.v) < 0) uniq.push(a.v); });
+      if(uniq.length > 1) ambiguous.push({ k:'qty', values:uniq.map(String) });
+      qs.filter(a => a.v === qs[0].v).forEach(a => extras.push([a.s, a.e]));
     }
   }
   /* 真正「没派上用场」的文字才显示成未识别 */
@@ -10345,7 +11673,7 @@ function viewAssist(st){
       '<span class="muted" style="font-size:12px">当前库内 ' + n + ' 张订单 · 客户 ' + (st.data.customers || []).length + ' 家</span>' +
     '</div>' +
     '<div class="muted" style="font-size:12px;margin-top:8px">' +
-      '能认的字段：订单号 / 客户 / 订单金额 / 合同交期 / 税金 / 签订日期 / 订单状态 / 排产单号 / 产品摘要 / 业务员 / 付款条件 / 贸易条款。' +
+      '能认的字段：订单号 / 客户 / 订单金额 / 订单数量 / 合同交期 / 税金 / 签订日期 / 订单状态 / 排产单号 / 产品摘要 / 业务员 / 付款条件 / 贸易条款。' +
     '</div></div></div>' +
     '<div id="nlOut"></div>';
 }
@@ -10406,6 +11734,11 @@ function nlRender(){
 
   body += nlRowHTML('orderNo', '订单号',
     '<input id="nlF_orderNo" value="' + esc(f.orderNo || '') + '" placeholder="留空自动生成">', '');
+  /* v0.61 · 订单数量：选填，认不到就留空（不催、不猜） */
+  const qtyOk = f.qty != null && f.qty > 0;
+  body += nlRowHTML('qty', '订单数量',
+    '<input id="nlF_qty" type="number" min="0" step="1" value="' + (qtyOk ? f.qty : '') + '" placeholder="件（选填）">' +
+    (qtyOk ? '<span class="nlok">' + qtyFmt(f.qty) + ' 件</span>' : ''), '');
   const amtOk = f.amount != null && f.amount > 0;
   body += nlRowHTML('amount', '订单金额 *',
     '<input id="nlF_amount" type="number" step="0.01" value="' + (amtOk ? f.amount : '') + '" placeholder="元">' +
@@ -10490,7 +11823,7 @@ async function nlCommit(){
     await histForceMark('智能录入前');
     if(newName){
       const code = 'C-' + fmt(today()).replace(/-/g, '').slice(2) + Math.floor(Math.random() * 90 + 10);
-      const nc = { id:uid('C'), code, name:newName, shortName:newName, industry:'未分类', level:'C',
+      const nc = { id:uid('C'), code, name:newName, shortName:newName, industry:'未分类', region:'', level:'C',
         settleDays:0, contact:'', phone:'', email:'', address:'',
         creditNote:'由智能录入自动建档', active:true, createdAt:fmt(today()) };
       await src.create('customers', nc);
@@ -10505,6 +11838,7 @@ async function nlCommit(){
       status: g('status') || r.fields.status || STATUS[0],
       signDate: g('signDate') || r.fields.signDate || fmt(today()),
       amount, currency:'CNY',
+      qty: Math.max(0, Math.round(Number(g('qty') || r.fields.qty || 0) || 0)),   /* v0.61 订单数量 */
       taxAmount: Number(g('taxAmount') || r.fields.taxAmount || 0) || 0,
       contractDelivery: delivery,
       productSummary: g('productSummary') || r.fields.productSummary || '',
@@ -10936,6 +12270,15 @@ document.addEventListener('scroll', e => {
   if(t && t.classList && t.classList.contains('bd') && t.closest && t.closest('.cfgd')) closeAllMsel();
 }, true);
 $('#btnHam').onclick = () => Store.setUI({ sidebarOpen: !Store.state.ui.sidebarOpen });
+/* v0.61 · 桌面侧栏收起 / 展开（手机端走汉堡抽屉，这个按钮被 CSS 藏掉）。
+   收起后内容区变宽 → 表格可用宽度变了，顺手重算一次列宽，免得右侧留白或横向溢出。 */
+$('#btnSbToggle').onclick = () => {
+  sbCollapsed = !sbCollapsed;
+  try{ localStorage.setItem(SB_LS, sbCollapsed ? '1' : '0'); }catch(e){}
+  applySbCollapsed();
+  if(Store.state.ui.page === 'orders'){ setupColResize('ord'); syncSumColW(); }
+};
+applySbCollapsed();   /* 启动时按上次的记忆恢复 */
 /* 「重新载入」= 从当前数据源重新读一遍并刷新界面（纯读操作）：适配器 -> list 各表 ->
    重算客户等级 -> 重渲染。换数据源、外部改了数据（如思源里改了行）、或怀疑界面不是最新时点它。
    带可见反馈：按钮进入「载入中」禁用态，结束提示实际读到的条数与数据源名称。 */
@@ -11370,6 +12713,8 @@ if(window.Store) window.Store.onLocalChange = SyncModule.onLocalChangeHook;
 window.OT = {
   Store, createSource, DataSource, ADAPTERS, SCHEMA, STATUS, FLOW, DONE, ACTIVE_STATUS, stTag, LEGACY_MAP, SHIPPED_STATUS, SHIP_ADVANCE_FROM, shipAdvanceTo,
   buildDemoData, filteredOrders, aggBy, calcKPI, resolveRange, Chart, reload, goto,
+  /* v0.66：图表画布自适应（手机档按容器重算画布 / 标签按实宽裁字）—— 回归断言用 */
+  chartCanvasW, fitText, qanTrendSVG, qanBarsSVG,
   basisDateOf, basisMonthOf, statusStageRows,
   FileStore, PAY_TERMS, TRADE_TERMS, LC_TERM, CODE_RE, RULES,
   buildOrderFields, validateForm, openOrderForm, openOrder, deleteOrder, initGlobalFilter, closeSheet,
@@ -11396,18 +12741,22 @@ window.OT = {
   openZoom, closeZoom, zoomBox, fitColToWrap,
   get zoomOn(){ return _zoomOn; },
   openFollowupForm, openShipmentForm, deleteShipment, openProdForm, deleteProd, PROD_STATUS, exportOrders, askNotify, fireDesktopAlerts, clearData,
+  /* v0.65：排产状态由订单状态派生（唯一真源）—— 下面四个是回归断言的主要入口 */
+  ORDER2PROD, planOrderMoNos, runOrderMoNos, prodOrderOf, prodStatusOf, prodStateOf, prodStateTagHTML, migrateProdRows,
   /* v0.43 · 排产单号（一订单 → N 单号，唯一来源 = production 表） */
   splitMoNos, orderProds, orderMoNos, orderMoNoText, moNoOwner, dupMoNos, syncOrderMoNo,
   orderPlanFlag, orderPlanTagHTML, orderPlanFlags,
   planOrderMoNos, runOrderMoNos, moDupBannerHTML, openProdSheet, moNosFieldHTML, bindMoField,
-  /* v0.45 · 单号重复提示的忽略记忆；v0.46 · 进度完全由状态决定 */
+  /* v0.45 · 单号重复提示的忽略记忆；v0.65 · 进度由订单状态映射（三档 0/30/100） */
   MOIGN_KEY, moIgnCfg, moIgnKey, moIgnoredSet, moIgnored, moIgnoreAdd, moIgnoreDel, moIgnoreClear,
-  PROD_STATUS_PCT, prodStatusPct, prodFormSyncProgress,
+  PROD_STATUS_PCT, prodStatusOf, prodStateOf,
   openCustomerSheet, PAGES, depositOf, balanceOf, syncPlanBar, sheetMode, sheetOpen, sheetEl, mountSheet, remountSheet,
   isFullyPaid, paidTotalOf, unpaidOf, computeInsertSortKey, ATT_KINDS, attKindLabel,
   receivedOf, writeOffOf, balReceivedOf, isBalSettled, depReceivedOf,
   /* v0.55 · 分次回款流水 + 分批发货 —— 回归断言用 */
   PAY_KINDS, PAY_METHODS, payRows, reindexPays, payAggOf, hasPayRows, payListOf, paySumOf, payPctOf,
+  /* v0.57 · 账期与应收日 */
+  settleDaysOf, settleSrcOf, payBatchesOf, payDueOf, addDaysStr,
   legacyPatchOf, ensureLegacyPays, syncLegacyFromPays, addPayment, deletePayment, openPaySheet, paySummaryHTML,
   shipListOf, shipAggOf, shipRemainOf, shipOverOf, shipPartialOf, shipPctOf, shipNoOwner,
   orderPaidInRange, basisDateOf,
@@ -11447,6 +12796,28 @@ window.OT = {
   boardColumns, cardFieldsBtnHTML, bindCardFields, toggleOCardField, infoI, bindInfoIcons,
   OCARD_FIELDS, OCARD_DEFAULT, OCARD_LS,
   get oView(){ return oView; }, setOView(v){ oView = v; },
+  /* v0.61 · 侧栏收起 / 展开（设备级偏好，只存本机，不进业务库、不同步） */
+  SB_LS, applySbCollapsed, get sbCollapsed(){ return sbCollapsed; },
+  setSbCollapsed(v){
+    sbCollapsed = !!v;
+    try{ localStorage.setItem(SB_LS, sbCollapsed ? '1' : '0'); }catch(e){}
+    applySbCollapsed();
+  },
+  /* v0.60 · 固定汇总栏（小计 + 合计，吸底常驻，列宽随主表同步） */
+  ordPaySum, sumRowHTML, ordSumDockHTML, ordGrandBarHTML, syncSumColW, SUM_ROW_H, ORD_COLS,
+  /* v0.62：列宽基准 / 缩放两层（供回归验证「分屏缩了能长回来」） */
+  tblColW, colBase, colScale, COL_FIT_MIN, shrinkColToWrap,
+  /* v0.61 · 订单数量（独立手工字段）：qtyOf = 取值口径（空/0 → 0），qtyFmt = 显示口径（0 → —） */
+  qtyOf, qtyFmt,
+  /* v0.63 · 客户国家/地区 + 看板「订单数量分析」
+     qanCfg = 配置白名单回落、qanRange = 时间窗口、qanGran = 粒度（含日→周自动降级）、
+     qanOrders = 基础集（顶部筛选 ∩ 模块时间窗 ∩ 状态筛选）、
+     qanBuckets / qanDimRows = 趋势桶与维度分组，custRegionOf = 地区口径 */
+  REGIONS, REGION_NONE, custRegionOf,
+  QAN_RANGES, QAN_GRANS, QAN_DIMS, QAN_METRICS, QAN_TYPES, QAN_DISTS, QAN_DEF,
+  qanCfg, qanSet, qanRange, qanDays, qanGran, qanOrders, qanBucketKey, qanLabelOf,
+  qanBuckets, qanDimRows, qanTrendSVG, qanBarsSVG, qanTableHTML, qanViewHTML, bindQan,
+  get ordSelSize(){ return ordSel.size; },
   get ocardFields(){ return ocardFields.slice(); }, setOCardFields(v){ ocardFields = sanitizeOCardFields(v); saveOCardFields(); },
   get iiOpen(){ return _iiOn; }, get iiPinned(){ return _iiPinned; },
   /* v0.28 · 列头点击排序 */
@@ -11471,6 +12842,7 @@ window.OT = {
   /* 智能录入助手（v0.38） */
   NL_SYNS, NL_LABEL, NL_REQUIRED, NL_S, nlWiden, nlClean, nlHits, nlCut, nlNum, nlDate, nlStatus,
   nlPay, nlTrade, nlCode, nlCustCandidates, nlOwnerCandidates, nlParseOrder,
+  nlScanQtys,   /* v0.61 · 「共 1200 件 / 3000pcs」这类没带关键词的数量兜底扫描 */
   viewAssist, bindAssist, nlRender, nlCommit, NL_DEMO,
   /* v0.38 · 图表换肤（iOS 深浅色双色板） */
   PALETTE_LIGHT, PALETTE_DARK, INK_LIGHT, INK_DARK, prefersDark, applyScheme,
