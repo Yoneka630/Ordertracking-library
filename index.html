@@ -3,7 +3,7 @@
 <head data-page-node-id="tB8joMdTgw5XU4U8A6S7i2">
 <meta charset="utf-8" data-page-node-id="iTOrAHcHmC5x6FNHHjD886">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" data-page-node-id="Ja1BDKMDLVRzLRExrICqlT">
-<title>订单追踪台 · v1.3.13</title>
+<title>订单追踪台 · v1.3.15</title>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#1677FF">
 <link rel="icon" href="icon-192.png">
@@ -1418,6 +1418,26 @@ textarea#nlIn{width:100%;border:0;background:var(--fill-2);border-radius:var(--r
 textarea#nlIn:focus{outline:none;background:var(--panel);box-shadow:0 0 0 3.5px var(--primary-soft)}
 @media(max-width:560px){.nlrow{grid-template-columns:1fr;gap:2px}.nlrow .nlk{padding-top:0}}
 
+/* --- v1.3.14 · 图片 OCR 预览（本地引擎 / 不联网 / 两级确认） --- */
+.nloc{grid-column:1/-1;margin-top:10px;border:1px dashed var(--line);border-radius:var(--radius-ctl);
+  padding:10px 12px;background:var(--fill-2)}
+.nloc.drag{border-color:var(--primary);background:var(--primary-soft)}
+.nloc-bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.nloc-status-row{display:flex;gap:8px;align-items:flex-start;margin-top:8px}
+.nloc-status{font-size:12px;color:var(--muted);line-height:1.6;flex:1;min-width:0;word-break:break-word}
+.nloc-status.err{color:var(--red-600)}
+.nloc-cancel{flex:0 0 auto;font-size:12px;white-space:nowrap}
+.nloc-prev{margin-top:10px;border-top:1px solid var(--line-2);padding-top:10px}
+.nloc-ph{display:flex;gap:10px;align-items:flex-start;margin-bottom:8px}
+.nloc-ph img{max-width:132px;max-height:96px;object-fit:contain;border:1px solid var(--line-2);
+  border-radius:4px;background:var(--panel)}
+.nloc-ph b{font-size:12.5px;color:var(--text)}
+textarea#nlOcrText{width:100%;border:0;background:var(--panel);border-radius:var(--radius-ctl);
+  padding:10px 12px;line-height:1.7;resize:vertical;min-height:104px;color:var(--text);
+  font-size:13px;font-variant-numeric:tabular-nums}
+textarea#nlOcrText:focus{outline:none;box-shadow:0 0 0 3.5px var(--primary-soft)}
+.nloc-acts{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px}
+
 /* ==========================================================================
    v0.43 · 排产单号（一订单 → N 单号）
    1) chips 多值输入：订单表单里录入多个排产单号
@@ -1981,7 +2001,7 @@ body.dv-rzing .dv-rz{opacity:1;color:var(--primary)}
 <aside id="sidebar" data-page-node-id="mOHG7ZovWQTFY89nDh3RpA">
   <div class="sb-logo" data-page-node-id="CItXgwA9E43rFqjh1jkPjK">
     <div class="mark" data-page-node-id="UZtmztULGLZ5gKgPjaSoN0"><svg width="28" height="28" viewBox="0 0 512 512" aria-hidden="true"><defs><linearGradient id="sbMarkBg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5b86d6"/><stop offset="1" stop-color="#3d8f89"/></linearGradient></defs><rect width="512" height="512" rx="116" fill="url(#sbMarkBg)"/><path d="M144 100 H252 L310 158 V322 A26 26 0 0 1 284 348 H144 A26 26 0 0 1 118 322 V126 A26 26 0 0 1 144 100 Z" fill="#ffffff"/><path d="M252 100 L310 158 L252 158 Z" fill="#cfe0f7"/><rect x="146" y="196" width="136" height="18" rx="9" fill="#d7e2f3"/><rect x="146" y="236" width="136" height="18" rx="9" fill="#d7e2f3"/><rect x="146" y="276" width="90" height="18" rx="9" fill="#d7e2f3"/><circle cx="396" cy="390" r="76" fill="#ffffff"/><path d="M362 390 L386 414 L430 362" fill="none" stroke="#3d8a5c" stroke-width="23" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-    <div class="sb-name" data-page-node-id="qJfiMtI7jd53xaMaRs2OfN"><div class="t" data-page-node-id="vxtJJYpJxW7saZcUyfaE3M" title="双击可重命名">订单追踪台</div><div class="s" data-page-node-id="ufakbTeCG3rPiVsiEX5UML">v1.3.13</div></div>
+    <div class="sb-name" data-page-node-id="qJfiMtI7jd53xaMaRs2OfN"><div class="t" data-page-node-id="vxtJJYpJxW7saZcUyfaE3M" title="双击可重命名">订单追踪台</div><div class="s" data-page-node-id="ufakbTeCG3rPiVsiEX5UML">v1.3.15</div></div>
     <button class="sb-ren" id="btnRename" type="button" title="重命名工作台" aria-label="重命名工作台">✎</button>
   </div>
   <nav class="sb-nav" id="sbNav" data-page-node-id="y58haCHcKQU8HJVk0gDYWN"></nav>
@@ -4565,8 +4585,8 @@ const Chart = (() => {
    —— 单一事实来源：界面标题 / 侧栏 / 「系统版本」页全部取自 APP_VERSION。
    新增一个版本时只需改两处：APP_VERSION / APP_UPDATED，并在 CHANGELOG 头部插一条。
    ========================================================================== */
-const APP_VERSION = 'v1.3.13';
-const APP_UPDATED = '2026-11-04';
+const APP_VERSION = 'v1.3.15';
+const APP_UPDATED = '2026-11-10';
 let   APP_NAME    = '订单追踪台';
 /* v0.54：工作台名支持用户重命名 —— APP_NAME_DEFAULT 是出厂默认，真实名从 localStorage 读。
    ★ 用 let 而不是继续 const：改名后要能被 document.title / 侧栏 / 桌面通知 / 思源库说明
@@ -4593,7 +4613,21 @@ APP_NAME = nameRead();   /* 启动即用记住的名字（没改过 / 读不到 
 const APP_TAG     = '出口业务 · 世界地图（气泡 / 数据柱双形态）';
 
 const CHANGELOG = [
-  { v:'v1.3.13', date:'2026-11-04', cat:'客户产品库移除「成本」三态筛选下拉（全部 / 已填 / 未填成本）；成本列 / 数值 / 排序 / 表单 / 详情 / CSV / 汇总保留', cur:true, items:[
+  { v:'v1.3.15', date:'2026-11-10', cat:'修复图片 OCR「一直显示正在初始化识别引擎」：环境自检 + 6 资源预检 + 全链路超时 + 停止/重试 + 诊断按钮', cur:true, items:[
+    '★ <b>根因</b>：tesseract.js 的 createWorker Promise 在 vendor 资源请求「挂起不返回」时永不 settle，界面永久停在「正在初始化识别引擎…」。Edge headless 六宿主对照实测复现（正常 / 404 / 服务器返回网页 / file:// / 部分资源损坏 / 请求挂起）。',
+    '★ <b>三层防护</b>：① 环境自检（协议 / Worker / vendor 目录），非 http(s) 立刻提示改用 node server.js；② 首次识别前并发预检 6 个 vendor 文件，8 秒超时、拒绝「服务器返回网页」并逐条列出缺失项；③ 脚本加载 / 引擎初始化（30s）/ 文字识别（60s）三处硬超时，超时清理野 worker 且可重试。',
+    '· <b>不再像死机</b>：状态条每秒刷新「已等待 Ns」，分阶段显示「初始化引擎 / 加载语言模型 / 识别中」；新增「停止」按钮（run token 作废在途结果）与「🔧 检测识别引擎」按钮，一键定位是哪一步卡住。',
+    '· <b>路径与降级</b>：NL_OCR_BASE 优先取 location.href（避免 iframe / 预览面板里 document.baseURI 继承宿主）；预检用 GET 以兼容 PWA 离线的 Service Worker 缓存。任何异常都在有限时间内结束，纯文字录入与两级确认不变量不变。',
+    '· <b>验证</b>：六宿主真机对照全部不再卡死（挂起场景 8.2 秒自动报出具体文件）；按 node server.js 路径真机跑通诊断 + 中文识别逐字准确；新增 tests/98 专项 46 条断言；全量回归 0 FAIL。',
+  ]},
+  { v:'v1.3.14', date:'2026-11-10', cat:'智能录入助手新增图片 OCR：截图拖入 / 粘贴 / 点选 → 本地识别 → 可编辑原文预览 → 人工核对 → 确认卡 → 写库；零 CDN、零联网', cur:false, items:[
+    '★ <b>图片识别（本地 OCR）</b>：智能录入助手新增「从图片识别」，订单截图可拖入 / 粘贴进输入框 / 点选；识别用随包的 tesseract.js + chi_sim/eng 模型，中文与英文数字单号都认。引擎、wasm、语言模型全在 vendor/，<b>零 CDN、零联网、图片不上传不入库</b>。',
+    '★ <b>两级确认，绝不直接建单</b>：OCR 结果先落到「识别原文」可编辑预览区（附缩略图对照），人工核对金额 / 交期 / 客户名后点「用这段文本解析」才进现有确认卡，再点「确认录入」才写库 —— 识别完成不会自动灌输入框、不会自动解析、不会落库。',
+    '· <b>懒加载与离线降级</b>：不点图片识别不加载任何 vendor 文件，页面初始零开销；引擎 / 模型加载失败只给提示并标红，纯文字录入与原有解析链路保持可用。图片经 canvas 缩放灰度预处理，清晰印刷体截图最准。',
+    '· <b>部署形态变更</b>：新增 vendor/ 6 个本地资源（约 11MB）；sw.js 增加 OCR_SHELL 预缓存（核心壳与 OCR 资源分批、单项失败不阻塞安装）；deploy.mjs 自检扩到 14 项并加「deploy 清单 ⇄ sw.js 缓存清单」双向锁；README 补充目录部署、http(s) 要求与隐私口径。图片识别需 http(s) 打开（file:// 会拦 Worker）。',
+    '· <b>验证</b>：Edge headless 真机用本地 vendor 完整跑通 Worker → wasm → 中文模型，样例截图逐字识别正确（置信度 88）；新增 tests/97 专项 60 条断言覆盖两级确认 / 三种入口 / 离线降级 / 双向锁；全量回归 0 FAIL。',
+  ]},
+  { v:'v1.3.13', date:'2026-11-04', cat:'客户产品库移除「成本」三态筛选下拉（全部 / 已填 / 未填成本）；成本列 / 数值 / 排序 / 表单 / 详情 / CSV / 汇总保留', cur:false, items:[
     '★ <b>客户产品库移除成本筛选</b>：工具栏「全部成本 / 已填成本 / 未填成本」三态下拉删除 —— 它和关键字是「与」关系、且只在客户产品库出现，体感像「一个多余的下拉」。成本列、数值、点列头排序、表单 / 详情、CSV 导入导出、汇总栏「未填成本 N」全部保留。',
     '· <b>配套清理</b>：移除 PROD_COSTF / PROD_COSTF_OPTS 状态与绑定、prodRows 里的三态筛选分支、空态提示的成本筛选文案；帮助文案改为只保留「点列头可按成本排序（未填的恒排最后）」。',
     '· <b>回归护城河</b>：tests/95 删除 D 段「三态筛选」断言并顺延段字母；tests/61 / 62 同步验证；全量 79 套件 0 FAIL。',
@@ -16383,12 +16417,21 @@ function viewAssist(st){
   return `<div class="card"><div class="hd"><h3>智能录入助手</h3>` +
     infoI('<b>说人话就能建单</b>：字段顺序随便、说法随便、只说一部分也行。<br>' +
       '① 解析 → ② <b>确认卡</b>（缺的标红追问、客户对不上给候选）→ ③ 确认后写入。<br>' +
-      '<b>纯本地规则解析</b>：不联网、不上传任何内容；写库前会自动存一份快照，可到「数据历史」回滚。') +
-    '<div class="spacer"></div><span class="tag t-blue">本地解析 · 零联网</span></div>' +
+      '<b>纯本地规则解析</b>：不联网、不上传任何内容；写库前会自动存一份快照，可到「数据历史」回滚。<br>' +
+      '<b>v1.3.14 图片识别</b>：把订单截图拖进来 / 粘贴进输入框 / 点「从图片识别」，用随包的本地 OCR 引擎识别（中文 + 英文）。' +
+      '引擎与模型都在站点 vendor/ 目录，<b>不联网、图片不上传也不入库</b>。<br>' +
+      '识别出来的是<b>可编辑原文</b>，先人工核对（金额 / 交期 / 客户名最容易认错），点「用这段文本解析」才进确认卡，' +
+      '再点「确认录入」才写库 —— 比打字多一道核对，不会直接建单。<br>' +
+      '截图请用 http(s) 打开本工作台识别（file:// 或单文件预览面板会拦 Worker，引擎会一直初始化不完）；本地可运行 node server.js。' +
+      '首次识别前会自动检查 6 个 vendor/ 资源；卡住 30 秒自动报错，可点「停止」或「🔧 检测识别引擎」定位，纯文字录入始终可用。<br>' +
+      '清晰印刷体截图最准，倾斜 / 手写 / 低清会明显变差。') +
+    '<div class="spacer"></div><span class="tag t-blue">本地解析 · 零联网</span>' +
+    '<span class="tag t-green">图片识别 · 不上传</span></div>' +
     '<div class="bd">' +
     '<div class="fld full"><label>把订单信息用一句话写下来' +
       infoI('例：<code>' + NL_DEMO + '</code><br>也可以省字段、换顺序，例如「客户甲，货款 1.5万，9月30号交货」。') +
       '</label><textarea id="nlIn" rows="3" placeholder="' + NL_DEMO + '">' + esc(NL_S.text) + '</textarea></div>' +
+    nlOcrZoneHTML() +
     '<div class="nlacts">' +
       '<button class="btn primary" id="nlGo">解析并预览</button>' +
       '<button class="btn" id="nlDemo">填入示例</button>' +
@@ -16597,6 +16640,343 @@ async function nlCommit(){
     if(btn){ btn.disabled = false; btn.textContent = '确认录入'; }
   }
 }
+/* ---------- v1.3.14 · 图片 OCR（本地 tesseract.js，随包懒加载） ----------
+ * 设计红线：
+ *  1) 引擎 / wasm / 语言包全在站点 vendor/，绝不联网、绝不上传图片；
+ *  2) 纯懒加载 —— 不点「从图片识别」不加载任何 vendor 文件（页面初始零开销）；
+ *  3) 两级确认 —— OCR 原文先可编辑预览，核对后才进 nlParseOrder 确认卡，再点确认才落库；
+ *  4) 离线降级 —— 引擎/模型加载失败只给提示，纯文字录入保持可用；
+ *  5) worker/core/lang 必须用绝对 URL：Worker 内相对路径基准是 worker.min.js 所在目录。
+ */
+function nlOcrBaseUrl(){
+  /* 预览面板 / iframe srcdoc 里 document.baseURI 会继承宿主，优先取 location.href；
+     非 http(s)（file:/about:/blob:）返回空串，交给 nlOcrEnvCheck 给可操作提示。 */
+  const cand = [];
+  try { cand.push(location.href); } catch(e){}
+  try { cand.push(document.baseURI); } catch(e){}
+  for(let i = 0; i < cand.length; i++){
+    try{
+      const u = new URL('./vendor/', cand[i]);
+      if(u.protocol === 'http:' || u.protocol === 'https:') return u.href;
+    }catch(e){}
+  }
+  return '';
+}
+const NL_OCR_BASE = nlOcrBaseUrl();
+const NL_OCR_FILES = ['tesseract.min.js','worker.min.js',
+  'tesseract-core-simd-lstm.wasm.js','tesseract-core-lstm.wasm.js',
+  'chi_sim.traineddata.gz','eng.traineddata.gz'];
+const NL_OCR = {
+  cfg: { langs:'chi_sim+eng', oem:1, gzip:true, maxEdge:2400, minEdge:1100,
+         probeTimeout:8000, initTimeout:30000, recognizeTimeout:60000 },
+  state: { text:'', name:'', thumb:'', status:'', err:'', busy:false, worker:null,
+           run:0, startedAt:0, phase:'', ticker:null },
+  loading: null,
+  recognize: null      /* 默认 nlOcrRecognizeImpl；测试可换成 mock，跳过 wasm */
+};
+
+function nlOcrZoneHTML(){
+  const s = NL_OCR.state;
+  return '<div class="nloc" id="nlOcrZone">' +
+    '<div class="nloc-bar">' +
+      '<button class="btn" id="nlImgBtn" type="button">📷 从图片识别</button>' +
+      '<input type="file" id="nlImgFile" accept="image/png,image/jpeg,image/webp" style="display:none">' +
+      '<button class="btn" id="nlOcrDiag" type="button">🔧 检测识别引擎</button>' +
+      '<span class="nlmini">可直接把截图粘贴到上面输入框，或拖到这块区域 · 本地识别，图片不上传、不入库</span>' +
+    '</div>' +
+    '<div class="nloc-status-row">' +
+      '<div class="nloc-status" id="nlOcrStatus"' + (s.status ? '' : ' style="display:none"') + '>' + esc(s.status) + '</div>' +
+      '<button class="btn nloc-cancel" id="nlOcrCancel" type="button" style="display:none">停止</button>' +
+    '</div>' +
+    '<div class="nloc-prev" id="nlOcrPrev"' + (s.text ? '' : ' style="display:none"') + '>' +
+      '<div class="nloc-ph"><img id="nlOcrThumb" alt="识别用截图"><div>' +
+        '<b>识别原文 · 请先核对</b>' +
+        '<div class="nlmini">OCR 会认错数字与日期，尤其金额、交期、客户名；改对了再解析。</div>' +
+      '</div></div>' +
+      '<textarea id="nlOcrText" rows="6" spellcheck="false"></textarea>' +
+      '<div class="nloc-acts">' +
+        '<button class="btn primary" id="nlOcrUse" type="button">用这段文本解析</button>' +
+        '<button class="btn" id="nlOcrDiscard" type="button">丢弃</button>' +
+        '<span class="nlmini">解析后还要过一遍确认卡，点「确认录入」才写库。</span>' +
+      '</div>' +
+    '</div></div>';
+}
+function nlOcrStatusText(msg, isErr){
+  NL_OCR.state.status = msg || '';
+  NL_OCR.state.err = !!isErr;
+  const el = $('#nlOcrStatus');
+  if(el){
+    el.textContent = msg || '';
+    el.style.display = msg ? '' : 'none';
+    el.className = 'nloc-status' + (isErr ? ' err' : '');
+  }
+}
+/* ---- v1.3.15 · 初始化卡死三层防护 ----
+   根因：tesseract.js 的 createWorker Promise 在资源请求挂起时永不 settle，
+   界面会永久停在「正在初始化识别引擎…」（Edge 真机 6 宿主对照已复现）。
+   ① 环境自检：协议 / Worker / vendor 目录，立刻给可操作提示；
+   ② 资源预检：6 个文件并发 GET + 超时 + 拒绝「返回网页」，不把挂起带进 Worker；
+   ③ 硬超时 + 每秒进度 + 停止按钮：万一仍卡住，30s 自动报错且可重试。 */
+function nlOcrEnvCheck(){
+  if(!/^https?:$/.test(location.protocol))
+    return { ok:false, msg:'图片识别必须用 http(s) 打开（当前 ' + location.protocol + '）。' +
+      '本地请在本目录运行 node server.js 后访问它给出的地址；直接双击 index.html（file://）' +
+      '或单文件预览面板会被浏览器拦截 Worker，识别引擎会一直初始化不完。' };
+  if(!NL_OCR_BASE)
+    return { ok:false, msg:'无法定位 vendor/ 目录：当前页面地址不是 http(s)。请用 node server.js 或部署到站点后打开 index.html。' };
+  if(typeof Worker === 'undefined')
+    return { ok:false, msg:'当前浏览器不支持 Web Worker，无法运行本地 OCR；纯文字录入仍可使用。' };
+  return { ok:true, msg:'' };
+}
+function nlOcrFetchHead(url, ms){
+  /* 用 GET（不是 HEAD）：PWA 离线时资源只存在于 Service Worker 缓存，HEAD 不走 SW 会误报。
+     拿到响应头就 cancel body，避免把 11MB 白白下载一遍。 */
+  return new Promise((resolve, reject) => {
+    let done = false;
+    const ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+    const timer = setTimeout(() => {
+      if(done) return; done = true;
+      try{ if(ctrl) ctrl.abort(); }catch(e){}
+      reject(new Error('请求无响应（超时）'));
+    }, ms);
+    const opts = ctrl ? { signal:ctrl.signal } : {};
+    Promise.resolve().then(() => fetch(url, opts)).then(res => {
+      const ct = String((res.headers && res.headers.get && res.headers.get('content-type')) || '').toLowerCase();
+      try{ if(res.body && res.body.cancel) res.body.cancel(); }catch(e){}
+      if(done) return; done = true; clearTimeout(timer);
+      if(!res.ok) return reject(new Error('HTTP ' + res.status));
+      if(ct.indexOf('text/html') >= 0) return reject(new Error('服务器返回了网页而不是资源文件'));
+      resolve(true);
+    }).catch(e => {
+      if(done) return; done = true; clearTimeout(timer);
+      reject(new Error(String((e && e.message) || e || '请求失败')));
+    });
+  });
+}
+async function nlOcrProbe(progress){
+  if(progress) progress('正在检查本地识别资源（6 个文件）…');
+  const rs = await Promise.allSettled(NL_OCR_FILES.map(f =>
+    nlOcrFetchHead(NL_OCR_BASE + f, NL_OCR.cfg.probeTimeout)));
+  const bad = [];
+  rs.forEach((r, i) => {
+    if(r.status === 'rejected') bad.push(NL_OCR_FILES[i] + '（' + String((r.reason && r.reason.message) || r.reason) + '）');
+  });
+  if(bad.length) throw new Error('本地识别资源不可用：' + bad.join('、') +
+    '。请确认 vendor/ 6 个文件已随站点一起部署、服务器没有把未知路径重定向到 index.html；' +
+    '刚更新版本请 Ctrl+F5 硬刷新（Service Worker 可能还在用旧缓存）。');
+}
+function nlOcrTimeout(p, ms, label){
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(label + '超时（' + Math.round(ms/1000) + 's）')), ms);
+    Promise.resolve(p).then(v => { clearTimeout(timer); resolve(v); },
+                            e => { clearTimeout(timer); reject(e); });
+  });
+}
+function nlOcrPhase(msg){
+  const s = NL_OCR.state;
+  s.phase = msg || '';
+  const sec = Math.max(0, Math.round((Date.now() - (s.startedAt || Date.now())) / 1000));
+  nlOcrStatusText(s.phase + '（已等待 ' + sec + 's，卡住会自动报错）');
+}
+function nlOcrStopTicker(){
+  const s = NL_OCR.state;
+  if(s.ticker){ clearInterval(s.ticker); s.ticker = null; }
+  s.phase = '';
+}
+function nlOcrStartTicker(){
+  nlOcrStopTicker();
+  NL_OCR.state.ticker = setInterval(() => {
+    const s = NL_OCR.state;
+    if(!s.busy || !s.phase) return;
+    const sec = Math.max(0, Math.round((Date.now() - s.startedAt) / 1000));
+    nlOcrStatusText(s.phase + '（已等待 ' + sec + 's，卡住会自动报错）');
+  }, 1000);
+}
+function nlOcrCancel(){
+  const s = NL_OCR.state;
+  s.run++;                       /* 让在途 Promise 的结果作废 */
+  s.busy = false;
+  s.worker = null;
+  NL_OCR.loading = null;         /* 重试不复用挂起的加载 Promise */
+  nlOcrStopTicker();
+  nlOcrStatusText('已停止。可以重新选一张图片，或直接用纯文字录入；点「检测识别引擎」可查看是哪一步卡住。', true);
+  const b = $('#nlImgBtn'); if(b) b.disabled = false;
+  const c = $('#nlOcrCancel'); if(c) c.style.display = 'none';
+}
+async function nlOcrDiagnose(){
+  const env = nlOcrEnvCheck();
+  if(!env.ok){ nlOcrStatusText('环境检查：' + env.msg, true); return; }
+  nlOcrStatusText('正在检测本地识别资源…');
+  try{
+    await nlOcrProbe(null);
+    nlOcrStatusText('环境检查通过：6 个本地资源均可访问（' + NL_OCR_BASE + '），可以点「从图片识别」。');
+  }catch(e){
+    nlOcrStatusText('环境检查失败：' + ((e && e.message) || e), true);
+  }
+}
+function nlOcrRender(){
+  /* 只在「结果落位」与「页面重建」时调用；识别进度走 nlOcrStatusText，
+     避免高频 logger 覆盖用户正在编辑的 OCR 原文。 */
+  const s = NL_OCR.state;
+  nlOcrStatusText(s.status, s.err);
+  const box = $('#nlOcrPrev'); if(box) box.style.display = s.text ? '' : 'none';
+  const ta = $('#nlOcrText'); if(ta) ta.value = s.text;
+  const im = $('#nlOcrThumb');
+  if(im){ if(s.thumb){ im.src = s.thumb; im.style.display = ''; } else im.style.display = 'none'; }
+  const use = $('#nlOcrUse'); if(use) use.disabled = !s.text.trim();
+}
+function nlOcrResult(text, name, thumb){
+  const s = NL_OCR.state;
+  s.text = String(text == null ? '' : text);
+  s.name = name || '';
+  s.thumb = thumb || '';
+  const empty = !s.text.trim();
+  nlOcrStatusText(empty
+    ? '没识别出文字 —— 换张更清晰的截图试试（纯文字录入仍可使用）。'
+    : '识别完成 —— 请先核对原文，再点「用这段文本解析」。', empty);
+  nlOcrRender();
+}
+function nlOcrPrep(file){
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      try{
+        const cfg = NL_OCR.cfg, long = Math.max(img.width, img.height) || 1;
+        let scale = 1;
+        if(long > cfg.maxEdge) scale = cfg.maxEdge / long;
+        else if(long < cfg.minEdge) scale = Math.min(2, cfg.minEdge / long);
+        const c = document.createElement('canvas');
+        c.width = Math.max(1, Math.round(img.width * scale));
+        c.height = Math.max(1, Math.round(img.height * scale));
+        const g = c.getContext('2d');
+        try{ g.filter = 'grayscale(1) contrast(1.15)'; }catch(e){}
+        g.drawImage(img, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(url);
+        resolve(c.toDataURL('image/jpeg', 0.92));
+      }catch(e){ URL.revokeObjectURL(url); reject(e); }
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('图片读取失败')); };
+    img.src = url;
+  });
+}
+function nlOcrLoadEngine(progress){
+  if(window.Tesseract) return Promise.resolve(window.Tesseract);
+  if(NL_OCR.loading) return NL_OCR.loading;
+  if(progress) progress('正在加载本地 OCR 引擎…');
+  const p = new Promise((resolve, reject) => {
+    const sc = document.createElement('script');
+    sc.src = NL_OCR_BASE + 'tesseract.min.js';
+    sc.onload = () => window.Tesseract
+      ? resolve(window.Tesseract)
+      : reject(new Error('OCR 引擎未就绪（文件可能不是 JS：检查 vendor/ 是否被服务器重定向成网页）'));
+    sc.onerror = () => reject(new Error('OCR 引擎文件加载失败（请确认 vendor/ 已随站点一起部署）'));
+    document.head.appendChild(sc);
+  });
+  NL_OCR.loading = nlOcrTimeout(p, NL_OCR.cfg.probeTimeout, 'OCR 引擎脚本加载')
+    .catch(e => { NL_OCR.loading = null; throw e; });
+  return NL_OCR.loading;
+}
+async function nlOcrWorker(T, progress){
+  const s = NL_OCR.state;
+  if(s.worker) return s.worker;
+  const run = s.run;
+  if(progress) progress('首次使用：正在加载本地中英文模型（约 3MB，只需一次）…');
+  const p = T.createWorker(NL_OCR.cfg.langs, NL_OCR.cfg.oem, {
+    workerPath: NL_OCR_BASE + 'worker.min.js',
+    corePath: NL_OCR_BASE,
+    langPath: NL_OCR_BASE,
+    gzip: NL_OCR.cfg.gzip,
+    logger: m => {
+      if(!m || !m.status || !progress) return;
+      const pct = Math.round((m.progress || 0) * 100);
+      if(m.status === 'recognizing text') progress('识别中 ' + pct + '%');
+      else if(/loading language|traineddata|initializing api/i.test(m.status))
+        progress('正在加载中英文语言模型… ' + pct + '%');
+      else if(/load|initial/i.test(m.status))
+        progress('正在初始化识别引擎…（阶段：' + m.status + '）');
+    }
+  });
+  let w;
+  try{
+    w = await nlOcrTimeout(p, NL_OCR.cfg.initTimeout, '识别引擎初始化');
+  }catch(e){
+    /* 迟到才 resolve 的 worker 必须 terminate，避免野 worker 常驻占内存 */
+    Promise.resolve(p).then(x => { try{ if(x && x.terminate) x.terminate(); }catch(_){} }).catch(() => {});
+    throw new Error(String((e && e.message) || e) +
+      ' —— 常见于 vendor/ 没随站点部署、服务器把未知路径重定向成网页、或 Service Worker 用了旧缓存；' +
+      '请点「检测识别引擎」定位，并确认用 http(s) 打开站点根目录。');
+  }
+  if(run !== s.run){ try{ if(w && w.terminate) w.terminate(); }catch(_){} throw new Error('本次识别已停止'); }
+  s.worker = w;
+  return w;
+}
+async function nlOcrRecognizeImpl(file, progress){
+  const env = nlOcrEnvCheck();
+  if(!env.ok) throw new Error(env.msg);
+  await nlOcrProbe(progress);
+  const dataUrl = await nlOcrPrep(file);
+  const T = await nlOcrLoadEngine(progress);
+  const w = await nlOcrWorker(T, progress);
+  if(progress) progress('识别中…');
+  const r = await nlOcrTimeout(w.recognize(dataUrl), NL_OCR.cfg.recognizeTimeout, '文字识别');
+  return { text:(r && r.data && r.data.text) || '', thumb:dataUrl };
+}
+async function nlOcrOnFile(file){
+  if(!file) return;
+  if(!/^image\/(png|jpe?g|webp)$/i.test(file.type || '')){
+    nlOcrStatusText('只支持 PNG / JPG / WebP 截图。', true); return;
+  }
+  const s = NL_OCR.state;
+  if(s.busy) return;
+  const run = ++s.run;
+  s.busy = true; s.text = ''; s.thumb = ''; s.name = file.name || '截图';
+  s.startedAt = Date.now();
+  const btn = $('#nlImgBtn'); if(btn) btn.disabled = true;
+  const cancel = $('#nlOcrCancel'); if(cancel) cancel.style.display = '';
+  nlOcrRender();
+  nlOcrStatusText('正在准备图片…');
+  nlOcrStartTicker();
+  try{
+    const rec = NL_OCR.recognize || nlOcrRecognizeImpl;
+    const out = await rec(file, nlOcrPhase);
+    if(run !== s.run) return;
+    nlOcrStopTicker();
+    nlOcrResult(out && typeof out === 'object' ? out.text : out, s.name, out && out.thumb);
+  }catch(e){
+    if(run !== s.run) return;
+    nlOcrStopTicker();
+    nlOcrStatusText('识别失败：' + ((e && e.message) || e) +
+      ' —— 纯文字录入仍可使用；可点「检测识别引擎」定位，或先用外部 OCR 转成文字再粘贴。', true);
+  }finally{
+    if(run === s.run){
+      s.busy = false;
+      const b = $('#nlImgBtn'); if(b) b.disabled = false;
+      const c = $('#nlOcrCancel'); if(c) c.style.display = 'none';
+      nlOcrStopTicker();
+    }
+  }
+}
+function nlOcrUse(){
+  const ta = $('#nlOcrText');
+  const t = ((ta && ta.value) || '').trim();
+  if(!t){ toast('识别原文是空的，换张图或手动写一句'); return; }
+  NL_OCR.state.text = t;                 /* 保留人工修正后的原文 */
+  const el = $('#nlIn'); if(el) el.value = t;
+  NL_S.text = t;
+  NL_S.parsed = nlParseOrder(t);
+  nlRender();
+  const box = $('#nlOut'); if(box && box.scrollIntoView) box.scrollIntoView({ block:'nearest' });
+  if(!NL_S.parsed || NL_S.parsed.recognized === 0)
+    toast('这段原文没认出订单字段 —— 可改成「客户是甲，金额 8800，交期 2026-12-31」这类说法');
+}
+function nlOcrDiscard(){
+  const s = NL_OCR.state;
+  s.text = ''; s.thumb = ''; s.name = '';
+  nlOcrStatusText('');
+  nlOcrRender();
+  const f = $('#nlImgFile'); if(f) f.value = '';
+}
 function bindAssist(){
   const go = $('#nlGo'); if(go) go.onclick = () => {
     const t = (($('#nlIn') || {}).value || '').trim();
@@ -16614,6 +16994,40 @@ function bindAssist(){
     const el = $('#nlIn'); if(el) el.value = '';
     nlRender();
   };
+  /* ---- v1.3.14 · 图片 OCR：全部元素级监听，避免 document 级累积 / 与产品表单 paste 冲突 ---- */
+  const ib = $('#nlImgBtn'), fi = $('#nlImgFile');
+  if(ib && fi){
+    ib.onclick = () => fi.click();
+    fi.onchange = () => { const f = fi.files && fi.files[0]; if(f) nlOcrOnFile(f); fi.value = ''; };
+  }
+  const zone = $('#nlOcrZone');
+  if(zone){
+    zone.ondragover = e => { e.preventDefault(); zone.classList.add('drag'); };
+    zone.ondragleave = () => zone.classList.remove('drag');
+    zone.ondrop = e => {
+      e.preventDefault(); zone.classList.remove('drag');
+      const dt = e.dataTransfer, f = dt && dt.files && dt.files[0];
+      if(f) nlOcrOnFile(f);
+    };
+  }
+  const ni = $('#nlIn');
+  if(ni) ni.onpaste = e => {
+    const items = e.clipboardData && e.clipboardData.items;
+    if(!items) return;
+    let img = null;
+    for(let i = 0; i < items.length; i++)
+      if(items[i].kind === 'file' && /^image\//i.test(items[i].type || '')){
+        img = items[i].getAsFile(); break;
+      }
+    if(!img) return;             /* 纯文字 → 不拦，照常粘进输入框 */
+    e.preventDefault();
+    nlOcrOnFile(img);
+  };
+  const diag = $('#nlOcrDiag'); if(diag) diag.onclick = nlOcrDiagnose;
+  const canc = $('#nlOcrCancel'); if(canc) canc.onclick = nlOcrCancel;
+  const use = $('#nlOcrUse'); if(use) use.onclick = nlOcrUse;
+  const dis = $('#nlOcrDiscard'); if(dis) dis.onclick = nlOcrDiscard;
+  nlOcrRender();                          /* 页面重建后同步上次的识别预览 */
   if(NL_S.parsed) nlRender();               /* 重建页面后保留上次的确认卡 */
 }
 
@@ -17677,6 +18091,11 @@ window.OT = {
   nlPay, nlTrade, nlCode, nlCustCandidates, nlOwnerCandidates, nlParseOrder,
   nlScanQtys,   /* v0.61 · 「共 1200 件 / 3000pcs」这类没带关键词的数量兜底扫描 */
   viewAssist, bindAssist, nlRender, nlCommit, NL_DEMO,
+  /* v1.3.14 · 图片 OCR（NL_OCR 是对象，测试可替换 recognize 做无 wasm 的行为验证） */
+  NL_OCR_BASE, NL_OCR, nlOcrZoneHTML, nlOcrStatusText, nlOcrRender, nlOcrResult,
+  nlOcrOnFile, nlOcrUse, nlOcrDiscard, nlOcrPrep, nlOcrLoadEngine, nlOcrWorker, nlOcrRecognizeImpl,
+  nlOcrEnvCheck, nlOcrFetchHead, nlOcrProbe, nlOcrTimeout, nlOcrPhase, nlOcrCancel, nlOcrDiagnose,
+  nlOcrStartTicker, nlOcrStopTicker, NL_OCR_FILES,
   /* v0.38 · 图表换肤（iOS 深浅色双色板） */
   PALETTE_LIGHT, PALETTE_DARK, INK_LIGHT, INK_DARK, prefersDark, applyScheme,
   get PALETTE(){ return PALETTE.slice(); }, get INK(){ return INK; },

@@ -1,9 +1,9 @@
 /* 订单追踪工作台 Service Worker
- * - 仅缓存应用外壳，使安装的 PWA 可离线启动。
+ * - 缓存应用外壳 + 本地 OCR 运行时，使安装的 PWA 可离线启动、离线识别截图。
  * - CACHE_VERSION 由 deploy.mjs 在每次发布时自动 bump，新版本原子替换旧缓存（缓存破坏）。
  * - S3 同步流量：放行，永远走网络（不缓存远端快照/附件），保证云端数据实时。
  */
-const CACHE_VERSION = 'v1.3.13';
+const CACHE_VERSION = 'v1.3.15';
 const APP_SHELL = [
   './',
   './index.html',
@@ -13,11 +13,23 @@ const APP_SHELL = [
   './icon-maskable-192.png',
   './icon-maskable-512.png'
 ];
+/* v1.3.14 · 本地 OCR 运行时（约 11MB）。随包预缓存后，PWA 完全离线也能识别截图；
+   引擎本身仍由页面懒加载 —— 不点「从图片识别」不会发起任何请求。 */
+const OCR_SHELL = [
+  './vendor/tesseract.min.js',
+  './vendor/worker.min.js',
+  './vendor/tesseract-core-simd-lstm.wasm.js',
+  './vendor/tesseract-core-lstm.wasm.js',
+  './vendor/chi_sim.traineddata.gz',
+  './vendor/eng.traineddata.gz'
+];
 
 self.addEventListener('install', (event) => {
   event.waitUntil((async () => {
     const cache = await caches.open(CACHE_VERSION);
+    /* 核心壳成组缓存；OCR 资源逐个尽力缓存，单项缺失不影响其余与安装 */
     await cache.addAll(APP_SHELL).catch(() => {/* 缺失资源降级，不阻塞安装 */});
+    await Promise.all(OCR_SHELL.map((u) => cache.add(u).catch(() => {})));
     self.skipWaiting();
   })());
 });
