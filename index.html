@@ -3,7 +3,7 @@
 <head data-page-node-id="tB8joMdTgw5XU4U8A6S7i2">
 <meta charset="utf-8" data-page-node-id="iTOrAHcHmC5x6FNHHjD886">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" data-page-node-id="Ja1BDKMDLVRzLRExrICqlT">
-<title>订单追踪台 · v1.4.1</title>
+<title>订单追踪台 · v1.4.3</title>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#1677FF">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -782,6 +782,16 @@ code{background:var(--line-2);border-radius:3px;padding:1px 5px;font-size:12px}
   color:var(--muted);border-radius:var(--radius-ctl);cursor:pointer;font-size:14px;line-height:1;padding:0}
 .cond .c-del:hover{border-color:var(--red);color:var(--red);background:var(--red-soft)}
 .fp-empty{font-size:12px;color:var(--faint);padding:10px 0 2px}
+/* ---------- v1.4.2 · 时间范围（开始 / 结束） ----------
+    一行两格，各自带标签；提示常驻在值区下方，倒置时与 toast 一起告诉用户「暂不生效」。
+    v1.4.3：标签改为与输入框同排等高 —— 原先浮在框上方 34px，整行被撑到 186px，
+    同行下拉 / 条件文字与填写框中线对不上。两格等宽、间距统一 8px / 6px。 */
+.cond .c-val .c-range{display:flex;gap:8px;align-items:center}
+.cond .c-val .c-range .c-ri{display:flex;flex-direction:row;align-items:center;gap:6px;flex:1;min-width:0}
+.cond .c-val .c-range .c-ri > span{flex:0 0 28px;font-size:12px;line-height:1.4;color:var(--muted);white-space:nowrap}
+.cond .c-val .c-range input{flex:1;width:auto;min-width:0}
+.c-hint{display:block;font-size:11.5px;line-height:1.5;color:var(--red);margin-top:4px}
+.qf .c-hint{width:100%;margin:2px 0 0}
 
 /* ---------- v0.32 · 配置入口 + 居中浮层 ----------
    预警规则 / 筛选条件这类「设置型」面板不再在页面上常占一块位置：
@@ -1255,18 +1265,23 @@ body.col-rz,body.col-rz *{cursor:col-resize!important}
 .pp{display:flex;flex-direction:column}
 .pp-grp{margin-bottom:16px}
 .pp-gt{font-size:11px;font-weight:700;letter-spacing:.05em;color:var(--muted);padding:0 0 6px}
-.pp-row{display:flex;align-items:flex-start;gap:10px;padding:4px 0;border-bottom:1px dashed var(--line-2)}
+/* v1.4.3 · 文字与填写框统一对齐：整行垂直居中（标签不再浮在控件上方）、
+   值列允许换行且间距固定 8px、控件与说明按同一基线排布。
+   .pp-ro:not(:first-child) 只命中「控件 + 说明」并存的行（币种 / 账期），
+   让它单行显示、不被挤成两行；纯只读行仍按原样自然折行。DOM / 文案 / 事件零改动。 */
+.pp-row{display:flex;align-items:center;gap:10px;padding:4px 0;border-bottom:1px dashed var(--line-2)}
 .pp-row:last-child{border-bottom:none}
 .pp-k{flex:0 0 88px;font-size:12.5px;color:var(--muted);line-height:32px}
-.pp-v{flex:1;min-width:0;display:flex;align-items:center;gap:6px}
-.pp-in,.pp-sel{border:1px solid transparent;border-radius:6px;background:transparent;padding:5px 8px;font-size:13px;color:var(--text);width:100%;font-family:inherit;line-height:1.5}
+.pp-v{flex:1;min-width:0;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.pp-in,.pp-sel{border:1px solid transparent;border-radius:6px;background:transparent;padding:5px 8px;font-size:13px;color:var(--text);width:auto;flex:1 1 100px;min-width:100px;box-sizing:border-box;font-family:inherit;line-height:1.5}
 .pp-in:hover,.pp-sel:hover{border-color:var(--line)}
 .pp-in:focus,.pp-sel:focus{border-color:var(--primary);background:var(--panel);box-shadow:0 0 0 3px var(--primary-soft);outline:none}
 .pp-in::placeholder{color:var(--muted)}
 .pp-sel{cursor:pointer}
 .pp-in[type=number],.pp-in.ro{font-variant-numeric:tabular-nums}
-.pp-ro{font-size:13px;line-height:32px;color:var(--text);padding-left:8px}
-.pp-ro .muted{font-size:11.5px;margin-left:6px}
+.pp-ro{font-size:13px;line-height:32px;color:var(--text);padding-left:0}
+.pp-ro .muted{font-size:11.5px;margin-left:0}
+.pp-v > .pp-ro:not(:first-child){flex:0 0 auto;white-space:nowrap}
 .pp-add{flex:0 0 auto;width:30px;height:30px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--muted);cursor:pointer;line-height:1}
 .pp-add:hover{color:var(--primary-600);border-color:var(--primary)}
 .pp-rec{border-bottom:1px solid var(--line-2);padding:7px 0}
@@ -2046,6 +2061,14 @@ body.dv-rzing .dv-rz{opacity:1;color:var(--primary)}
   #page .toolbar > select,#page .toolbar > label{
     height:44px;min-height:44px;box-sizing:border-box}
   #page .toolbar > .menu > .btn{height:44px;min-height:44px}
+  /* 平板端「同步设置」勾选框 bugfix：整块 label 是 44px 触控目标，
+     勾选框本身只放大到 20px（基础规则见 CSS 末尾的同名选择器）。
+     用 !important 是因为基础规则写在文件末尾、与本条同特异性，
+     按源码顺序会覆盖本条；触屏档必须稳赢，故显式提升。 */
+  .fld label.sync-chk{min-height:44px!important}
+  .fld label.sync-chk > input[type=checkbox]{
+    flex-basis:20px!important;width:20px!important;height:20px!important;
+    min-width:20px!important;max-width:20px!important;min-height:20px!important}
 }
 
 /* ---------- v1.4.1 · 手机宽度（≤560px）的等宽列网格 ----------
@@ -2066,6 +2089,13 @@ body.dv-rzing .dv-rz{opacity:1;color:var(--primary)}
   #gfilter .inner > .gf-tools > .btn{flex:1 1 0;min-width:0;width:100%}
   #page .toolbar > .menu > .btn{width:100%}
   #page .toolbar > label{justify-content:center}
+  /* v1.4.2 · 时间范围：窄屏两格纵向排，各占整行、44px 触控，不被压成半格
+     v1.4.3：标签与输入框同排后两格恒 44px，间距与桌面统一 8px */
+  .cond .c-val{max-width:none}
+  .cond .c-val .c-range{flex-direction:column;align-items:stretch;gap:8px}
+  .cond .c-val .c-range .c-ri{width:100%;min-height:44px}
+  .cond .c-val .c-range input{height:44px;min-height:44px}
+  #fRangeClear{min-height:44px}
 }
 /* 超窄屏顶栏：主按钮收成与「重新载入」同款的图标按钮（DOM 文本与点击逻辑不变），
    把宽度还给标题；≤360px 仍放不下时改成等宽列网格，两行按列对齐，绝不裁切。 */
@@ -2080,7 +2110,28 @@ body.dv-rzing .dv-rz{opacity:1;color:var(--primary)}
     padding-top:6px;padding-bottom:6px}
   #topbar > div:nth-child(2){grid-column:span 2;min-width:0}
   #topbar .spacer{display:none}
+  /* v1.4.3 · 极窄屏放不下「控件 + 说明」同行时：说明独占第二行，
+     标签与填写框仍按第一行顶部对齐，不出现居中下沉的偏移感。 */
+  .pp-row,.pp-v{align-items:flex-start}
+  .pp-k{line-height:36px}
+  .pp-v > .pp-ro:not(:first-child){flex:1 1 100%;white-space:normal}
 }
+
+/* ---------- 平板端「同步设置」勾选框与文字重叠 · bugfix（v1.4.3 内，不升版本号） ----------
+   根因：复选框写在 .fld 内，被基础规则 .fld input（width:100% / padding:8px 11px /
+   background / border-radius）当成文本输入框命中；.fld label 的 display:block 还会把
+   .switch 的 inline-flex 压掉，让「导出时包含 AccessKey」的空框浮到文字上方。
+   桌面 Chromium 把原生外观钳回 13px 勉强看不出，iPadOS Safari 允许这些声明生效：
+   同步内容 8 个勾被撑成绿色圆块压住文字，配置导出的空框实测撑到 204px 并与文字错行。
+   这里只给同步设置卡片的两类勾选项加 sync-chk 类，精确还原原生框尺寸、隔离输入框
+   样式、恢复同行对齐；其余 .fld 复选框、桌面密度、文案与事件一律不动。
+   触屏档的两条 44px 规则合并进既有的 ≤920px 媒体块（不再新增同条件 @media，
+   否则既有回归按「最后一个 920 块」取内容会取到本块而整组误报）。 */
+.fld label.sync-chk{display:inline-flex;align-items:center;gap:8px;margin-bottom:0;min-height:19px}
+.fld label.sync-chk > input[type=checkbox]{
+  flex:0 0 16px;width:16px;height:16px;min-width:16px;max-width:16px;min-height:16px;
+  margin:0;padding:0;border:0;border-radius:0;background:transparent;box-sizing:border-box;
+  appearance:auto;accent-color:var(--primary)}
 </style>
 </head>
 <body data-page-node-id="iN68ACaq0BuwCUMgsu3KFv">
@@ -2088,7 +2139,7 @@ body.dv-rzing .dv-rz{opacity:1;color:var(--primary)}
 <aside id="sidebar" data-page-node-id="mOHG7ZovWQTFY89nDh3RpA">
   <div class="sb-logo" data-page-node-id="CItXgwA9E43rFqjh1jkPjK">
     <div class="mark" data-page-node-id="UZtmztULGLZ5gKgPjaSoN0"><svg width="28" height="28" viewBox="0 0 512 512" aria-hidden="true"><defs><linearGradient id="sbMarkBg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5b86d6"/><stop offset="1" stop-color="#3d8f89"/></linearGradient></defs><rect width="512" height="512" rx="116" fill="url(#sbMarkBg)"/><path d="M144 100 H252 L310 158 V322 A26 26 0 0 1 284 348 H144 A26 26 0 0 1 118 322 V126 A26 26 0 0 1 144 100 Z" fill="#ffffff"/><path d="M252 100 L310 158 L252 158 Z" fill="#cfe0f7"/><rect x="146" y="196" width="136" height="18" rx="9" fill="#d7e2f3"/><rect x="146" y="236" width="136" height="18" rx="9" fill="#d7e2f3"/><rect x="146" y="276" width="90" height="18" rx="9" fill="#d7e2f3"/><circle cx="396" cy="390" r="76" fill="#ffffff"/><path d="M362 390 L386 414 L430 362" fill="none" stroke="#3d8a5c" stroke-width="23" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-    <div class="sb-name" data-page-node-id="qJfiMtI7jd53xaMaRs2OfN"><div class="t" data-page-node-id="vxtJJYpJxW7saZcUyfaE3M" title="双击可重命名">订单追踪台</div><div class="s" data-page-node-id="ufakbTeCG3rPiVsiEX5UML">v1.4.1</div></div>
+    <div class="sb-name" data-page-node-id="qJfiMtI7jd53xaMaRs2OfN"><div class="t" data-page-node-id="vxtJJYpJxW7saZcUyfaE3M" title="双击可重命名">订单追踪台</div><div class="s" data-page-node-id="ufakbTeCG3rPiVsiEX5UML">v1.4.3</div></div>
     <button class="sb-ren" id="btnRename" type="button" title="重命名工作台" aria-label="重命名工作台">✎</button>
   </div>
   <nav class="sb-nav" id="sbNav" data-page-node-id="y58haCHcKQU8HJVk0gDYWN"></nav>
@@ -3568,11 +3619,21 @@ const F_OPS = {
   text:   [['contains','包含'],['notContains','不包含'],['eq','等于'],['ne','不等于'],['empty','为空'],['notEmpty','不为空']],
   enum:   [['in','是其中之一'],['notIn','不是其中之一'],['empty','为空'],['notEmpty','不为空']],
   number: [['eq','='],['ne','≠'],['gt','>'],['gte','≥'],['lt','<'],['lte','≤'],['empty','为空'],['notEmpty','不为空']],
-  date:   [['on','等于'],['before','早于'],['after','晚于'],['thisMonth','本月'],['thisQuarter','本季'],
-           ['thisYear','本年'],['last30','近 30 天'],['last90','近 90 天'],['empty','为空'],['notEmpty','不为空']]
+  date:   [['on','等于'],['before','早于'],['after','晚于'],['between','时间范围'],['thisMonth','本月'],['thisQuarter','本季'],
+            ['thisYear','本年'],['last30','近 30 天'],['last90','近 90 天'],['empty','为空'],['notEmpty','不为空']]
 };
 /* 这些运算符不需要填值 */
 const F_OP_NOVAL = ['empty','notEmpty','thisMonth','thisQuarter','thisYear','last30','last90'];
+/* v1.4.2 · 需要「开始 / 结束」两个值的运算符。起止读取、倒置判定、闭区间求值、
+   面板提示与快捷起止全部收敛到下面三个纯函数，避免各处各写一套口径。
+   ★ vals 必须保留空串占位：selList() 会过滤空值，直接拿它会把「只填结束」误当成「开始」。 */
+const F_OP_RANGE = ['between'];
+function rangeInvalid(from, to){ return !!(from && to && String(from) > String(to)); }
+function condRangeOf(c){
+  const v = Array.isArray(c && c.vals) ? c.vals : (c && c.vals != null ? [c.vals] : []);
+  return { from:String(v[0] == null ? '' : v[0]), to:String(v[1] == null ? '' : v[1]) };
+}
+function condRangeInvalid(c){ const R = condRangeOf(c); return rangeInvalid(R.from, R.to); }
 /* 相对日期区间（「本月」「近 30 天」这类），基准是今天 */
 function fRelRange(op){
   const t = today();
@@ -3654,6 +3715,14 @@ function condMatch(st, o, c, ctx){
     case 'on':     return !blank && sRaw === String(L[0]);
     case 'before': return !blank && sRaw < String(L[0]);
     case 'after':  return !blank && sRaw > String(L[0]);
+    case 'between': {
+      const R = condRangeOf(c);
+      if(!R.from && !R.to) return true;      /* 起止都没填 = 不设限（与空 vals 语义一致） */
+      if(condRangeInvalid(c)) return true;   /* 倒置：面板已红字提示，条件暂不生效，避免整片筛空 */
+      if(blank) return false;                /* 没填日期的记录不落在任何区间内 */
+      /* 闭区间：含起止边界；只填一端时按半区间，另一端不设限 */
+      return (!R.from || sRaw >= R.from) && (!R.to || sRaw <= R.to);
+    }
     default: {
       const R = fRelRange(c.op);
       if(R) return !blank && sRaw >= R.from && sRaw <= R.to;
@@ -3677,6 +3746,7 @@ function condValueLabel(st, scope, c){
   const F = filterFieldOf(scope, c.field); if(!F) return '';
   const L = selList(c.vals);
   if(F.type === 'enum'){ const opts = F.opts ? F.opts(st) : []; return L.map(v => selLabel(opts, v)).join('、'); }
+  if(F_OP_RANGE.indexOf(c.op) >= 0){ const R = condRangeOf(c); return (R.from || '…') + ' ~ ' + (R.to || '…'); }
   return L.length ? String(L[0]) : '';
 }
 /* 通用多选下拉：顶栏业务员与条件行的枚举值共用（取代 chips） */
@@ -3752,12 +3822,21 @@ function condRowHTML(st, scope, c, idx){
     ops.map(o => `<option value="${esc(o[0])}"${o[0] === c.op ? ' selected' : ''}>${esc(o[1])}</option>`).join('') + '</select>';
   let valHtml = '<span class="c-none">—</span>';
   if(F_OP_NOVAL.indexOf(c.op) < 0){
-    const v0 = selList(c.vals)[0] || '';
+    const isRange = F_OP_RANGE.indexOf(c.op) >= 0;
+    const R = condRangeOf(c);
+    const v0 = isRange ? R.from : (selList(c.vals)[0] || '');
     if(F.type === 'enum'){
       const opts = F.opts ? F.opts(st) : [];
       valHtml = mselHTML('cmsel' + idx, selList(c.vals), opts, '选择…', idx, opts.length > 8);
     } else if(F.type === 'number'){
       valHtml = `<input type="number" data-ci="${idx}" data-keep="1" value="${esc(v0)}" placeholder="数值">`;
+    } else if(F.type === 'date' && isRange){
+      /* 时间范围：开始 / 结束两个原生日期控件，空串占位保留在 vals[0] / vals[1] */
+      valHtml = `<div class="c-range">
+        <label class="c-ri"><span>开始</span><input type="date" data-ci="${idx}" data-cpart="from" data-keep="1" value="${esc(R.from)}" aria-label="开始时间"></label>
+        <label class="c-ri"><span>结束</span><input type="date" data-ci="${idx}" data-cpart="to" data-keep="1" value="${esc(R.to)}" aria-label="结束时间"></label>
+      </div>` + (condRangeInvalid(c)
+        ? '<div class="c-hint" role="alert">开始时间不能晚于结束时间，该条件暂不生效</div>' : '');
     } else if(F.type === 'date'){
       valHtml = `<input type="date" data-ci="${idx}" data-keep="1" value="${esc(v0)}">`;
     } else {
@@ -3822,32 +3901,59 @@ function bindCondPanel(scope){
       setCond(scope, i, { field:nf.k, op:(F_OPS[nf.type] || F_OPS.text)[0][0], vals:[] });
     };
     if(op) op.onchange = e => {
-      const cur = condsOf(scope, i);
-      setCond(scope, i, { op:e.target.value,
-        vals:(F_OP_NOVAL.indexOf(e.target.value) >= 0 ? [] : cur.vals) });
+      const cur = condsOf(scope, i), nop = e.target.value;
+      let vals;
+      if(F_OP_NOVAL.indexOf(nop) >= 0) vals = [];                       /* 相对区间 / 空值：不需要值 */
+      else if(F_OP_RANGE.indexOf(nop) >= 0) vals = [];                  /* 切到时间范围：从空起止开始 */
+      else if(F_OP_RANGE.indexOf(cur.op) >= 0) vals = [condRangeOf(cur).from]; /* 范围 → 单值：只留开始 */
+      else vals = cur.vals;
+      setCond(scope, i, { op:nop, vals });
     };
-    const inp = row.querySelector('.c-val input');
-    if(inp) inp.oninput = () => setCond(scope, i, { vals:[inp.value] });
+    const allIn = Array.from(row.querySelectorAll('.c-val input'));
+    if(F_OP_RANGE.indexOf(condsOf(scope, i).op) >= 0 && allIn.length >= 2){
+      const fi = allIn.find(x => x.dataset.cpart === 'from') || allIn[0];
+      const ti = allIn.find(x => x.dataset.cpart === 'to') || allIn[1];
+      const apply = () => {
+        if(rangeInvalid(fi.value, ti.value))
+          toast('开始时间不能晚于结束时间，该条件暂不生效', 2600, 'err');
+        setCond(scope, i, { vals:[fi.value, ti.value] });   /* 空串占位必须保留 */
+      };
+      [fi, ti].forEach(el => { el.oninput = apply; });
+    } else {
+      const inp = allIn[0];
+      if(inp) inp.oninput = () => setCond(scope, i, { vals:[inp.value] });
+    }
     const del = row.querySelector('.c-del'); if(del) del.onclick = () => delCond(scope, i);
     bindMsel('#cmsel' + i, L => setCond(scope, i, { vals:L }));
   });
   /* v1.3.12：业务员 / 统计口径 / 自定义起止（原顶栏「更多筛选」折叠区）已搬进浮层，
      随浮层一起重挂，这里统一绑定。元素不在浮层内时（不应发生）自动跳过。 */
   const sf2 = patch => Store.setFilter(patch, scope);
+  const rangeWarn = () => { const f = scopeFilters(Store.state, scope);
+    if(rangeInvalid(f.from, f.to)) toast('开始时间不能晚于结束时间，该范围暂不生效', 2600, 'err'); };
   const owEl = $('#fOwner'); if(owEl) bindMsel('#fOwner', L => sf2({ ownerId:L }));
   const fb = $('#fBasis'); if(fb) fb.onchange = e => sf2({ basis:e.target.value });
-  const ff = $('#fFrom'); if(ff) ff.onchange = e => sf2({ from:e.target.value });
-  const ft = $('#fTo');   if(ft) ft.onchange = e => sf2({ to:e.target.value });
+  const ff = $('#fFrom'); if(ff) ff.onchange = e => { sf2({ from:e.target.value }); rangeWarn(); };
+  const ft = $('#fTo');   if(ft) ft.onchange = e => { sf2({ to:e.target.value }); rangeWarn(); };
+  /* v1.4.2 · 清空时间：只复位起止，业务员 / 口径 / 关键字 / 条件行保持不变；
+     全量复位仍由面板「清空」(#fpClear) 与顶栏「重置」(#fReset) 走 blankFilter()。 */
+  const rc = $('#fRangeClear'); if(rc) rc.onclick = () => sf2({ from:'', to:'' });
 }
 /* 条件行的值输入要在重渲染后保住焦点（否则每敲一个字就失焦） */
 function snapFocus(){
   const el = document.activeElement;
   if(!el || !el.dataset || el.dataset.keep !== '1') return null;
-  return { ci:el.dataset.ci, pos:(el.selectionStart == null ? String(el.value || '').length : el.selectionStart) };
+  /* date 输入在部分浏览器上取 selectionStart 会抛 InvalidStateError，兜住 */
+  let pos = 0;
+  try{ pos = (el.selectionStart == null ? String(el.value || '').length : el.selectionStart); }catch(e){ pos = 0; }
+  return { ci:el.dataset.ci, part:el.dataset.cpart || '', pos };
 }
 function restoreFocusSnap(snap){
   if(!snap) return;
-  const el = $('.c-val input[data-keep="1"][data-ci="' + snap.ci + '"]');
+  /* 时间范围一行有两个输入：按 data-cpart 精确定位，别把「结束」的焦点还给「开始」 */
+  const sel = '.c-val input[data-keep="1"][data-ci="' + snap.ci + '"]' +
+    (snap.part ? '[data-cpart="' + snap.part + '"]' : ':not([data-cpart])');
+  const el = $(sel);
   if(!el) return;
   el.focus();
   try{ el.setSelectionRange(snap.pos, snap.pos); }catch(e){}
@@ -3918,7 +4024,12 @@ function safeAlerts(st){ try{ return computeAlerts(st); }catch(e){ return []; } 
 
 function resolveRange(f){
   const t = today();
-  if(f.preset === 'custom') return { from: f.from || '0000-01-01', to: f.to || '9999-12-31' };
+  if(f.preset === 'custom'){
+    /* v1.4.2 · 起止倒置时整段不设限（浮层已红字提示），避免 filteredOrders / calcKPI /
+       回款归集等所有消费 resolveRange 的模块被一个坏区间整片筛空；只填一端按半区间。 */
+    if(rangeInvalid(f.from, f.to)) return { from:'0000-01-01', to:'9999-12-31' };
+    return { from: f.from || '0000-01-01', to: f.to || '9999-12-31' };
+  }
   if(f.preset === 'all')    return { from: '0000-01-01', to: '9999-12-31' };
   /* ★ 日历区间 = 整段（到期末），不是「期初…今天」。
      筛「本月交期」就是为了找出本月要交货 / 要完工的单，而交期大量落在今天之后；
@@ -4672,7 +4783,7 @@ const Chart = (() => {
    —— 单一事实来源：界面标题 / 侧栏 / 「系统版本」页全部取自 APP_VERSION。
    新增一个版本时只需改两处：APP_VERSION / APP_UPDATED，并在 CHANGELOG 头部插一条。
    ========================================================================== */
-const APP_VERSION = 'v1.4.1';
+const APP_VERSION = 'v1.4.3';
 const APP_UPDATED = '2026-11-12';
 let   APP_NAME    = '订单追踪台';
 /* v0.54：工作台名支持用户重命名 —— APP_NAME_DEFAULT 是出厂默认，真实名从 localStorage 读。
@@ -4700,7 +4811,22 @@ APP_NAME = nameRead();   /* 启动即用记住的名字（没改过 / 读不到 
 const APP_TAG     = '出口业务 · 世界地图（气泡 / 数据柱双形态）';
 
 const CHANGELOG = [
-  { v:'v1.4.1', date:'2026-11-12', cat:'手机端按钮行统一节奏：等宽列网格、8px 定距、44px 定高、超窄顶栏自动换行', cur:true, items:[
+  { v:'v1.4.3', date:'2026-11-12', cat:'表单文字与填写框对齐：标签 / 控件 / 说明同一基线、间距统一', cur:true, items:[
+    '★ <b>三处同类错位一次修好</b>：详情属性面板「币种 / 账期」行、更多筛选「时间范围」条件行 —— 原先说明文字被挤成两行、填写框被垂直居中下沉 15px、开始 / 结束标签浮在输入框上方 34px。',
+    '· <b>对齐</b>：属性行整行垂直居中，标签 / 填写框 / 说明落在同一水平中线（实测中线差 17px → 0）；说明单行显示不折行，控件与说明间距统一 8px。',
+    '· <b>尺寸与换行</b>：填写框不再 `width:100%` 独占、改按剩余宽度伸缩；条件行「开始 / 结束」标签与日期输入框同排等高，两格等宽，每格与同行下拉同为 34px（手机 44px）。放不下时说明整块换行到第二行，≤360px 仍按第一行顶部对齐。',
+    '· <b>零功能改动</b>：只改 CSS，DOM 结构 / 字段文案 / 事件 / 数据逻辑一行未动；`tests/14/31/51/81` 依赖的 `.pp-v` 值文本、时间范围闭区间过滤、清空与重置全部原样；桌面 ≥921px 基础 token 未动。',
+    '· <b>验证</b>：`tests/104` 27/27；Edge CDP 真机 21/21（390px 改前 / 改后逐像素对照 + 1280px 桌面）；属性行 75px → 45px、条件行 186px → 147px；全量回归 0 失败。',
+  ]},
+  { v:'v1.4.2', date:'2026-11-12', cat:'时间范围筛选：闭区间起止、倒置提示、清空重置、五页一致', cur:false, items:[
+    '★ <b>时间范围筛选</b>：「更多筛选」的日期字段新增「时间范围」关系，保留 早于 / 晚于 / 本月 等单条件；可同时设置开始时间与结束时间，按<b>含起止边界的闭区间</b>过滤（≥ 开始 且 ≤ 结束），只填一端按半区间、两端都空不设限。',
+    '· <b>五页一套组件、结果一致</b>：数据看板 / 订单 / 回款 / 业务员共用 `global` 条件行，排产页用独立的 `prod` 组件（计划开工 / 计划完工），都走同一套 `condRangeOf` / `rangeInvalid` / `condMatch`；`filteredOrders`、`prodViewList`、`resolveRange` 三个消费入口口径一致。',
+    '· <b>开始晚于结束有明确提示</b>：条件行下方常驻红字 + 即时 toast，该条件暂不生效（不把结果整片筛空）；快捷「自定义起止」同样提示。',
+    '· <b>清空与重置</b>：快捷区新增「清空时间」，只复位起止、保留其它条件；面板「清空」与顶栏「重置」仍按 `blankFilter()` 全复位；删除条件行、切换关系时起止值自动收敛。',
+    '· <b>兼容原有查询</b>：与关键字、业务员、统计口径、条件行且/或、自定义起止均为「与」关系；≤560px 两个日期输入纵向各占整行、44px 触控，桌面基础样式一行未动。',
+    '· <b>验证</b>：`tests/103` 专项 62/62；Edge CDP 真机 28/28（390 / 320 / 1280 视口，含倒置提示、清空重置、五页结果一致）；全量回归 0 失败。',
+  ]},
+  { v:'v1.4.1', date:'2026-11-12', cat:'手机端按钮行统一节奏：等宽列网格、8px 定距、44px 定高、超窄顶栏自动换行', cur:false, items:[
     '★ <b>按钮行统一节奏</b>：手机端顶栏 / 筛选栏 / 工具条统一 8px 间距与 44px 控件高；分段控件、内联下拉、复选与菜单按钮不再忽高忽低（修前实测 20/34/44/52/65/119 六档）。',
     '· <b>等宽列网格</b>：≤560px 用 `repeat(auto-fit,minmax(112px,1fr))` 按屏宽自动分列（320→2 列 / 390→3 列 / 560→4 列），同行等宽、整行换行、尾行按列左对齐；561–920px 仍保留原有 flex 节奏，不把平板工具条摊成多行。',
     '· <b>不再被 spacer 推挤或横向裁切</b>：工具条 spacer 与筛选栏 `margin-left:auto` 归零（修前造出 164~252px 空隙）；561–920px 筛选栏由 nowrap 横滑改回换行；超宽分段控件自己横向滚、按钮永不折行。',
@@ -12943,6 +13069,10 @@ function cfgEntryHTML(st, btnId, scope){
    下部是 condPanelHTML（全字段条件行）。两者合为单一高级筛选入口。 */
 function quickFilterHTML(st, scope){
   const f = scopeFilters(st, scope);
+  const custom = f.preset === 'custom';
+  const disp = custom ? '' : 'none';
+  /* v1.4.2 · 自定义起止与条件行「时间范围」同一套口径：闭区间、倒置不设限并红字提示 */
+  const bad = custom && rangeInvalid(f.from, f.to);
   return `<div class="qf">
     <div class="gf"><div class="gf-label">业务员（可多选）</div>
       ${mselHTML('fOwner', f.ownerId, fOptOwner(st), '全部业务员')}</div>
@@ -12951,10 +13081,13 @@ function quickFilterHTML(st, scope){
         <option value="sign" ${f.basis==='sign'?'selected':''}>按签订日</option>
         <option value="delivery" ${f.basis==='delivery'?'selected':''}>按交期</option>
         <option value="pay" ${f.basis==='pay'?'selected':''}>按实收</option></select></div>
-    <div class="gf" id="custDates" style="display:${f.preset==='custom'?'':'none'};min-width:140px">
-      <div class="gf-label">起</div><input type="date" id="fFrom" value="${f.from||''}"></div>
-    <div class="gf" id="custDates2" style="display:${f.preset==='custom'?'':'none'};min-width:140px">
-      <div class="gf-label">止</div><input type="date" id="fTo" value="${f.to||''}"></div>
+    <div class="gf" id="custDates" style="display:${disp};min-width:140px">
+      <div class="gf-label">开始时间</div><input type="date" id="fFrom" value="${f.from||''}" aria-label="开始时间"></div>
+    <div class="gf" id="custDates2" style="display:${disp};min-width:140px">
+      <div class="gf-label">结束时间</div><input type="date" id="fTo" value="${f.to||''}" aria-label="结束时间"></div>
+    <div class="gf" id="custRangeTools" style="display:${disp}"><div class="gf-label">&nbsp;</div>
+      <button class="btn sm" id="fRangeClear" type="button">清空时间</button></div>
+    <div class="c-hint qf-hint" id="custRangeHint" role="alert" style="display:${bad?'':'none'}">开始时间不能晚于结束时间，该范围暂不生效（点「清空时间」或「重置」恢复）</div>
   </div>`;
 }
 function filterDlgHTML(st, scope, wrapId){
@@ -14192,7 +14325,7 @@ function viewSync(st){
   const statusLine = stt.lastError ? ('⚠️ 上次异常：' + String(stt.lastError).slice(0,48))
     : stt.lastSyncAt ? ('已同步 · ' + (stt.lastSyncAtStr||'').slice(11,19) + (stt.lastDirection==='up'?'（上传）':'（下载）'))
     : '尚未同步';
-  const typeBox = (k, label) => `<label style="display:flex;align-items:center;gap:6px;font-size:13px;white-space:nowrap">
+  const typeBox = (k, label) => `<label class="sync-chk" style="display:flex;align-items:center;gap:8px;font-size:13px;white-space:nowrap">
       <input type="checkbox" data-inc="${k}" ${cfg['include'+k]!==false?'checked':''}> ${label}</label>`;
   const fileProto = typeof location !== 'undefined' && location.protocol === 'file:';
   const corsWarn = fileProto ? infoI(`<b>当前通过 file:// 打开，S3 同步会被浏览器 CORS 策略阻断</b>。请通过本地服务地址访问，例如 <b>http://localhost:8000/</b>；或双击 <code>start-server.bat</code> 启动后再用浏览器打开。`, 'warn') : '';
@@ -14252,7 +14385,7 @@ function viewSync(st){
             <button class="btn" id="syncCfgExport">⤓ 导出配置</button>
             <button class="btn" id="syncCfgImport">⤒ 导入配置</button>
             <input type="file" id="syncCfgFile" accept=".json,application/json" style="display:none">
-            <label class="switch"><input type="checkbox" id="syncCfgSecret"> 导出时包含 AccessKey 与密钥密文</label>
+            <label class="switch sync-chk"><input type="checkbox" id="syncCfgSecret"> 导出时包含 AccessKey 与密钥密文</label>
           </div>
           <div style="margin-top:4px">${infoI('导出为 JSON 文件，换设备 / 换浏览器时导入即可，免手工重填。默认只导出连接参数；勾选后额外带上 AccessKey 与<b>已加密</b>的密钥密文（仍须原「加密口令」才能解开），该文件请妥善保管。')}</div>
         </div>
@@ -17726,15 +17859,16 @@ window.OT = {
   setBX(v){ BX = v; }, get BX(){ return BX; },
   /* 列表筛选 / 排序（v0.16：订单 + 排产）—— v0.22 起 filteredOrders 可带 scope */
   ordViewList, prodViewList, prodBaseList, prodRisk, prodGap, prodCmpTag, prodPct, prodDone, ORD_DIR_DEFAULT, PROD_DIR_DEFAULT, PROD_RISK_LABEL,
-  filteredOrders, blankFilter, filterScopeOf, scopeFilters, pageFilter, gfilterHTML,
+  filteredOrders, blankFilter, filterScopeOf, scopeFilters, pageFilter, gfilterHTML, resolveRange,
   /* 多维多选筛选（v0.23） */
   selList, selOn, selToggle, selLabel, F_STATUS, F_PAY, F_PROD, F_RISK, F_PROW, F_PRISK,
   ordDateKey, ordPayKeys, ordProdState, ordProdStateOf, prodStateIndex,
   QUICK_PLANS, quickPlan,
-  ORDER_FIELDS, PROD_FIELDS, F_OPS, F_OP_NOVAL,
+  ORDER_FIELDS, PROD_FIELDS, F_OPS, F_OP_NOVAL, F_OP_RANGE,
+  rangeInvalid, condRangeOf, condRangeInvalid,
   filterFieldsOf, filterFieldOf, filterCtx, condMatch, condsMatch, condPanelHTML, condRowHTML,
   bindCondPanel, clearConds, mselHTML, bindMsel, closeAllMsel, snapFocus, restoreFocusSnap,
-  ordersPanelHTML, prodPanelHTML,
+  ordersPanelHTML, prodPanelHTML, quickFilterHTML, filterDlgHTML,
   APP_TAG,
   get ordSort(){ return ordSort; }, setOrdSort(v){ ordSort = v; sortSave(); },
   get ordDir(){ return ordDir; }, setOrdDir(v){ ordDir = v; sortSave(); },
