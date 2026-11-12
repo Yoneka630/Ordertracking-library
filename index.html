@@ -3,7 +3,7 @@
 <head data-page-node-id="tB8joMdTgw5XU4U8A6S7i2">
 <meta charset="utf-8" data-page-node-id="iTOrAHcHmC5x6FNHHjD886">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" data-page-node-id="Ja1BDKMDLVRzLRExrICqlT">
-<title>订单追踪台 · v1.4.0</title>
+<title>订单追踪台 · v1.4.1</title>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#1677FF">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2014,6 +2014,72 @@ body.dv-rzing .dv-rz{opacity:1;color:var(--primary)}
      !important 是因为基础样式里 .gf input(13px) / .fld 等规则特异性更高。 */
   input:not([type=checkbox]):not([type=radio]):not([type=range]),
   select,textarea{font-size:16px!important}
+
+  /* ④ v1.4.1 · 手机端按钮行统一节奏（对齐 / 间距 / 尺寸 / 换行）
+     CDP 真机 320~920px 实测修前：筛选栏控件高度 44/65/119 三档、工具栏 20/34/44/52
+     四档；.spacer 与 margin-left:auto 造出 164~252px 的空隙；561~920px 的筛选栏
+     nowrap + overflow-x:auto 把「重置」推出屏幕；320px 顶栏「新增订单」出界。
+     这里只重排顶栏 / 筛选栏 / 工具栏这三个「按钮行」容器：8px 定距 + 44px 定高，
+     手机宽度再叠等宽列网格，放不下整行换行、尾行按列左对齐。平板档仍用原来的
+     flex 节奏，避免把一行的工具条摊成好几行。不改任何 DOM / 文案 / 事件，
+     桌面基础规则一行不动。 */
+  #topbar{gap:8px}
+  #topbar .spacer{display:none}
+  #topbar .today{height:44px;min-height:44px;min-width:44px;padding:0 8px}
+  #topbar .btn{min-height:44px;min-width:44px}
+  /* 561~920：只把筛选栏的 nowrap 横滑改回换行，其余沿用桌面 flex 节奏 */
+  #gfilter .inner{flex-wrap:wrap;overflow-x:visible;align-items:flex-end;gap:8px}
+  #gfilter .inner > .gf-tools{margin-left:0;gap:8px}
+  #page .toolbar{gap:8px}
+  #page .toolbar > .spacer{display:none}
+  /* 控件外框统一 44px：分段控件 / 内联下拉 / 复选 / 菜单按钮不再忽高忽低。
+     .seg 去掉 3px 内边距与 1px 外框，让白底药丸本体正好 44px（触控目标不倒退）；
+     超宽分组横向可滚、按钮永不折行。 */
+  #gfilter .inner .seg,#page .toolbar > .seg{
+    display:flex;flex-wrap:nowrap;height:44px;min-height:44px;max-width:420px;
+    padding:0;border:0;overflow-x:auto;overflow-y:hidden;scrollbar-width:none}
+  #gfilter .inner .seg::-webkit-scrollbar,#page .toolbar > .seg::-webkit-scrollbar{display:none}
+  #gfilter .inner .seg button,#page .toolbar > .seg button{
+    flex:0 0 auto;min-width:0;height:100%;min-height:0;padding:0 8px;white-space:nowrap}
+  #gfilter .inner .seg button,#page .toolbar > .seg[id$="View"] button{flex:1 1 0;padding:0 4px}
+  #gfilter .inner > .gf > input,#gfilter .inner > .gf > select{height:44px;min-height:44px}
+  #page .toolbar > select,#page .toolbar > label{
+    height:44px;min-height:44px;box-sizing:border-box}
+  #page .toolbar > .menu > .btn{height:44px;min-height:44px}
+}
+
+/* ---------- v1.4.1 · 手机宽度（≤560px）的等宽列网格 ----------
+   列数随屏宽自动增减（320→2 列 / 390→3 列 / 560→4 列），每个控件吃掉整格：
+   同排等宽、间距恒 8px、整行换行、尾行仍按列左对齐。关键字 / 时间范围 /
+   视图切换各占一整行，长内容不会再被压成半格。 */
+@media(max-width:560px){
+  #gfilter .inner,#page .toolbar{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(112px,1fr));
+    gap:8px;align-items:center;overflow-x:visible}
+  #gfilter .inner > .gf-kw,#gfilter .inner > .gf,
+  #page .toolbar > .seg{grid-column:1/-1;min-width:0}
+  #gfilter .inner .seg,#page .toolbar > .seg{width:100%}
+  #gfilter .inner > .gf > input,#gfilter .inner > .gf > select{width:100%;max-width:420px}
+  #gfilter .inner > .btn,#gfilter .inner > .gf-tools,
+  #page .toolbar > .btn,#page .toolbar > .menu,
+  #page .toolbar > select,#page .toolbar > label{width:100%}
+  #gfilter .inner > .gf-tools > .btn{flex:1 1 0;min-width:0;width:100%}
+  #page .toolbar > .menu > .btn{width:100%}
+  #page .toolbar > label{justify-content:center}
+}
+/* 超窄屏顶栏：主按钮收成与「重新载入」同款的图标按钮（DOM 文本与点击逻辑不变），
+   把宽度还给标题；≤360px 仍放不下时改成等宽列网格，两行按列对齐，绝不裁切。 */
+@media(max-width:400px){
+  #topbar{gap:6px}
+  #topbar #btnNew{font-size:0;padding:0 10px}
+  #topbar #btnNew::before{content:"+";font-size:18px;line-height:1}
+}
+@media(max-width:360px){
+  #topbar{display:grid;grid-template-columns:repeat(auto-fit,minmax(44px,1fr));
+    align-items:center;height:auto;min-height:var(--topbar-h);
+    padding-top:6px;padding-bottom:6px}
+  #topbar > div:nth-child(2){grid-column:span 2;min-width:0}
+  #topbar .spacer{display:none}
 }
 </style>
 </head>
@@ -2022,7 +2088,7 @@ body.dv-rzing .dv-rz{opacity:1;color:var(--primary)}
 <aside id="sidebar" data-page-node-id="mOHG7ZovWQTFY89nDh3RpA">
   <div class="sb-logo" data-page-node-id="CItXgwA9E43rFqjh1jkPjK">
     <div class="mark" data-page-node-id="UZtmztULGLZ5gKgPjaSoN0"><svg width="28" height="28" viewBox="0 0 512 512" aria-hidden="true"><defs><linearGradient id="sbMarkBg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5b86d6"/><stop offset="1" stop-color="#3d8f89"/></linearGradient></defs><rect width="512" height="512" rx="116" fill="url(#sbMarkBg)"/><path d="M144 100 H252 L310 158 V322 A26 26 0 0 1 284 348 H144 A26 26 0 0 1 118 322 V126 A26 26 0 0 1 144 100 Z" fill="#ffffff"/><path d="M252 100 L310 158 L252 158 Z" fill="#cfe0f7"/><rect x="146" y="196" width="136" height="18" rx="9" fill="#d7e2f3"/><rect x="146" y="236" width="136" height="18" rx="9" fill="#d7e2f3"/><rect x="146" y="276" width="90" height="18" rx="9" fill="#d7e2f3"/><circle cx="396" cy="390" r="76" fill="#ffffff"/><path d="M362 390 L386 414 L430 362" fill="none" stroke="#3d8a5c" stroke-width="23" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-    <div class="sb-name" data-page-node-id="qJfiMtI7jd53xaMaRs2OfN"><div class="t" data-page-node-id="vxtJJYpJxW7saZcUyfaE3M" title="双击可重命名">订单追踪台</div><div class="s" data-page-node-id="ufakbTeCG3rPiVsiEX5UML">v1.4.0</div></div>
+    <div class="sb-name" data-page-node-id="qJfiMtI7jd53xaMaRs2OfN"><div class="t" data-page-node-id="vxtJJYpJxW7saZcUyfaE3M" title="双击可重命名">订单追踪台</div><div class="s" data-page-node-id="ufakbTeCG3rPiVsiEX5UML">v1.4.1</div></div>
     <button class="sb-ren" id="btnRename" type="button" title="重命名工作台" aria-label="重命名工作台">✎</button>
   </div>
   <nav class="sb-nav" id="sbNav" data-page-node-id="y58haCHcKQU8HJVk0gDYWN"></nav>
@@ -4606,7 +4672,7 @@ const Chart = (() => {
    —— 单一事实来源：界面标题 / 侧栏 / 「系统版本」页全部取自 APP_VERSION。
    新增一个版本时只需改两处：APP_VERSION / APP_UPDATED，并在 CHANGELOG 头部插一条。
    ========================================================================== */
-const APP_VERSION = 'v1.4.0';
+const APP_VERSION = 'v1.4.1';
 const APP_UPDATED = '2026-11-12';
 let   APP_NAME    = '订单追踪台';
 /* v0.54：工作台名支持用户重命名 —— APP_NAME_DEFAULT 是出厂默认，真实名从 localStorage 读。
@@ -4634,7 +4700,14 @@ APP_NAME = nameRead();   /* 启动即用记住的名字（没改过 / 读不到 
 const APP_TAG     = '出口业务 · 世界地图（气泡 / 数据柱双形态）';
 
 const CHANGELOG = [
-  { v:'v1.4.0', date:'2026-11-12', cat:'iOS / 触屏体验层：安全区四边、44pt 触控目标、输入框 16px 防缩放、主屏图标与抽屉下滑关闭', cur:true, items:[
+  { v:'v1.4.1', date:'2026-11-12', cat:'手机端按钮行统一节奏：等宽列网格、8px 定距、44px 定高、超窄顶栏自动换行', cur:true, items:[
+    '★ <b>按钮行统一节奏</b>：手机端顶栏 / 筛选栏 / 工具条统一 8px 间距与 44px 控件高；分段控件、内联下拉、复选与菜单按钮不再忽高忽低（修前实测 20/34/44/52/65/119 六档）。',
+    '· <b>等宽列网格</b>：≤560px 用 `repeat(auto-fit,minmax(112px,1fr))` 按屏宽自动分列（320→2 列 / 390→3 列 / 560→4 列），同行等宽、整行换行、尾行按列左对齐；561–920px 仍保留原有 flex 节奏，不把平板工具条摊成多行。',
+    '· <b>不再被 spacer 推挤或横向裁切</b>：工具条 spacer 与筛选栏 `margin-left:auto` 归零（修前造出 164~252px 空隙）；561–920px 筛选栏由 nowrap 横滑改回换行；超宽分段控件自己横向滚、按钮永不折行。',
+    '· <b>超窄屏顶栏</b>：≤400px 主按钮收成图标、间距收 6px；≤360px 改等宽列两行，320px 下「新增订单」不再出界。桌面 34px 基线、所有 DOM / 文案 / 事件一行未动。',
+    '· <b>验证</b>：tests/102 专项 41/41；Edge CDP 12 档视口 + 全站 15 页 + 6 项按钮行为 134/134；桌面 921px 控件高度与改前逐项一致；全量回归 0 失败。',
+  ]},
+  { v:'v1.4.0', date:'2026-11-12', cat:'iOS / 触屏体验层：安全区四边、44pt 触控目标、输入框 16px 防缩放、主屏图标与抽屉下滑关闭', cur:false, items:[
     '★ <b>补齐 iOS 体验层</b>：新增 apple-mobile-web-app-capable / status-bar-style / apple-touch-icon；安全区变量从只有 --safe-b 扩到四边，落位到顶栏、主区、内容底部、侧栏、详情抽屉、底部冻结条与浮层 —— standalone 下不再被状态栏 / Home Indicator / 横屏刘海盖住。',
     '· <b>44×44pt 触控目标</b>：仅 ≤920px 把 --ctl-h 抬到 44px，固定 px 的按钮 / 分页 / 日历 / 回到顶部等补 min-*；桌面 34px 基线一行未动（v0.21 / v0.38 断言保持全绿）。',
     '· <b>输入框 16px 防 iOS 聚焦缩放</b>：触屏断点统一 input / select / textarea 字号 16px，横竖屏加 -webkit-text-size-adjust；不使用 maximum-scale=1，保留用户缩放能力。',
