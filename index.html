@@ -3,9 +3,13 @@
 <head data-page-node-id="tB8joMdTgw5XU4U8A6S7i2">
 <meta charset="utf-8" data-page-node-id="iTOrAHcHmC5x6FNHHjD886">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" data-page-node-id="Ja1BDKMDLVRzLRExrICqlT">
-<title>订单追踪台 · v1.3.13</title>
+<title>订单追踪台 · v1.4.0</title>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#1677FF">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="订单追踪">
+<link rel="apple-touch-icon" href="icon-192.png">
 <link rel="icon" href="icon-192.png">
 <style>
 /* ============ 扁平浅色设计系统 v0.4 ============ */
@@ -68,8 +72,12 @@
   --ease-out:cubic-bezier(.2,.8,.2,1); --ease-in-out:cubic-bezier(.4,0,.2,1);
   /* 层级 */
   --z-sidebar:70; --z-drawer:200; --z-toast:280; --z-tip:300;
-  /* 移动端安全区 */
+  /* 移动端安全区：viewport-fit=cover 后必须四边都避让 ——
+     standalone 状态栏 / 灵动岛 / Home Indicator / 横屏刘海都会盖住内容。 */
+  --safe-t:env(safe-area-inset-top,0px);
+  --safe-r:env(safe-area-inset-right,0px);
   --safe-b:env(safe-area-inset-bottom,0px);
+  --safe-l:env(safe-area-inset-left,0px);
   /* v0.31 · 数据表滚动区高度上限：列表在首屏内自成滚动区，整页不再需要滚
      v0.36：这里退化为「首帧兜底」——真实值由 fitPageH() 实测后写回元素。
      原因：各页 表头+筛选栏+KPI 的高度并不相同（orders 与 prod 共用同一个 376，
@@ -1974,6 +1982,39 @@ body.dv-rzing .dv-rz{opacity:1;color:var(--primary)}
   .kpi{grid-template-columns:1fr}
 }
 
+
+/* ---------- v1.4.0 · iOS / 触屏体验层（Apple HIG） ----------
+   只在 ≤920px 生效，桌面基础规则一行不动 —— v0.21 / v0.38 的「控件统一高 34px」
+   仍是唯一真源，历史回归断言不受影响。
+   ① 44×44pt 触控目标  ② 安全区四边落位  ③ 输入框 16px 防 iOS 聚焦缩放  ④ 横竖屏字号稳定 */
+@media(max-width:920px){
+  html{-webkit-text-size-adjust:100%}
+  /* ① 用变量抬控件高：所有 height:var(--ctl-h) 的输入 / 按钮 / 分段控件一次到位；
+     固定 px 的控件再补 min-*，不覆盖其 height，避免破坏同行基线与既有断言。 */
+  :root{--ctl-h:44px}
+  .btn.sm,.hamb,.seg button,.pg2,.calnav .btn,.pp-add,.sb-ren,.totop,
+  .dirbtn,.close,#sheet .ft>.btn,#dpane .ft>.btn,
+  #sheet .hd>.close,#dpane .hd>.close{min-height:44px}
+  .hamb,.pp-add,.totop,.calnav .btn,.pg2,.sb-ren,
+  #sheet .hd>.close,#dpane .hd>.close,.close{min-width:44px}
+  .sb-nav a,.sb-grp{min-height:44px}
+  th,td{padding-top:12px;padding-bottom:12px}
+  /* ② 安全区：顶栏（含筛选栏）避开状态栏、主区避让横屏刘海、内容底部避开 Home Indicator、
+     抽屉从状态栏下方开始、底部冻结条与浮层各自垫安全区。 */
+  header.stick{padding-top:var(--safe-t)}
+  #main{padding-left:var(--safe-l);padding-right:var(--safe-r)}
+  #page{padding-bottom:calc(40px + var(--safe-b))}
+  #sidebar{padding-top:var(--safe-t);padding-bottom:var(--safe-b)}
+  #mask.on #sheet{top:var(--safe-t)}
+  #sheet .ft,#dpane .ft{padding-bottom:calc(10px + var(--safe-b))}
+  .cfgwrap>.cfgd>.hd{padding-top:calc(11px + var(--safe-t))}
+  .cfgwrap>.cfgd>.bd{padding-bottom:calc(15px + var(--safe-b))}
+  /* ③ iOS Safari 聚焦 <16px 输入框会自动放大页面且不还原 —— 统一抬到 16px。
+     不用 maximum-scale=1：那会禁用用户缩放，违反无障碍要求。
+     !important 是因为基础样式里 .gf input(13px) / .fld 等规则特异性更高。 */
+  input:not([type=checkbox]):not([type=radio]):not([type=range]),
+  select,textarea{font-size:16px!important}
+}
 </style>
 </head>
 <body data-page-node-id="iN68ACaq0BuwCUMgsu3KFv">
@@ -1981,7 +2022,7 @@ body.dv-rzing .dv-rz{opacity:1;color:var(--primary)}
 <aside id="sidebar" data-page-node-id="mOHG7ZovWQTFY89nDh3RpA">
   <div class="sb-logo" data-page-node-id="CItXgwA9E43rFqjh1jkPjK">
     <div class="mark" data-page-node-id="UZtmztULGLZ5gKgPjaSoN0"><svg width="28" height="28" viewBox="0 0 512 512" aria-hidden="true"><defs><linearGradient id="sbMarkBg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5b86d6"/><stop offset="1" stop-color="#3d8f89"/></linearGradient></defs><rect width="512" height="512" rx="116" fill="url(#sbMarkBg)"/><path d="M144 100 H252 L310 158 V322 A26 26 0 0 1 284 348 H144 A26 26 0 0 1 118 322 V126 A26 26 0 0 1 144 100 Z" fill="#ffffff"/><path d="M252 100 L310 158 L252 158 Z" fill="#cfe0f7"/><rect x="146" y="196" width="136" height="18" rx="9" fill="#d7e2f3"/><rect x="146" y="236" width="136" height="18" rx="9" fill="#d7e2f3"/><rect x="146" y="276" width="90" height="18" rx="9" fill="#d7e2f3"/><circle cx="396" cy="390" r="76" fill="#ffffff"/><path d="M362 390 L386 414 L430 362" fill="none" stroke="#3d8a5c" stroke-width="23" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-    <div class="sb-name" data-page-node-id="qJfiMtI7jd53xaMaRs2OfN"><div class="t" data-page-node-id="vxtJJYpJxW7saZcUyfaE3M" title="双击可重命名">订单追踪台</div><div class="s" data-page-node-id="ufakbTeCG3rPiVsiEX5UML">v1.3.13</div></div>
+    <div class="sb-name" data-page-node-id="qJfiMtI7jd53xaMaRs2OfN"><div class="t" data-page-node-id="vxtJJYpJxW7saZcUyfaE3M" title="双击可重命名">订单追踪台</div><div class="s" data-page-node-id="ufakbTeCG3rPiVsiEX5UML">v1.4.0</div></div>
     <button class="sb-ren" id="btnRename" type="button" title="重命名工作台" aria-label="重命名工作台">✎</button>
   </div>
   <nav class="sb-nav" id="sbNav" data-page-node-id="y58haCHcKQU8HJVk0gDYWN"></nav>
@@ -4565,8 +4606,8 @@ const Chart = (() => {
    —— 单一事实来源：界面标题 / 侧栏 / 「系统版本」页全部取自 APP_VERSION。
    新增一个版本时只需改两处：APP_VERSION / APP_UPDATED，并在 CHANGELOG 头部插一条。
    ========================================================================== */
-const APP_VERSION = 'v1.3.13';
-const APP_UPDATED = '2026-11-04';
+const APP_VERSION = 'v1.4.0';
+const APP_UPDATED = '2026-11-12';
 let   APP_NAME    = '订单追踪台';
 /* v0.54：工作台名支持用户重命名 —— APP_NAME_DEFAULT 是出厂默认，真实名从 localStorage 读。
    ★ 用 let 而不是继续 const：改名后要能被 document.title / 侧栏 / 桌面通知 / 思源库说明
@@ -4593,7 +4634,14 @@ APP_NAME = nameRead();   /* 启动即用记住的名字（没改过 / 读不到 
 const APP_TAG     = '出口业务 · 世界地图（气泡 / 数据柱双形态）';
 
 const CHANGELOG = [
-  { v:'v1.3.13', date:'2026-11-04', cat:'客户产品库移除「成本」三态筛选下拉（全部 / 已填 / 未填成本）；成本列 / 数值 / 排序 / 表单 / 详情 / CSV / 汇总保留', cur:true, items:[
+  { v:'v1.4.0', date:'2026-11-12', cat:'iOS / 触屏体验层：安全区四边、44pt 触控目标、输入框 16px 防缩放、主屏图标与抽屉下滑关闭', cur:true, items:[
+    '★ <b>补齐 iOS 体验层</b>：新增 apple-mobile-web-app-capable / status-bar-style / apple-touch-icon；安全区变量从只有 --safe-b 扩到四边，落位到顶栏、主区、内容底部、侧栏、详情抽屉、底部冻结条与浮层 —— standalone 下不再被状态栏 / Home Indicator / 横屏刘海盖住。',
+    '· <b>44×44pt 触控目标</b>：仅 ≤920px 把 --ctl-h 抬到 44px，固定 px 的按钮 / 分页 / 日历 / 回到顶部等补 min-*；桌面 34px 基线一行未动（v0.21 / v0.38 断言保持全绿）。',
+    '· <b>输入框 16px 防 iOS 聚焦缩放</b>：触屏断点统一 input / select / textarea 字号 16px，横竖屏加 -webkit-text-size-adjust；不使用 maximum-scale=1，保留用户缩放能力。',
+    '· <b>抽屉下滑关闭</b>：单指、内容已滚到顶、起点不在输入控件、下滑 >90px 且纵向优先才关闭；passive 监听不抢 iOS 边缘返回手势；原有 × / 取消 / 点遮罩关闭路径不变。',
+    '· <b>验证</b>：tests/101 专项 50/50；Edge CDP 五档 iPhone 视口（含横屏）42/42，真实触摸下滑关闭通过；全量回归 0 失败。',
+  ]},
+  { v:'v1.3.13', date:'2026-11-04', cat:'客户产品库移除「成本」三态筛选下拉（全部 / 已填 / 未填成本）；成本列 / 数值 / 排序 / 表单 / 详情 / CSV / 汇总保留', cur:false, items:[
     '★ <b>客户产品库移除成本筛选</b>：工具栏「全部成本 / 已填成本 / 未填成本」三态下拉删除 —— 它和关键字是「与」关系、且只在客户产品库出现，体感像「一个多余的下拉」。成本列、数值、点列头排序、表单 / 详情、CSV 导入导出、汇总栏「未填成本 N」全部保留。',
     '· <b>配套清理</b>：移除 PROD_COSTF / PROD_COSTF_OPTS 状态与绑定、prodRows 里的三态筛选分支、空态提示的成本筛选文案；帮助文案改为只保留「点列头可按成本排序（未填的恒排最后）」。',
     '· <b>回归护城河</b>：tests/95 删除 D 段「三态筛选」断言并顺延段字母；tests/61 / 62 同步验证；全量 79 套件 0 FAIL。',
@@ -14293,6 +14341,39 @@ function closeSheet(){
   const el = $('#sheet'); if(el) el.classList.remove('wide');
 }
 $('#mask').onclick = e => { if(e.target.id === 'mask') closeSheet(); };
+/* v1.4.0 · iOS 抽屉下滑关闭（HIG：模态必须有可取消手势）。
+   守卫：单指、抽屉处于 overlay 全屏态、内容已滚到顶、起点不在输入控件 / 拖宽把手上；
+   下滑 >90px 且纵向位移 >1.2×横向才关闭；横滑直接放弃，不 preventDefault，
+   因此不干扰 iOS 屏幕左边缘的系统返回手势，也不影响表单内滚动。 */
+function bindSheetSwipeDown(){
+  const sh = $('#sheet'); if(!sh || sh.dataset.swipeBound) return;
+  sh.dataset.swipeBound = '1';
+  let x0 = 0, y0 = 0, tracking = false, moved = false;
+  sh.addEventListener('touchstart', e => {
+    if(e.touches.length !== 1 || !$('#mask').classList.contains('on')) return;
+    const tag = ((e.target && e.target.tagName) || '').toLowerCase();
+    if(tag === 'input' || tag === 'textarea' || tag === 'select') return;
+    if(e.target && e.target.closest && e.target.closest('.dz')) return;
+    if(sh.scrollTop > 2) return;
+    const bd = sh.querySelector('.bd'); if(bd && bd.scrollTop > 2) return;
+    x0 = e.touches[0].clientX; y0 = e.touches[0].clientY;
+    tracking = true; moved = false;
+  }, {passive:true});
+  sh.addEventListener('touchmove', e => {
+    if(!tracking || e.touches.length !== 1) return;
+    const dx = e.touches[0].clientX - x0, dy = e.touches[0].clientY - y0;
+    if(Math.abs(dx) > 12 && Math.abs(dx) > Math.abs(dy)){ tracking = false; return; }
+    if(dy > 8 && dy > Math.abs(dx) * 1.2) moved = true;
+  }, {passive:true});
+  sh.addEventListener('touchend', e => {
+    if(!tracking) return;
+    tracking = false;
+    if(!moved || !e.changedTouches || !e.changedTouches.length) return;
+    const dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0;
+    if(dy > 90 && dy > Math.abs(dx) * 1.2) closeSheet();
+  }, {passive:true});
+}
+bindSheetSwipeDown();
 function sheetMode(){ const main = document.getElementById('main'); if(main && main.classList.contains('split')) return 'split'; return ($('#mask') && $('#mask').classList.contains('on')) ? 'overlay' : null; }
 function sheetOpen(){ return sheetMode() !== null; }
 function sheetEl(){ const m = sheetMode(); if(m === 'split') return document.getElementById('dpane'); if(m === 'overlay') return $('#sheet'); return null; }
