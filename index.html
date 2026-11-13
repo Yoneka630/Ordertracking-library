@@ -3,7 +3,7 @@
 <head data-page-node-id="tB8joMdTgw5XU4U8A6S7i2">
 <meta charset="utf-8" data-page-node-id="iTOrAHcHmC5x6FNHHjD886">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" data-page-node-id="Ja1BDKMDLVRzLRExrICqlT">
-<title>订单追踪台 · v1.4.3</title>
+<title>订单追踪台 · v1.4.8</title>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#1677FF">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -60,10 +60,10 @@
   /* v1.3.0 · 数据柱形态的 Canvas 专用色（Canvas 吃不到 var()，单独开一层 token，
      深色档整套覆盖 —— 换肤仍然只改 token，不改一行绘制代码） */
   --cv-sea-1:#FFFFFF; --cv-sea-2:#F3F8FF; --cv-bar-shadow:#2A4C86;
-  --sw:224px; --topbar-h:52px; --ctl-h:34px;
+  --sw:224px; --topbar-h:52px; --ctl-h:32px;
   /* v1.0.4 · 容器统一刻度：卡片 / 筛选面板 / 看板卡 / 工具条共用同一套内距与间隙，
      改这里一处即可让全站容器的「尺寸 · 间距 · 描边 · 圆角 · 底色」保持同步 */
-  --card-pad:16px; --card-gap:12px; --card-hd-h:48px;
+  --card-pad:16px; --card-gap:16px; --card-hd-h:48px; --pad-y:16px; --btn-fs:12px; --btn-gap:6px;
   /* 类型刻度（对齐设计规范 30/20/16/14/12/11）：字号只从这七级里取，勿再散写 */
   --fs-display:30px; --fs-h1:20px; --fs-h2:16px; --fs-body:14px;
   --fs-sm:12px; --fs-xs:11px; --fs-tab:11px;
@@ -527,8 +527,7 @@ header.stick{position:sticky;top:0;z-index:60;background:var(--panel);border-bot
 .gf-more-btn .ar{display:inline-block;transition:transform .18s;color:var(--faint)}
 #gfilter.more-open .gf-more-btn .ar{transform:rotate(180deg)}
 #gfilter:not(.more-open) #fPreset button[data-p="quarter"],
-#gfilter:not(.more-open) #fPreset button[data-p="last12"],
-#gfilter:not(.more-open) #fPreset button[data-p="custom"]{display:none}
+#gfilter:not(.more-open) #fPreset button[data-p="last12"]{display:none}
 .gf-more{display:none;flex-basis:100%;order:9;gap:8px;flex-wrap:wrap;align-items:flex-end;
   padding-top:9px;margin-top:3px;border-top:1px dashed var(--line)}
 #gfilter.more-open .gf-more{display:flex}
@@ -1156,7 +1155,7 @@ tbody tr.sel,tbody tr.sel:hover{background:var(--primary-soft)}
   #sidebar.open{transform:none;box-shadow:0 0 0 100vw rgba(15,23,42,.34)}
   #main{margin-left:0}
   .hamb{display:block}
-  #page{padding:12px 12px 40px}
+  #page{padding:var(--pad-y) 12px 40px}
   .c2{grid-template-columns:1fr}
   #mask{--sheet-w:100%}
   #sheet{border-radius:0}
@@ -1181,7 +1180,7 @@ tbody tr.sel,tbody tr.sel:hover{background:var(--primary-soft)}
   /* 「重新载入」文字最长、又在窄屏最不常用（关掉重开一样刷新）→ 收成一个 ↻ 图标。
      用 font-size:0 把文字藏掉、靠 ::before 出声，按钮仍是同一个节点（aria/点击不受影响）。 */
   #topbar #btnRefresh{font-size:0;padding:4px 9px}
-  #topbar #btnRefresh::before{content:"↻";font-size:14px;line-height:1}
+  #topbar #btnRefresh::before{content:none}
   #topbar .sub{display:none}
 }
 
@@ -1436,6 +1435,11 @@ code{background:var(--fill-2);border-radius:5px;padding:1px 6px}
 .nlcand{display:flex;gap:6px;flex-wrap:wrap;width:100%}
 .nlpick{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding-top:6px}
 .nlmini{font-size:11.5px;color:var(--faint);width:100%;line-height:1.6}
+/* v1.4.7 · 认到多个排产单号时：输入框独占整行，下方给一行可换行的完整清单。
+   否则「已识别 N 个」会把输入框挤窄，手机 390px 里长串单号只能看到开头几个字符。 */
+.nlrow.multi #nlF_moNo{flex:1 1 100%}
+.nlrow.multi .nlok{flex:0 0 auto;white-space:nowrap}
+.nlrow.multi .nlmini{white-space:normal;overflow-wrap:anywhere}
 textarea#nlIn{width:100%;border:0;background:var(--fill-2);border-radius:var(--radius-ctl);
   padding:10px 12px;line-height:1.7;resize:vertical;min-height:76px;color:var(--text)}
 textarea#nlIn:focus{outline:none;background:var(--panel);box-shadow:0 0 0 3.5px var(--primary-soft)}
@@ -1589,7 +1593,7 @@ body.zooming{cursor:zoom-out}
   /* 日期胶囊占的位置只能从别处省：智能录入收成图标（与 btnRefresh 同一招，title 已带说明），
      否则 375px 下标题容器会被压到 0 宽、一个字都看不见 */
   #topbar #btnAssist{font-size:0;padding:4px 9px}
-  #topbar #btnAssist::before{content:"✨";font-size:13px;line-height:1}
+  #topbar #btnAssist::before{content:none}
   #topbar #btnNew{padding:4px 10px;font-size:12px}
 }
 /* 375px（iPhone SE 级别）标题只剩 75px，19px 四个字差一点点 → 降一档字号，保住完整页名 */
@@ -1723,6 +1727,59 @@ body.zooming{cursor:zoom-out}
 .qan-chip.on{background:var(--primary-soft);border-color:var(--primary);
   color:var(--primary-700);font-weight:600}
 
+/* ==========================================================================
+   v1.4.5 · 按钮三级形态 + 4px 统一圆角 + 线性图标
+   设计：主=纯色面状 / 次=一圈描边线状 / 最轻=无边框无底色文字按钮。
+   ★ --radius-ctl(8px) 仍是输入框 / 容器圆角的唯一真源，这里只新增 --btn-radius，
+     不改任何基础 token；高度 / 内距 / 布局一行不动，移动端媒体块仍在其后生效。
+   ========================================================================== */
+:root{
+  --btn-radius:4px;
+  --btn-solid:var(--primary);          /* 主操作：全站统一一个纯色（默认 #1677FF，跟随主题色） */
+  --btn-solid-fg:var(--on-accent);
+  --btn-outline:var(--line);           /* 次操作：一圈描边 */
+  --btn-ghost-fg:var(--muted);
+}
+/* ① 所有可点击控件统一 4px 圆角（含 999px 胶囊 / 圆形关闭钮） */
+.btn,.btn.sm,.btn.lg,.btn.xs,.seg,.seg button,.qan-chip,.chip,.qbtn,.pg2,
+.pp-add,.close,.hamb,.msel-btn,.lay-mini,.geo-bar-ctrl button,
+.menu .pop button,.calnav .btn,.gf-more-btn,.sb-ren,.totop,.dirbtn,
+.c-del,.c-add,.tbtn,.cp-btn,.qan-st-btn,.sb-toggle{border-radius:var(--btn-radius)}
+/* ② 主操作：纯色面状，白字，不用渐变 / 阴影 / 多色 */
+.btn.primary{background:var(--btn-solid);border:1px solid var(--btn-solid);
+  color:var(--btn-solid-fg);font-weight:600}
+.btn.primary:hover{background:var(--btn-solid);border-color:var(--btn-solid);
+  color:var(--btn-solid-fg);filter:brightness(1.08)}
+/* ③ 次操作：线状，透明底 + 一圈描边 */
+.btn{background:transparent;border:1px solid var(--btn-outline);color:var(--text)}
+.btn:hover{background:transparent;border-color:var(--btn-solid);color:var(--btn-solid)}
+.btn.danger{background:transparent;border:1px solid var(--red-600);color:var(--red-600)}
+.btn.danger:hover{background:transparent;border-color:var(--red);color:var(--red-600)}
+.seg{background:transparent}
+.seg button{background:transparent}
+.seg button.on,.seg button.on:hover{background:var(--primary-soft);color:var(--primary-700);
+  box-shadow:none;border:0}
+.qan-chip,.chip,.qbtn,.pg2,.msel-btn{background:transparent;border:1px solid var(--btn-outline)}
+.qan-chip:hover,.chip:hover,.qbtn:hover,.pg2:hover:not(:disabled){border-color:var(--btn-solid);color:var(--text)}
+.pg2.gap{border:0;background:transparent}
+/* ④ 最轻操作：文字按钮，无边框、无底色、只一行 */
+.btn.text,.btn.ghost,.lay-mini,.c-del,.c-add,.close,.hamb,.sb-ren,.totop,
+.pp-add,.menu .pop button,.calnav .btn,.tbtn,.sb-toggle,.dirbtn{
+  background:transparent;border:0;color:var(--btn-ghost-fg)}
+.btn.text:hover,.btn.ghost:hover,.lay-mini:hover,.c-del:hover,.close:hover,
+.hamb:hover,.sb-ren:hover,.totop:hover,.pp-add:hover,.menu .pop button:hover{
+  background:transparent;border:0;color:var(--btn-solid)}
+.lay-mini.del:hover{background:transparent;color:var(--red-600)}
+/* ⑤ 线性图标：同一套 sprite，stroke 继承 currentColor，深浅色与主题色自适应 */
+.li-sprite{position:absolute;width:0;height:0;overflow:hidden;pointer-events:none}
+.li{width:16px;height:16px;flex:0 0 auto;display:inline-block;
+  fill:none;stroke:currentColor;stroke-width:1.7;
+  stroke-linecap:round;stroke-linejoin:round;vertical-align:-3px}
+.btn .li,.seg button .li,.close .li,.hamb .li,.lay-mini .li,.pp-add .li{width:15px;height:15px}
+.sb-nav a .ico{display:inline-flex;align-items:center;justify-content:center}
+.sb-nav a .ico .li{width:18px;height:18px;vertical-align:0}
+.sb-nav a.on .ico{color:var(--primary-700)}
+.fx-sym .li{width:16px;height:16px}
 /* ---------- ② 导航层级 ---------- */
 .sb-nav{padding:10px 10px 14px}
 /* 一级：可展开分组 —— 大字号 + 600 字重 + 主文字色 */
@@ -2095,14 +2152,13 @@ body.dv-rzing .dv-rz{opacity:1;color:var(--primary)}
   .cond .c-val .c-range{flex-direction:column;align-items:stretch;gap:8px}
   .cond .c-val .c-range .c-ri{width:100%;min-height:44px}
   .cond .c-val .c-range input{height:44px;min-height:44px}
-  #fRangeClear{min-height:44px}
 }
 /* 超窄屏顶栏：主按钮收成与「重新载入」同款的图标按钮（DOM 文本与点击逻辑不变），
    把宽度还给标题；≤360px 仍放不下时改成等宽列网格，两行按列对齐，绝不裁切。 */
 @media(max-width:400px){
   #topbar{gap:6px}
   #topbar #btnNew{font-size:0;padding:0 10px}
-  #topbar #btnNew::before{content:"+";font-size:18px;line-height:1}
+  #topbar #btnNew::before{content:none}
 }
 @media(max-width:360px){
   #topbar{display:grid;grid-template-columns:repeat(auto-fit,minmax(44px,1fr));
@@ -2132,28 +2188,94 @@ body.dv-rzing .dv-rz{opacity:1;color:var(--primary)}
   flex:0 0 16px;width:16px;height:16px;min-width:16px;max-width:16px;min-height:16px;
   margin:0;padding:0;border:0;border-radius:0;background:transparent;box-sizing:border-box;
   appearance:auto;accent-color:var(--primary)}
+
+/* ==========================================================================
+   v1.4.5 · 圆角兜底
+   这四类控件要么定义在「按钮覆盖块」之后（.sb-grp / .dv-rz），要么由更高特异性
+   规则定义（.sb-logo .sb-ren），或原本是 999px 胶囊（.geo-pill）。放在样式表末尾，
+   用同级 / 更高特异性收进同一档；只改圆角与底色，尺寸 / 布局 / 事件一行不动。
+   注意：CSS 注释里绝不能出现样式标签的闭合字面串，HTML 解析器会提前收掉整个样式块。
+   ========================================================================== */
+.sb-logo .sb-ren,.sb-grp,.dv-rz,.geo-pill{border-radius:var(--btn-radius)}
+.sb-logo .sb-ren{background:transparent;border:0;color:var(--btn-ghost-fg)}
+.sb-logo .sb-ren:hover{background:transparent;color:var(--btn-solid)}
+.geo-pill{background:transparent;border:1px solid var(--btn-outline)}
+.geo-pill:hover{border-color:var(--btn-solid);color:var(--text)}
+.geo-pill.on{background:var(--primary-soft);border-color:var(--primary);color:var(--primary-700)}
+/* ==========================================================================
+   v1.4.6 · 按钮密度规范：32px 高 / 12px 字 / 6px 间距 / 卡片上下 16px
+   真源在 :root：--ctl-h(桌面 32 / 窄屏 44) · --btn-fs:12px · --btn-gap:6px · --pad-y:16px。
+   ① 所有交互控件走 var(--ctl-h)：窄屏 44px 触控、iOS 安全区与输入框 16px 防缩放自动保留；
+      超窄屏 #topbar #btn* 的 font-size:0 是纯图标态（特异性更高），也天然保留。
+   ② 用 :is() 取参数最高特异性，一次压过基础层 / iOS 皮肤 / 设计规范层 / 各媒体块里
+      散落的 height、font-size、padding 与 gap；原规则一行不删，DOM 与事件一行不动。
+   ③ .dv-rz 是分屏拖拽把手（布局控件），不纳入按钮集合；抽屉与配置面板的安全区
+      padding 也不在本块内，避免把 calc(基准 + safe-area) 覆盖掉。
+   ========================================================================== */
+/* ① 所有交互控件：同高、同字号、上下内距归零（左右内距保持原值） */
+:is(.btn,.btn.sm,.btn.lg,.btn.xs,.seg button,.qan-chip,.chip,.qbtn,.pg2,
+.pp-add,.close,.hamb,.msel-btn,.lay-mini,.geo-bar-ctrl button,.menu .pop button,
+.calnav .btn,.gf-more-btn,.sb-ren,.sb-logo .sb-ren,.totop,.dirbtn,.c-del,.c-add,
+.tbtn,.cp-btn,.qan-st-btn,.sb-toggle,.sb-grp,.geo-pill,.geo-scope button,
+.geo-mode button,.geo-bar-fit,.fp-add,.fp-more-btn,#topbar .btn.sm){
+  height:var(--ctl-h);font-size:var(--btn-fs);
+  padding-top:0;padding-bottom:0;box-sizing:border-box}
+/* ② 分段容器：由按钮撑高，避免固定高 + 3px 内距把 32px 按钮裁掉；窄屏仍可换行 */
+:is(.seg,.qan .card .hd .seg,.calbar .seg,#gfilter .seg){
+  height:auto;padding:0;column-gap:var(--btn-gap);box-sizing:border-box}
+/* ③ 同一排按钮的间距统一 6px（列方向），按钮内图标与文字间距也统一 */
+:is(#topbar,#gfilter .inner,.toolbar,.card > .hd,.fp-hd,.geo-zones,.gf-tools,.btnrow){
+  column-gap:var(--btn-gap)}
+:is(.btn,.qan-chip,.chip,.qbtn,.pg2,.geo-pill){gap:var(--btn-gap)}
+.ops .btn.xs{margin-right:var(--btn-gap)}
+/* ④ 卡片及分区：上下内距统一 16px；.bd.np 与抽屉安全区规则特异性更高，原样保留 */
+:is(.card > .hd,.card > .bd,.card .hd,.card .bd,.kpi .card,.qan-kpi .card,
+.fpanel,.mcard,.fp-hd){
+  padding-top:var(--pad-y);padding-bottom:var(--pad-y);box-sizing:border-box}
+/* ⑤ 区块之间的垂直间距统一 16px（卡片网格 / 工具条 / 筛选面板） */
+:is(.grid,.toolbar,.fpanel,.hint,.pgallery){margin-bottom:var(--card-gap)}
+
+/* ==========================================================================
+   v1.4.8 · 产品详情「上一条 / 下一条」快速浏览（客户产品库 / 供应商产品库共用）
+   ① 位置 —— 与「编辑 / 删除」同排，四个按钮都是 .ft 的**直接子元素**：
+      高度 / 圆角 / 字号自动继承 v1.4.5 与 v1.4.6 的既有规范，新按钮不必重写尺寸；
+      写成 <div> 包一层反而拿不到 `#sheet .ft > .btn{min-height:34px}`，同排会不等高。
+   ② 计数器 —— tabular-nums：3 / 12 → 4 / 12 时数字宽度不跳，按钮不会左右抖。
+   ③ 窄屏只留图标 —— 文字在 .pnav-t 里直接 display:none；不用「font-size:0 + ::before
+      补字符」那套（会与内联 SVG 叠成双图标，v1.4.6 踩过），aria-label 仍在。
+   ④ 返回定位 —— 当前行闪一下品牌浅底再淡出；reduced-motion 的降级由全局规则统一兜住。
+   ========================================================================== */
+.pnav-n{font-size:12px;color:var(--muted);white-space:nowrap;flex:none;
+  font-variant-numeric:tabular-nums;padding:0 2px;user-select:none}
+.pnav-n.is-off{color:var(--faint)}
+.flipx{transform:scaleX(-1)}
+@keyframes pnavhl{from{background:var(--primary-soft)}to{background:transparent}}
+tr.pnav-hl{animation:pnavhl 1.2s ease-out}
+@media(max-width:560px){.pnav-t{display:none}}
 </style>
 </head>
 <body data-page-node-id="iN68ACaq0BuwCUMgsu3KFv">
+<svg class="li-sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><defs><symbol id="li-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></symbol><symbol id="li-bell" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 6-2 7-2 9h16c0-2-2-3-2-9"/><path d="M10 20a2 2 0 0 0 4 0"/></symbol><symbol id="li-sparkles" viewBox="0 0 24 24"><path d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6z"/><path d="M18 15l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z"/></symbol><symbol id="li-filetext" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></symbol><symbol id="li-factory" viewBox="0 0 24 24"><path d="M3 21V9l6 4V9l6 4V5h6v16z"/><path d="M8 17h1M14 17h1"/></symbol><symbol id="li-wallet" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/><circle cx="17" cy="15" r="1.2"/></symbol><symbol id="li-building" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="1"/><path d="M9 7h2M13 7h2M9 11h2M13 11h2M10 21v-4h4v4"/></symbol><symbol id="li-box" viewBox="0 0 24 24"><path d="M3 7l9-4 9 4v10l-9 4-9-4z"/><path d="M3 7l9 4 9-4M12 11v10"/></symbol><symbol id="li-truck" viewBox="0 0 24 24"><path d="M3 6h11v10H3zM14 10h4l3 3v3h-7"/><circle cx="7" cy="18" r="1.8"/><circle cx="18" cy="18" r="1.8"/></symbol><symbol id="li-tag" viewBox="0 0 24 24"><path d="M20 12l-8 8-9-9V3h8z"/><circle cx="7.5" cy="7.5" r="1.2"/></symbol><symbol id="li-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></symbol><symbol id="li-database" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v7c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12v7c0 1.7 3.6 3 8 3s8-1.3 8-3v-7"/></symbol><symbol id="li-cloud" viewBox="0 0 24 24"><path d="M7 18h10a4 4 0 0 0 .6-8A6 6 0 0 0 6 9a4.5 4.5 0 0 0 1 9z"/><path d="M12 11v7M9 15l3 3 3-3"/></symbol><symbol id="li-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l4 2"/><path d="M3 12a9 9 0 0 1 2.6-6.4"/></symbol><symbol id="li-bookmark" viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4-6 4z"/></symbol><symbol id="li-edit" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M14 6l4 4"/></symbol><symbol id="li-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol><symbol id="li-refresh" viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 6"/><path d="M20 5v6h-6"/></symbol><symbol id="li-up" viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></symbol><symbol id="li-down" viewBox="0 0 24 24"><path d="M12 5v14M6 13l6 6 6-6"/></symbol><symbol id="li-left" viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6"/></symbol><symbol id="li-chevdown" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol><symbol id="li-chevup" viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></symbol><symbol id="li-chevleft" viewBox="0 0 24 24"><path d="M11 6l-6 6 6 6M18 6l-6 6 6 6"/></symbol><symbol id="li-caretdown" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5"/></symbol><symbol id="li-caretup" viewBox="0 0 24 24"><path d="M7 14l5-5 5 5"/></symbol><symbol id="li-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol><symbol id="li-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol><symbol id="li-settings" viewBox="0 0 24 24"><path d="M4 7h9M18 7h2M4 17h4M13 17h7"/><circle cx="15.5" cy="7" r="2"/><circle cx="10.5" cy="17" r="2"/></symbol><symbol id="li-reset" viewBox="0 0 24 24"><path d="M4 11a8 8 0 1 1 2.3 6"/><path d="M4 5v6h6"/></symbol><symbol id="li-download" viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M4 20h16"/></symbol><symbol id="li-upload" viewBox="0 0 24 24"><path d="M12 17V5M7 10l5-5 5 5M4 20h16"/></symbol><symbol id="li-pin" viewBox="0 0 24 24"><path d="M9 3h6l-1 6 4 4H6l4-4z"/><path d="M12 13v8"/></symbol><symbol id="li-more" viewBox="0 0 24 24"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></symbol><symbol id="li-exchange" viewBox="0 0 24 24"><path d="M4 8h14l-3-3M20 16H6l3 3"/></symbol><symbol id="li-check" viewBox="0 0 24 24"><path d="M5 12l4 4L19 6"/></symbol><symbol id="li-warn" viewBox="0 0 24 24"><path d="M12 3l9 17H3z"/><path d="M12 9v5M12 17h.01"/></symbol><symbol id="li-search" viewBox="0 0 24 24"><circle cx="10" cy="10" r="6"/><path d="M15 15l5 5"/></symbol><symbol id="li-trash" viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 14h10l1-14"/></symbol></defs></svg>
+
 
 <aside id="sidebar" data-page-node-id="mOHG7ZovWQTFY89nDh3RpA">
   <div class="sb-logo" data-page-node-id="CItXgwA9E43rFqjh1jkPjK">
     <div class="mark" data-page-node-id="UZtmztULGLZ5gKgPjaSoN0"><svg width="28" height="28" viewBox="0 0 512 512" aria-hidden="true"><defs><linearGradient id="sbMarkBg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5b86d6"/><stop offset="1" stop-color="#3d8f89"/></linearGradient></defs><rect width="512" height="512" rx="116" fill="url(#sbMarkBg)"/><path d="M144 100 H252 L310 158 V322 A26 26 0 0 1 284 348 H144 A26 26 0 0 1 118 322 V126 A26 26 0 0 1 144 100 Z" fill="#ffffff"/><path d="M252 100 L310 158 L252 158 Z" fill="#cfe0f7"/><rect x="146" y="196" width="136" height="18" rx="9" fill="#d7e2f3"/><rect x="146" y="236" width="136" height="18" rx="9" fill="#d7e2f3"/><rect x="146" y="276" width="90" height="18" rx="9" fill="#d7e2f3"/><circle cx="396" cy="390" r="76" fill="#ffffff"/><path d="M362 390 L386 414 L430 362" fill="none" stroke="#3d8a5c" stroke-width="23" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-    <div class="sb-name" data-page-node-id="qJfiMtI7jd53xaMaRs2OfN"><div class="t" data-page-node-id="vxtJJYpJxW7saZcUyfaE3M" title="双击可重命名">订单追踪台</div><div class="s" data-page-node-id="ufakbTeCG3rPiVsiEX5UML">v1.4.3</div></div>
-    <button class="sb-ren" id="btnRename" type="button" title="重命名工作台" aria-label="重命名工作台">✎</button>
+    <div class="sb-name" data-page-node-id="qJfiMtI7jd53xaMaRs2OfN"><div class="t" data-page-node-id="vxtJJYpJxW7saZcUyfaE3M" title="双击可重命名">订单追踪台</div><div class="s" data-page-node-id="ufakbTeCG3rPiVsiEX5UML">v1.4.8</div></div>
+    <button class="sb-ren" id="btnRename" type="button" title="重命名工作台" aria-label="重命名工作台"><svg class="li" aria-hidden="true" focusable="false"><use href="#li-edit"/></svg></button>
   </div>
   <nav class="sb-nav" id="sbNav" data-page-node-id="y58haCHcKQU8HJVk0gDYWN"></nav>
   <div class="sb-foot" data-page-node-id="aYIl2JwHHZlvyCXEx9VwGG">
     <div class="ds" data-page-node-id="AcH14v7NzWiccSb55vuBLg"><span class="dot" id="dsDot" data-page-node-id="JjHrmQzVGtBgTSkxM7Bdgr"></span><span id="dsName" data-page-node-id="wKCDBV5oRXTF3aa5S13H0y">本地手工录入</span></div>
     <div id="dsMeta" data-page-node-id="YC0N0pUIHVWH7oqaLmbCYy">读写就绪</div>
-    <button class="sb-toggle" id="btnSbToggle" type="button" title="收起导航栏"><span class="tx">收起导航</span><span class="ar">«</span></button>
+    <button class="sb-toggle" id="btnSbToggle" type="button" title="收起导航栏"><span class="tx">收起导航</span><span class="ar"><svg class="li" aria-hidden="true" focusable="false"><use href="#li-chevleft"/></svg></span></button>
   </div>
 </aside>
 
 <div id="main" data-page-node-id="EjA7Q7kylNBgT7fOFe3tEQ">
   <header class="stick" data-page-node-id="QWxBhZRtIwv82m53GCPy4p">
     <div id="topbar" data-page-node-id="nfYgIpMIxvUYQG3eH9F8lT">
-      <button class="hamb" id="btnHam" data-page-node-id="npoBSpcMhb3WInkceHV0TM">☰</button>
+      <button class="hamb" id="btnHam" data-page-node-id="npoBSpcMhb3WInkceHV0TM"><svg class="li" aria-hidden="true" focusable="false"><use href="#li-menu"/></svg></button>
       <div data-page-node-id="FAA2Rx8V40pS9ZZ6XPCklX">
         <div class="ttl" id="pgTitle" data-page-node-id="IZgMCMHMTQ1nC9rwSxOdEn">数据看板</div>
         <div class="sub" id="pgSub" data-page-node-id="TOrAYcPDfMTElajY5vXYvr">销售汇总 · 客户维度 · 全局筛选联动</div>
@@ -2182,8 +2304,8 @@ body.dv-rzing .dv-rz{opacity:1;color:var(--primary)}
       <!-- v1.0.7 · 汇率：外币金额要能折成本位币才算得出合计，比例必须让用户看得见、改得动 -->
       <div class="cp">
         <button class="btn cp-btn" id="fxBtn" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="fxPop" title="汇率：1 单位外币折合多少元人民币（合计 / 看板按它折算）">
-          <!-- 小屏 .cp-lb 会被隐藏，留一个「¥⇄」符号位，按钮不会变成空壳 -->
-          <span class="fx-sym" aria-hidden="true">¥⇄</span><span class="cp-lb">汇率</span>
+          <!-- 小屏 .cp-lb 会被隐藏，留一个「<svg class="li" aria-hidden="true" focusable="false"><use href="#li-exchange"/></svg>」符号位，按钮不会变成空壳 -->
+          <span class="fx-sym" aria-hidden="true"><svg class="li" aria-hidden="true" focusable="false"><use href="#li-exchange"/></svg></span><span class="cp-lb">汇率</span>
         </button>
         <div class="cp-pop fx" id="fxPop" role="dialog" aria-label="汇率设置" hidden>
           <div class="cp-hd"><b>汇率</b><em>1 外币 = ? 元</em></div>
@@ -2192,9 +2314,9 @@ body.dv-rzing .dv-rz{opacity:1;color:var(--primary)}
           <div class="cp-ft"><button class="btn sm" id="fxReset" type="button">恢复默认</button></div>
         </div>
       </div>
-      <button class="btn sm" id="btnRefresh" data-page-node-id="ZAPIt249tNvL5pXISUBQEr" title="从当前数据源重新读取全部数据并刷新界面（只读，不会改动数据）">↻ 重新载入</button>
-      <button class="btn" id="btnAssist" title="用一句话说清订单信息，助手解析出字段后由你确认再录入">✨ 智能录入</button>
-      <button class="btn primary" id="btnNew" data-page-node-id="BAOxRK3gBhMo7cME74ypTq">+ 新增订单</button>
+      <button class="btn sm" id="btnRefresh" data-page-node-id="ZAPIt249tNvL5pXISUBQEr" title="从当前数据源重新读取全部数据并刷新界面（只读，不会改动数据）"><svg class="li" aria-hidden="true" focusable="false"><use href="#li-refresh"/></svg> 重新载入</button>
+      <button class="btn" id="btnAssist" title="用一句话说清订单信息，助手解析出字段后由你确认再录入"><svg class="li" aria-hidden="true" focusable="false"><use href="#li-sparkles"/></svg> 智能录入</button>
+      <button class="btn primary" id="btnNew" data-page-node-id="BAOxRK3gBhMo7cME74ypTq"><svg class="li" aria-hidden="true" focusable="false"><use href="#li-plus"/></svg> 新增订单</button>
     </div>
     <div id="gfilter" data-page-node-id="GDqDx6GZo8b6mKJq5wF30F"></div>
   </header>
@@ -2208,7 +2330,7 @@ body.dv-rzing .dv-rz{opacity:1;color:var(--primary)}
 <div id="mask" data-page-node-id="EdTlBGkuussXSSlHTYOkSZ"><div id="sheet" data-page-node-id="9lx4SITxWd7T5NWlcwqbb3"></div></div>
 <div class="toast" id="toast" data-page-node-id="DwNEHegNpdW5mggeJ6IFpj"></div>
 <div id="tip" data-page-node-id="Ngn3HCqRE9r0WgyMG0C2jt"></div>
-<button class="totop" id="toTop" type="button" title="回到顶部" aria-label="回到顶部">↑</button>
+<button class="totop" id="toTop" type="button" title="回到顶部" aria-label="回到顶部"><svg class="li" aria-hidden="true" focusable="false"><use href="#li-up"/></svg></button>
 
 <script>
 /* ==========================================================================
@@ -3601,8 +3723,8 @@ function blankFilter(){
   return {
     /* v0.23 的多选维度字段：新 UI 不再写它们，但 filteredOrders 仍读取 ——
        老 API（setOrdFCust / setOrdFPay…）与历史回归脚本继续可用。 */
-    ownerId: [], customerId: [], status: [], pay: [], prod: [], risk: [],
-    quick: '', basis:'sign', preset:'all', from:'', to:'', keyword:'',
+    customerId: [], status: [], pay: [], prod: [], risk: [],
+    quick: '', preset:'all', from:'', to:'', keyword:'',
     /* v0.24：条件行筛选（新 UI 的唯一出口）。[{ field, op, vals, join }] */
     conds: []
   };
@@ -3760,7 +3882,7 @@ function mselHTML(id, cur, opts, ph, ci, searchable){
   const srch = searchable
     ? `<input class="mp-search" placeholder="搜索…">` : '';
   return `<div class="msel${_openMsel === id ? ' open' : ''}" id="${id}"${attr}>
-    <button type="button" class="msel-btn${L.length ? ' on' : ''}"><span class="msel-t">${esc(label)}</span><i>▾</i></button>
+    <button type="button" class="msel-btn${L.length ? ' on' : ''}"><span class="msel-t">${esc(label)}</span><i><svg class="li" aria-hidden="true" focusable="false"><use href="#li-chevdown"/></svg></i></button>
     <div class="msel-pop">${srch}
       ${opts.map(o => `<label><input type="checkbox" value="${esc(o[0])}"${L.indexOf(o[0]) >= 0 ? ' checked' : ''}> ${esc(o[1])}</label>`).join('')}
     </div></div>`;
@@ -3845,7 +3967,7 @@ function condRowHTML(st, scope, c, idx){
   }
   return `<div class="cond" data-ci="${idx}">${joinSel}${fieldSel}${opSel}
     <div class="c-val">${valHtml}</div>
-    <button type="button" class="c-del" data-ci="${idx}" title="删除这个条件">×</button></div>`;
+    <button type="button" class="c-del" data-ci="${idx}" title="删除这个条件"><svg class="li" aria-hidden="true" focusable="false"><use href="#li-close"/></svg></button></div>`;
 }
 /* 筛选面板（订单页 / 排产页共用） */
 function condPanelHTML(st, scope){
@@ -3855,7 +3977,7 @@ function condPanelHTML(st, scope){
     <div class="fp-hd"><span class="t">筛选</span>
       <span class="muted">第 2 行起可选用「且 / 或」，按顺序从左到右计算</span>
       <div class="spacer"></div>
-      <button class="btn sm" id="fpAdd" type="button">＋ 添加筛选条件</button>
+      <button class="btn sm" id="fpAdd" type="button"><svg class="li" aria-hidden="true" focusable="false"><use href="#li-plus"/></svg> 添加筛选条件</button>
       <button class="btn sm" id="fpClear" type="button">清空</button></div>
     <div class="condlist" id="condList">${rows}</div>
     ${conds.length ? '' : '<div class="fp-empty">还没有筛选条件。点右上「＋ 添加筛选条件」，例如：订单状态 是其中之一 已完结 / 已收款。</div>'}
@@ -3926,18 +4048,9 @@ function bindCondPanel(scope){
     const del = row.querySelector('.c-del'); if(del) del.onclick = () => delCond(scope, i);
     bindMsel('#cmsel' + i, L => setCond(scope, i, { vals:L }));
   });
-  /* v1.3.12：业务员 / 统计口径 / 自定义起止（原顶栏「更多筛选」折叠区）已搬进浮层，
-     随浮层一起重挂，这里统一绑定。元素不在浮层内时（不应发生）自动跳过。 */
-  const sf2 = patch => Store.setFilter(patch, scope);
-  const rangeWarn = () => { const f = scopeFilters(Store.state, scope);
-    if(rangeInvalid(f.from, f.to)) toast('开始时间不能晚于结束时间，该范围暂不生效', 2600, 'err'); };
-  const owEl = $('#fOwner'); if(owEl) bindMsel('#fOwner', L => sf2({ ownerId:L }));
-  const fb = $('#fBasis'); if(fb) fb.onchange = e => sf2({ basis:e.target.value });
-  const ff = $('#fFrom'); if(ff) ff.onchange = e => { sf2({ from:e.target.value }); rangeWarn(); };
-  const ft = $('#fTo');   if(ft) ft.onchange = e => { sf2({ to:e.target.value }); rangeWarn(); };
-  /* v1.4.2 · 清空时间：只复位起止，业务员 / 口径 / 关键字 / 条件行保持不变；
-     全量复位仍由面板「清空」(#fpClear) 与顶栏「重置」(#fReset) 走 blankFilter()。 */
-  const rc = $('#fRangeClear'); if(rc) rc.onclick = () => sf2({ from:'', to:'' });
+  /* v1.4.4：原浮层顶部的业务员 / 统计口径 / 自定义起止三组独立控件已整体退场；
+     业务员改走条件行（普通筛选项），统计口径与时间起止不再作为浮层内控件，故此处不再绑定它们。
+     条件行本身的字段 / 关系 / 值 / 删除 / 多选下拉已在上方逐行绑定。 */
 }
 /* 条件行的值输入要在重渲染后保住焦点（否则每敲一个字就失焦） */
 function snapFocus(){
@@ -4024,13 +4137,9 @@ function safeAlerts(st){ try{ return computeAlerts(st); }catch(e){ return []; } 
 
 function resolveRange(f){
   const t = today();
-  if(f.preset === 'custom'){
-    /* v1.4.2 · 起止倒置时整段不设限（浮层已红字提示），避免 filteredOrders / calcKPI /
-       回款归集等所有消费 resolveRange 的模块被一个坏区间整片筛空；只填一端按半区间。 */
-    if(rangeInvalid(f.from, f.to)) return { from:'0000-01-01', to:'9999-12-31' };
-    return { from: f.from || '0000-01-01', to: f.to || '9999-12-31' };
-  }
-  if(f.preset === 'all')    return { from: '0000-01-01', to: '9999-12-31' };
+  /* v1.4.4 · 自定义起止（fFrom/fTo）已移除，时间筛选统一走条件行的日期字段 + 「时间范围」运算符，
+     或顶栏时间预设（固定按签订日）。遗留的 preset='custom' 视为「无限制」，落到全量区间。 */
+  if(f.preset === 'all' || f.preset === 'custom')    return { from: '0000-01-01', to: '9999-12-31' };
   /* ★ 日历区间 = 整段（到期末），不是「期初…今天」。
      筛「本月交期」就是为了找出本月要交货 / 要完工的单，而交期大量落在今天之后；
      截到今天会把它们整片漏掉 —— 实测「本月」只出 1 条，自定义 9/1~9/30 才全出。
@@ -4055,10 +4164,9 @@ function filteredOrders(st, scope){
   const f = scopeFilters(st, scope), { from, to } = resolveRange(f);
   let list = st.data.orders.slice();
   /* v0.23 多维多选：同一维度内「或」，维度之间「与」；空 = 该维度不设限 */
-  const own = selList(f.ownerId), cus = selList(f.customerId);
+  const cus = selList(f.customerId);
   const sta = selList(f.status),  pay = selList(f.pay);
   const prd = selList(f.prod),    rsk = selList(f.risk);
-  if(own.length) list = list.filter(o => own.indexOf(o.ownerId) >= 0);
   if(cus.length) list = list.filter(o => cus.indexOf(o.customerId) >= 0);
   if(sta.length) list = list.filter(o => sta.indexOf(o.status) >= 0);
   if(pay.length) list = list.filter(o => ordPayKeys(o).some(k => pay.indexOf(k) >= 0));
@@ -4089,20 +4197,17 @@ function filteredOrders(st, scope){
     };
     list = list.filter(o => (o.orderNo + ' ' + cText(o.customerId) + ' ' + oText(o.ownerId) + ' ' + (o.productSummary||'')).toLowerCase().includes(k));
   }
-  if(f.basis === 'sign')     list = list.filter(o => o.signDate && o.signDate >= from && o.signDate <= to);
-  if(f.basis === 'delivery') list = list.filter(o => o.contractDelivery && o.contractDelivery >= from && o.contractDelivery <= to);
-  if(f.basis === 'pay'){
-    list = list.filter(o => orderPaidInRange(o, from, to) > 0);
-  }
+  /* v1.4.4 · 取消「统一口径」：时间预设 / 区间固定按「签订日」过滤（与原默认口径一致）；
+     切换口径 / 按交期 / 按实收的能力改为在条件行里选「合同交期 / 实际交付」字段或「时间范围」运算符。 */
+  if(from !== '0000-01-01' || to !== '9999-12-31')
+    list = list.filter(o => o.signDate && o.signDate >= from && o.signDate <= to);
   return list;
 }
 function calcKPI(st, orders){
-  const basis = st.filters.basis;
-  const { from, to } = resolveRange(st.filters);
+  /* v1.4.4 · 取消「统一口径」：实收额统一用订单实收到账额（原默认口径），不再按回款日切换 */
   /* v1.0.7 · 看板全部金额指标走本位币折算（各币种 × 汇率后相加），单币种时恒等 */
   const amount   = orders.reduce((a,b) => a + baseAmt(b.amount, b.currency), 0);
-  /* 实收额：按「回款日」口径时按回款实收日归集，其余口径直接用订单实收到账额 */
-  const recv     = orders.reduce((a,o) => a + baseAmt(basis === 'pay' ? orderPaidInRange(o, from, to) : receivedOf(o), o.currency), 0);
+  const recv     = orders.reduce((a,o) => a + baseAmt(receivedOf(o), o.currency), 0);
   const writeoff = orders.reduce((a,o) => a + baseAmt(writeOffOf(o), o.currency), 0);
   const paid     = recv + writeoff;                       // 已回款（核销口径）：实收 + 已结清手续费
   const unpaid   = Math.max(0, amount - orders.reduce((a,o) => a + baseAmt(paidTotalOf(o), o.currency), 0));
@@ -4154,7 +4259,7 @@ function dimLabelFn(st, dim){
   }[dim] || (k => k);
 }
 function aggBy(st, orders, dim, opt){
-  const basis = (opt && opt.basis) || ((st.filters && st.filters.basis) || 'sign');
+  const basis = (opt && opt.basis) || 'sign';
   const keyOf = dimKeyFn(st, dim, basis), labelOf = dimLabelFn(st, dim);
   const map = new Map();
   orders.forEach(o => {
@@ -4181,7 +4286,7 @@ function aggBy(st, orders, dim, opt){
 /* v1.0.8 · 双维度交叉聚合：主轴 × 次轴，口径与 aggBy 完全一致（本位币 + 回款折算），
    只是把「每个组合」单独存一行，供堆叠柱 / 交叉表使用。 */
 function aggBy2(st, orders, dA, dB, opt){
-  const basis = (opt && opt.basis) || ((st.filters && st.filters.basis) || 'sign');
+  const basis = (opt && opt.basis) || 'sign';
   const ka = dimKeyFn(st, dA, basis), la = dimLabelFn(st, dA);
   const kb = dimKeyFn(st, dB, basis), lb = dimLabelFn(st, dB);
   const map = new Map();
@@ -4783,8 +4888,8 @@ const Chart = (() => {
    —— 单一事实来源：界面标题 / 侧栏 / 「系统版本」页全部取自 APP_VERSION。
    新增一个版本时只需改两处：APP_VERSION / APP_UPDATED，并在 CHANGELOG 头部插一条。
    ========================================================================== */
-const APP_VERSION = 'v1.4.3';
-const APP_UPDATED = '2026-11-12';
+const APP_VERSION = 'v1.4.8';
+const APP_UPDATED = '2026-11-13';
 let   APP_NAME    = '订单追踪台';
 /* v0.54：工作台名支持用户重命名 —— APP_NAME_DEFAULT 是出厂默认，真实名从 localStorage 读。
    ★ 用 let 而不是继续 const：改名后要能被 document.title / 侧栏 / 桌面通知 / 思源库说明
@@ -4811,7 +4916,42 @@ APP_NAME = nameRead();   /* 启动即用记住的名字（没改过 / 读不到 
 const APP_TAG     = '出口业务 · 世界地图（气泡 / 数据柱双形态）';
 
 const CHANGELOG = [
-  { v:'v1.4.3', date:'2026-11-12', cat:'表单文字与填写框对齐：标签 / 控件 / 说明同一基线、间距统一', cur:true, items:[
+  { v:'v1.4.8', date:'2026-11-13', cat:'产品详情快速浏览：上一条 / 下一条 + 左右方向键', cur:true, items:[
+    '★ <b>详情内连续翻看</b>：客户产品库与供应商产品库的详情页底部新增「← 上一条 ｜ N / M ｜ 下一条 →」，按<b>当前列表顺序</b>（页内搜索 + 列头排序后的全部行）连续切换，不必退回列表再点一次。',
+    '★ <b>键盘 ← / →</b>：详情打开时左右方向键即上一条 / 下一条；焦点落在输入框、下拉、文本域或可编辑区域时自动让位，光标照常移动；看图浮层打开时方向键仍归浮层。',
+    '★ <b>返回列表自动定位</b>：关掉详情后列表不重渲染（筛选 / 排序 / 滚动位置原样保留），并把当前这条滚进视野、闪一下浅底高亮 —— 翻过十几条再关掉也不会找不到刚才那一条。',
+    '· <b>边界与异常</b>：首 / 末条按钮置灰并给出「已经是第一条 / 最后一条」提示（键盘触发时节流提示）；结果集只有一条时不摆导航；产品已被删除或取不到时给「已不可用」失败态，而不是点了没反应。',
+    '· <b>范围边界</b>：只重开详情面板，不走 Store / goto，列表列宽、分屏宽度、fitPageH 高度链一律不动；两张库没有分页，故不涉及页码状态；详情页原有布局与编辑 / 删除按钮位置不变。',
+  ]},
+  { v:'v1.4.7', date:'2026-11-13', cat:'智能录入：客户下拉选择 + 多个排产单号识别', cur:false, items:[
+    '★ <b>智能录入客户改成下拉</b>：确认卡「客户」不再只是静态文字 + 重选，库内客户全部列进 `nlF_customerId`，随时可改选且直接生效；客户名对不上时仍走候选按钮 / 「新建客户」独立按钮，<b>不自动建档</b>。',
+    '★ <b>多个排产单号一次认全</b>：顿号 / 逗号 / 分号 / 斜杠 / 空格 / 换行都当分隔，「排产单号 A，排产单号 B」「工单号 B」这类重复关键词合并去重、不再误判成歧义；改前只有顿号能认到两个。',
+    '★ <b>全文补捞裸单号</b>：原文里没带关键词的形似单号（如 `W2026110101`）也收进排产单号，同时排除订单号 / 日期 / 金额 / 数量与贸易币种缩写；确认卡显示「已识别 N 个」，可在文本框里直接删改。',
+    '· <b>范围边界</b>：确认页排产单号仍是单文本框（多个用「、」分隔），订单表单的 chips 多值控件不回退；客户下拉选项口径与订单表单一致（重名带编码）。',
+    '· <b>代价说明</b>：全文扫描口径下，没带关键词的订单号 / 规格型号也可能被收成排产单号，确认页会列出个数，请在点「确认录入」前删掉不需要的。',
+  ]},
+  { v:'v1.4.6', date:'2026-11-13', cat:'按钮密度规范：32px 高 / 12px 字 / 6px 间距 / 卡片上下 16px', cur:false, items:[
+    '★ <b>按钮高度统一 32px</b>：桌面与平板所有按钮（含 `.btn` 家族、分段、地区标签、分页、侧栏按钮）与同排输入框 / 下拉 / 分段控件一律走 `--ctl-h`；手机 ≤920px 仍保持 44px 触控与输入框 16px 防缩放，同一排内依然等高。',
+    '· <b>字号统一 12px</b>：新增 `--btn-fs`，所有交互按钮收敛到一档；超窄屏顶栏三个纯图标按钮保留 font-size:0 的图标态（文字隐藏是既有窄屏布局设计）。',
+    '· <b>间距统一 6px</b>：新增 `--btn-gap`，顶栏 / 筛选栏 / 工具条 / 分段 / 地区标签 / 卡片头的列间距与按钮内图标间距全部同一档；改前是 2 / 6 / 10px 三档。',
+    '· <b>卡片与区块上下 16px</b>：新增 `--pad-y` 并让 `--card-gap` 由 12px 升到 16px；卡片 `.hd` / `.bd`、KPI 卡、筛选面板、工具条与卡片之间的垂直留白统一，只改上下、左右内距与布局宽度不变。',
+    '· <b>范围边界</b>：`.dv-rz` 分屏拖拽把手是布局控件（20px），不纳入按钮集合；抽屉与配置面板的安全区 padding 原样保留；v1.4.5 的 4px 圆角与三级按钮形态、线性图标一律不回退。',
+  ]},
+  { v:'v1.4.5', date:'2026-11-13', cat:'按钮三级形态与线性图标：4px 统一圆角', cur:false, items:[
+    '★ <b>按钮三级形态统一</b>：主操作 = 纯色面状（全站一个品牌纯色 #1677FF + 白字，不用渐变 / 多色），次操作 = 线状（透明底 + 一圈描边），最轻操作 = 文字按钮（无边框、无底色、只一行）。',
+    '· <b>圆角统一 4px</b>：新增 `--btn-radius`，`.btn` / 分段 / 分页 / chip / 关闭 / 汉堡 / 行内图标按钮等全部收进同一档；`--radius-ctl`(8px) 仍是输入框与容器的唯一真源，基础 token 一行未动。',
+    '· <b>线性图标</b>：侧栏 15 个 emoji 与工具栏字符符号（设置 / 编辑 / 关闭 / 新增 / 下拉 / 上移下移 / 导入导出 / 刷新等）全部换成同一套内联 SVG sprite，stroke 1.7 / currentColor，深浅色与主题色自适应，零外部依赖。',
+    '· <b>零功能改动</b>：DOM 结构 / 字段名 / 事件 / 数据逻辑全部保留；`PAGES.ico` 只换值不换字段，`#sbNav a .ico` 节点仍在；移动端 44px 触控、等宽列网格与安全区规则位于本覆盖块之后，仍原样生效。',
+    '· <b>验证</b>：全量回归 84 套件 0 失败；Edge CDP 真机改前 / 改后对照（桌面 1280 + 手机 390/320），按钮圆角、三级配色、图标线性化逐项验收。',
+  ]},
+  { v:'v1.4.4', date:'2026-11-13', cat:'筛选模块精简：取消「统一口径」、业务员并入条件行', cur:false, items:[
+    '★ <b>取消「统一口径」</b>：原「更多筛选」顶部的「统计口径」下拉（签订日 / 合同交期 / 回款实收日）整体退场，时间预设与区间<b>固定按「签订日」</b>过滤（与原默认口径一致）；看板月份归集、KPI 实收额、图表副标题同步固定，不再随口径切换。',
+    '· <b>业务员不再是独立筛选入口</b>：原顶栏独立的「业务员」多选下拉移除，业务员作为<b>普通条件行字段</b>（「是其中之一」多选）并入「更多筛选」的同一条件集合，与其它订单字段共用一套选中 / 生效 / 重置逻辑，不再有专属分组或独立控件。',
+    '· <b>自定义起止移除</b>：原「更多筛选」顶部的自定义起止（开始 / 结束日期）退场，时间筛选改走顶栏「时间范围」预设（全部 / 本月 / 本季 / 本年 / 近 90 天 / 近 12 月）或条件行的「时间范围」关系（闭区间、倒置提示、与关键字 / 其它条件为「与」）。',
+    '· <b>零新增特殊逻辑</b>：除时间口径固定为签订日外，其它筛选项（关键字、6 个时间预设、15 个条件行字段）的定义、可选值与组合方式均与 v1.4.3 一致；`blankFilter` 不再携带 `ownerId` / `basis`。',
+    '· <b>验证</b>：`tests/06/10/40/41/43/49/57/76/103` 重写对齐；全量回归 84 套件 4633 断言 0 失败。',
+  ]},
+  { v:'v1.4.3', date:'2026-11-12', cat:'表单文字与填写框对齐：标签 / 控件 / 说明同一基线、间距统一', cur:false, items:[
     '★ <b>三处同类错位一次修好</b>：详情属性面板「币种 / 账期」行、更多筛选「时间范围」条件行 —— 原先说明文字被挤成两行、填写框被垂直居中下沉 15px、开始 / 结束标签浮在输入框上方 34px。',
     '· <b>对齐</b>：属性行整行垂直居中，标签 / 填写框 / 说明落在同一水平中线（实测中线差 17px → 0）；说明单行显示不折行，控件与说明间距统一 8px。',
     '· <b>尺寸与换行</b>：填写框不再 `width:100%` 独占、改按剩余宽度伸缩；条件行「开始 / 结束」标签与日期输入框同排等高，两格等宽，每格与同行下拉同为 34px（手机 44px）。放不下时说明整块换行到第二行，≤360px 仍按第一行顶部对齐。',
@@ -5560,22 +5700,22 @@ const CHANGELOG = [
 ];
 
 const PAGES = [
-  { id:'dashboard', ico:'📊', name:'数据看板', title:'数据看板', sub:'销售汇总 · 客户维度 · 全局筛选联动' },
-  { id:'alert',     ico:'🔔', name:'预警中心', title:'预警中心', sub:'交期 · 发货未收款 · 到期回款' },
-  { id:'assist',    ico:'✨', name:'智能录入', title:'智能录入助手', sub:'自然语言 → 订单字段 → 确认后录入' },
-  { id:'orders',    ico:'📋', name:'订单',     title:'订单管理', sub:'6 状态全链路进度' },
-  { id:'prod',      ico:'🏭', name:'排产',     title:'排产与交期', sub:'工单进度与交期对比' },
-  { id:'pay',       ico:'💰', name:'回款',     title:'回款中心', sub:'计划与实收登记' },
-  { id:'cust',      ico:'🏢', name:'客户',     title:'客户档案', sub:'新增 / 编辑 / 删除 · 客户维度汇总' },
+  { id:'dashboard', ico:'grid', name:'数据看板', title:'数据看板', sub:'销售汇总 · 客户维度 · 全局筛选联动' },
+  { id:'alert',     ico:'bell', name:'预警中心', title:'预警中心', sub:'交期 · 发货未收款 · 到期回款' },
+  { id:'assist',    ico:'sparkles', name:'智能录入', title:'智能录入助手', sub:'自然语言 → 订单字段 → 确认后录入' },
+  { id:'orders',    ico:'filetext', name:'订单',     title:'订单管理', sub:'6 状态全链路进度' },
+  { id:'prod',      ico:'factory', name:'排产',     title:'排产与交期', sub:'工单进度与交期对比' },
+  { id:'pay',       ico:'wallet', name:'回款',     title:'回款中心', sub:'计划与实收登记' },
+  { id:'cust',      ico:'building', name:'客户',     title:'客户档案', sub:'新增 / 编辑 / 删除 · 客户维度汇总' },
   /* v0.47 · 产品库：客户产品与供应商产品是两张独立表，各自配一份档案页作归属维度 */
-  { id:'custprod',  ico:'📦', name:'客户产品', title:'客户产品库', sub:'SKU · 双型号 · 价格 MOQ · 包装资料' },
-  { id:'suppliers', ico:'🚚', name:'供应商',   title:'供应商档案', sub:'档案 · 产品数 · 账期与交期' },
-  { id:'supprod',   ico:'🏷️', name:'供应商产品', title:'供应商产品库', sub:'SKU · 工厂型号 · 采购价 · 包装' },
-  { id:'owners',    ico:'👤', name:'业务员',   title:'业务员档案', sub:'新增 / 编辑 / 删除 · 业绩汇总' },
-  { id:'source',    ico:'🔌', name:'数据源',   title:'数据访问层', sub:'适配器与对接配置' },
-  { id:'sync',      ico:'☁️', name:'云端同步', title:'S3 多端同步', sub:'加密快照 · 增量 · 多设备一致' },
-  { id:'history',   ico:'🕘', name:'数据历史', title:'数据历史', sub:'快照回滚 · 删除回收站' },
-  { id:'version',   ico:'🔖', name:'系统版本', title:'系统版本', sub:'版本基线 · 更新日志' }
+  { id:'custprod',  ico:'box', name:'客户产品', title:'客户产品库', sub:'SKU · 双型号 · 价格 MOQ · 包装资料' },
+  { id:'suppliers', ico:'truck', name:'供应商',   title:'供应商档案', sub:'档案 · 产品数 · 账期与交期' },
+  { id:'supprod',   ico:'tag', name:'供应商产品', title:'供应商产品库', sub:'SKU · 工厂型号 · 采购价 · 包装' },
+  { id:'owners',    ico:'user', name:'业务员',   title:'业务员档案', sub:'新增 / 编辑 / 删除 · 业绩汇总' },
+  { id:'source',    ico:'database', name:'数据源',   title:'数据访问层', sub:'适配器与对接配置' },
+  { id:'sync',      ico:'cloud', name:'云端同步', title:'S3 多端同步', sub:'加密快照 · 增量 · 多设备一致' },
+  { id:'history',   ico:'clock', name:'数据历史', title:'数据历史', sub:'快照回滚 · 删除回收站' },
+  { id:'version',   ico:'bookmark', name:'系统版本', title:'系统版本', sub:'版本基线 · 更新日志' }
 ];
 const NAV_GRP = { dashboard:'分析', alert:'分析', assist:'业务', source:'系统', sync:'系统', history:'系统', version:'系统' };
 
@@ -5619,25 +5759,23 @@ function renderSidebar(st){
     const open = navOpen.has(g.key);
     const gid = 'sbg-' + g.key;
     h += `<button class="sb-grp" type="button" aria-expanded="${open}" aria-controls="${gid}">`
-       + `<span class="tx">${g.key}</span><span class="ar" aria-hidden="true">▾</span></button>`;
+       + `<span class="tx">${g.key}</span><span class="ar" aria-hidden="true"><svg class="li" aria-hidden="true" focusable="false"><use href="#li-chevdown"/></svg></span></button>`;
     h += `<div class="sb-sub" id="${gid}"${open ? '' : ' hidden'}>`;
     g.items.forEach(id => {
       const p = byId(id); if(!p) return;
+      /* v1.4.3：侧栏不再显示各页数据汇总数量（订单/客户/产品…笔/个）。
+         原因：订单页默认按「签订日」口径筛选，会把签订日为空的订单剔除，
+         导致徽标（取全量 st.data.orders.length）与列表可见数不一致、引发困惑。
+         移除后侧栏只做导航，数量口径改由各页内 KPI / 汇总栏呈现。
+         仅保留「预警」红色告警徽标（未处理告警数，属通知而非数据总量）。 */
       let cnt = '';
-      if(id === 'orders') cnt = `<span class="cnt">${st.data.orders.length}</span>`;
-      if(id === 'cust')   cnt = `<span class="cnt">${st.data.customers.length}</span>`;
-      if(id === 'custprod')  cnt = `<span class="cnt">${(st.data.custProducts||[]).length}</span>`;
-      if(id === 'suppliers') cnt = `<span class="cnt">${(st.data.suppliers||[]).length}</span>`;
-      if(id === 'supprod')   cnt = `<span class="cnt">${(st.data.supplierProducts||[]).length}</span>`;
-      if(id === 'owners') cnt = `<span class="cnt">${st.data.owners.length}</span>`;
-      if(id === 'pay')    cnt = `<span class="cnt">${st.data.orders.filter(o=>!isFullyPaid(o)).length}</span>`;
       if(id === 'alert'){
         const n = Store.alerts ? Store.alerts.filter(a => a.lvl === 'red').length : 0;
         if(n) cnt = `<span class="cnt" style="background:var(--fill-red);color:var(--on-accent)">${n}</span>`;
       }
       const on = cur === id;
       h += `<a data-pg="${id}" class="${on?'on':''}" title="${p.name}"${on?' aria-current="page"':''}>`
-         + `<span class="ico">${p.ico}</span><span class="tx">${p.name}</span>${cnt}</a>`;
+         + `<span class="ico"><svg class="li" aria-hidden="true" focusable="false"><use href="#li-${p.ico}"/></svg></span><span class="tx">${p.name}</span>${cnt}</a>`;
     });
     h += `</div>`;
   });
@@ -5713,7 +5851,7 @@ function gotoDrill(spec){
 }
 
 /* ---------- 顶栏筛选栏：挂载一次，页面重渲染不碰它 → 输入不丢焦点（仅切页时按作用域重挂） ---------- */
-const PRESETS = [['all','全部'],['month','本月'],['quarter','本季'],['year','本年'],['last90','近90天'],['last12','近12月'],['custom','自定义']];
+const PRESETS = [['all','全部'],['month','本月'],['quarter','本季'],['year','本年'],['last90','近90天'],['last12','近12月']];
 /* ★ v1.3.7 · 筛选栏只在「真的会读这份筛选」的页面出现。
    真机实测（1440×900，关键字 / 业务员 / 时间范围 三项逐个试）：只有下面五页输入后页面真的会变。
    预警中心、客户、客户产品、供应商、供应商产品、智能录入、数据源、云端同步、数据历史、系统版本
@@ -5731,7 +5869,7 @@ function gfilterHTML(st, scope){
       <input id="fKw" placeholder="订单号 / 客户 / 产品 / 业务员" value="${esc(f.keyword||'')}"></div>
     <div class="gf"><div class="gf-label">时间范围</div>
       <div class="seg" id="fPreset">${PRESETS.map(p => `<button data-p="${p[0]}" class="${f.preset===p[0]?'on':''}">${p[1]}</button>`).join('')}</div></div>
-    <button class="btn gf-more-btn" id="fMoreBtn" type="button" aria-controls="fMore"><span class="tx">更多筛选</span>${n?`<span class="cnt">${n}</span>`:''}<span class="ar">▾</span></button>
+    <button class="btn gf-more-btn" id="fMoreBtn" type="button" aria-controls="fMore"><span class="tx">更多筛选</span>${n?`<span class="cnt">${n}</span>`:''}<span class="ar"><svg class="li" aria-hidden="true" focusable="false"><use href="#li-chevdown"/></svg></span></button>
     <div class="gf-tools">
       <button class="btn" id="fReset">重置</button>
       ${scope === 'prod' ? `<span class="tag t-gray" style="height:var(--ctl-h);display:inline-flex;align-items:center;font-weight:400"
@@ -5777,24 +5915,13 @@ function pageFilter(st){
   st = st || Store.state;
   return scopeFilters(st, filterScopeOf(st.ui.page));
 }
-/* 顶栏业务员下拉只刷文字与勾选态，不重建节点（重建会让关键字输入框丢焦点） */
-function syncOwnerMsel(cur){
-  const box = $('#fOwner'); if(!box) return;
-  const L = selList(cur), opts = fOptOwner(Store.state);
-  const t = box.querySelector('.msel-t');
-  if(t) t.textContent = L.length
-    ? (L.length <= 2 ? L.map(v => selLabel(opts, v)).join('、') : ('已选 ' + L.length + ' 项'))
-    : '全部业务员';
-  const btn = box.querySelector('.msel-btn'); if(btn) btn.classList.toggle('on', L.length > 0);
-  $$('#fOwner input[type=checkbox]').forEach(cb => { cb.checked = L.indexOf(cb.value) >= 0; });
-}
 /* 把「当前页作用域」的筛选值刷回筛选栏 DOM（不重建节点 → 输入不丢焦点） */
 function syncFilterBar(){
   const f = pageFilter(Store.state);
   const kw = $('#fKw'); if(kw && document.activeElement !== kw) kw.value = f.keyword || '';
   $$('#fPreset button').forEach(x => x.classList.toggle('on', x.dataset.p === f.preset));
-  /* v1.3.12：业务员 / 口径 / 自定义起止已搬进筛选浮层，浮层随每次重渲染自刷新，
-     这里不再同步。只更新顶栏「更多筛选」按钮上的条件条数徽标。 */
+  /* v1.4.4：业务员 / 口径 / 自定义起止已整体退场，浮层只渲染条件行（随重渲染自刷新），
+     这里只同步顶栏关键字、时间预设「on」态与「更多筛选」按钮上的条件条数徽标。 */
   const mb = $('#fMoreBtn');
   if(mb){
     const n = (f.conds || []).length;
@@ -5855,7 +5982,7 @@ function custRegionOf(st, cid){
 /* 把「全部 / 跟随筛选（无日期限制）」这类天文边界收敛到**数据真实区间**，
    否则「日均单量」会拿公元 0 年当分母，趋势也会被铺成几千个空桶。 */
 function qanClampRange(st, from, to, label, follow){
-  const basis = (st.filters && st.filters.basis) || 'sign';
+  const basis = 'sign';
   const ds = (st.data.orders || []).map(o => basisDateOf(o, basis)).filter(Boolean).sort();
   let f = (from && from > '1900-01-01') ? from : (ds[0] || fmt(today()));
   let t = (to && to < '9000-01-01') ? to : (ds[ds.length - 1] || fmt(today()));
@@ -5891,7 +6018,7 @@ function qanOrders(st){
   const c = qanCfg(st), r = qanRange(st);
   let list = filteredOrders(st);
   if(!r.follow){
-    const basis = (st.filters && st.filters.basis) || 'sign';
+    const basis = 'sign';
     list = list.filter(o => { const d = basisDateOf(o, basis); return !!d && d >= r.from && d <= r.to; });
   }
   if(c.st.length) list = list.filter(o => c.st.indexOf(o.status) >= 0);
@@ -6124,8 +6251,8 @@ function qanViewHTML(st){
     .filter(g => !g.none && !g.os).map(g => g.key)).size;
   const custN = new Set(list.map(o => o.customerId || '')).size;
   const dimRows = qanDimRows(st, list, c.dim);
-  const granRows = qanBuckets(list, g.gran, r.from, r.to, (st.filters && st.filters.basis) || 'sign').rows;
-  const basisTxt = { sign:'签订日', delivery:'合同交期', pay:'回款实收日' }[(st.filters && st.filters.basis) || 'sign'] || '签订日';
+  const granRows = qanBuckets(list, g.gran, r.from, r.to, 'sign').rows;
+  const basisTxt = '签订日';
   const dimTxt = (QAN_DIMS.find(x => x[0] === c.dim) || QAN_DIMS[0])[1];
   const share = allN ? (list.length / allN * 100) : 0;
   const peak = granRows.reduce((a, b) => (valOfQ(b, c.metric) > valOfQ(a, c.metric) ? b : a), granRows[0] || { count:0, qty:0, key:'' });
@@ -6138,7 +6265,7 @@ function qanViewHTML(st){
       `<button data-r="${x[0]}" class="${c.range === x[0] ? 'on' : ''}">${x[1]}</button>`).join('')}</div>
     <div class="seg" id="qanMetric">${QAN_METRICS.map(x =>
       `<button data-m="${x[0]}" class="${c.metric === x[0] ? 'on' : ''}">${x[1]}</button>`).join('')}</div>
-    <button class="btn qan-st-btn" id="qanStBtn" type="button" aria-expanded="${stOpen ? 'true' : 'false'}" aria-controls="qanStWrap"><span class="ql">状态</span><b>${c.st.length ? '已选 ' + c.st.length : '全部'}</b><span class="ar">▾</span></button>
+    <button class="btn qan-st-btn" id="qanStBtn" type="button" aria-expanded="${stOpen ? 'true' : 'false'}" aria-controls="qanStWrap"><span class="ql">状态</span><b>${c.st.length ? '已选 ' + c.st.length : '全部'}</b><span class="ar"><svg class="li" aria-hidden="true" focusable="false"><use href="#li-chevdown"/></svg></span></button>
     <div class="spacer"></div>
     <span class="muted" style="font-size:11.5px;display:inline-flex;align-items:center;gap:4px">${r.label}${c.st.length ? ' · 已筛 ' + c.st.length + ' 个状态' : ''} · ${list.length} 笔${infoI('这一块只看<b>单量与件数</b>，与上方按金额统计的卡片互不覆盖。<br>基础数据 = 顶部筛选后的订单；这里的时间范围 / 状态下拉是<b>在它之上再收窄</b>。<br>「订单笔数」按订单条数算；「商品件数」按每单的<b>订单数量</b>字段求和（未填的不计入，也不按 0 冒充）。')}</span>
   </div>
@@ -6204,7 +6331,7 @@ function bindQanTips(root){
 function bindQan(st){
   const c = qanCfg(st), r = qanRange(st), g = qanGran(st, r);
   const list = qanOrders(st);
-  const basis = (st.filters && st.filters.basis) || 'sign';
+  const basis = 'sign';
   const granRows = qanBuckets(list, g.gran, r.from, r.to, basis).rows;
   const dimRows = qanDimRows(st, list, c.dim);
   /* 空态要分清是「时间范围挑空了」还是「筛选筛空了」——前者用户改一下范围就有，
@@ -7384,7 +7511,7 @@ function customMeta(cfg){
 function customRows(st, cfg){
   const c = customNorm(cfg || {});
   const p = c.panels[0], m = p.metrics[0];
-  const rows = aggBy(st, filteredOrders(st), p.dims[0], { basis: st.filters.basis });
+  const rows = aggBy(st, filteredOrders(st), p.dims[0], { basis: 'sign' });
   if(m === 'paid')   return rows.map(r => Object.assign({}, r, { amount: r.paid }));
   if(m === 'unpaid') return rows.map(r => Object.assign({}, r, { amount: r.unpaid }));
   if(m === 'count')  return rows.map(r => Object.assign({}, r, { amount: r.count }));
@@ -7405,7 +7532,7 @@ function fmtVal(v, unit){
 function customPanelData(st, panel){
   const p = panelNorm(panel);
   const orders = filteredOrders(st);
-  const basis = st.filters.basis;
+  const basis = 'sign';
   const cats = aggBy(st, orders, p.dims[0], { basis });
   const series = [];
   if(p.dims[1]){
@@ -7542,7 +7669,7 @@ function dashCtx(st){
   return {
     st, orders, k, c,
     pct: n => k.amount ? (n / k.amount * 100).toFixed(1) : '0.0',
-    rows: aggBy(st, orders, c.dim, { basis: st.filters.basis }),
+    rows: aggBy(st, orders, c.dim, { basis: 'sign' }),
     statusRows: statusStageRows(st, orders),
     types: c.dim === 'month'
       ? [['bar','柱状图'],['line','折线图'],['area','面积图'],['table','表格']]
@@ -7559,7 +7686,7 @@ function viewDashboard(st){
     <span class="dash-hint">数据看板 · 拖动可排序，视图可增删 · 拖卡片右下角调宽高，图会跟着重画</span>
     <div class="spacer"></div>
     <div class="lay">
-      <button class="btn" id="dashLayBtn" type="button" aria-expanded="false" aria-controls="dashLayPop" title="调整视图顺序，或增删视图">⚙ 视图布局</button>
+      <button class="btn" id="dashLayBtn" type="button" aria-expanded="false" aria-controls="dashLayPop" title="调整视图顺序，或增删视图"><svg class="li" aria-hidden="true" focusable="false"><use href="#li-settings"/></svg> 视图布局</button>
       <div class="lay-pop" id="dashLayPop" role="dialog" aria-label="视图布局" hidden>${dashLayPanelHTML(list)}</div>
     </div>
   </div>
@@ -7596,7 +7723,7 @@ function customCardHTML(item, ctx){
     <div class="hd"><h3>${esc(title)}</h3>
       <span class="muted" style="font-size:11px">${esc(m.sub)}</span>
       <div class="spacer"></div>
-      <button class="lay-mini" type="button" data-cedit="${item.id}" title="编辑这个视图" aria-label="编辑 ${esc(title)}">✎</button>
+      <button class="lay-mini" type="button" data-cedit="${item.id}" title="编辑这个视图" aria-label="编辑 ${esc(title)}"><svg class="li" aria-hidden="true" focusable="false"><use href="#li-edit"/></svg></button>
     </div>
     <div class="bd cpanels${multi ? ' multi' : ''}">${panels}</div>
   </div>`;
@@ -7640,7 +7767,7 @@ function dashBody(id, ctx){
 
   if(id === 'chartTrend'){
     return `<div class="card"><div class="hd"><h3>月度销售趋势</h3>
-        <span class="muted" style="font-size:11px">按${ {sign:'签订日',delivery:'合同交期',pay:'回款实收日'}[st.filters.basis] }归集</span></div>
+        <span class="muted" style="font-size:11px">按签订日归集</span></div>
       <div class="bd" style="padding:10px 4px 0"><div id="chartTrend"></div></div>
       <div class="legend" style="display:flex;flex-wrap:wrap;gap:9px;padding:9px 15px 13px;font-size:12px">${Chart.series()}</div></div>`;
   }
@@ -7701,7 +7828,7 @@ function panelFormHTML(p, i){
   return `<div class="cfp" data-i="${i}">
     <div class="cfp-hd"><b>面板 ${i + 1}</b>
       <span class="cfp-hint">${panelHint(p)}</span>
-      ${first ? '' : `<button class="lay-mini del" type="button" data-cfdel="${i}" title="移除这个面板" aria-label="移除面板 ${i + 1}">✕</button>`}</div>
+      ${first ? '' : `<button class="lay-mini del" type="button" data-cfdel="${i}" title="移除这个面板" aria-label="移除面板 ${i + 1}"><svg class="li" aria-hidden="true" focusable="false"><use href="#li-close"/></svg></button>`}</div>
     <div class="cfgf-row"><span class="cfgf-lb">维度</span>
       <select class="cf-dim"${first ? ' id="cfDim"' : ''}>${opt(CUSTOM_DIMS, p.dims[0])}</select>
       <select class="cf-dim2"${first ? ' id="cfDim2"' : ''} title="次维度：柱状图里拆成堆叠系列">
@@ -7769,16 +7896,16 @@ function dashLayPanelHTML(list){
     return `<li draggable="true" data-id="${x.id}"><span class="grip" aria-hidden="true">⋮⋮</span>
       <span class="nm">${nm}</span><span class="ds">${esc(v.sub || v.desc || '')}</span>
       <span class="ops">
-        <button class="lay-mini" type="button" data-act="up" title="上移" aria-label="上移 ${nm}">↑</button>
-        <button class="lay-mini" type="button" data-act="down" title="下移" aria-label="下移 ${nm}">↓</button>
-        <button class="lay-mini del" type="button" data-act="del" title="${cus ? '删除这个视图' : '从看板移除'}" aria-label="${cus ? '删除' : '移除'} ${nm}">✕</button>
+        <button class="lay-mini" type="button" data-act="up" title="上移" aria-label="上移 ${nm}"><svg class="li" aria-hidden="true" focusable="false"><use href="#li-up"/></svg></button>
+        <button class="lay-mini" type="button" data-act="down" title="下移" aria-label="下移 ${nm}"><svg class="li" aria-hidden="true" focusable="false"><use href="#li-down"/></svg></button>
+        <button class="lay-mini del" type="button" data-act="del" title="${cus ? '删除这个视图' : '从看板移除'}" aria-label="${cus ? '删除' : '移除'} ${nm}"><svg class="li" aria-hidden="true" focusable="false"><use href="#li-close"/></svg></button>
       </span>
       <span class="lay-sz">
         <span class="cfgf-lb">宽</span><select data-szw="${x.id}" aria-label="${nm} 宽度">${wSel}</select>
         <span class="cfgf-lb">高</span>
         <input data-szh="${x.id}" type="number" min="220" max="900" step="10"
           value="${sz.h || ''}" placeholder="自动" aria-label="${nm} 高度（留空 = 自动）">
-        <button class="lay-mini" type="button" data-act="szrst" title="恢复默认尺寸" aria-label="恢复 ${nm} 默认尺寸">⟲</button>
+        <button class="lay-mini" type="button" data-act="szrst" title="恢复默认尺寸" aria-label="恢复 ${nm} 默认尺寸"><svg class="li" aria-hidden="true" focusable="false"><use href="#li-reset"/></svg></button>
       </span></li>`;
   }).join('')}</ul>
   <div class="lay-sub">可用视图 · 点 ＋ 加回看板</div>
@@ -7787,18 +7914,18 @@ function dashLayPanelHTML(list){
         const v = meta(x);
         return `<li data-id="${x.id}"><span class="nm">${esc(v.title || v.name || x.id)}</span>
           <span class="ds">${esc(v.sub || v.desc || '')}</span>
-          <button class="lay-mini" type="button" data-act="add" title="加回看板" aria-label="加回 ${esc(v.title || v.name || '')}">＋</button></li>`;
+          <button class="lay-mini" type="button" data-act="add" title="加回看板" aria-label="加回 ${esc(v.title || v.name || '')}"><svg class="li" aria-hidden="true" focusable="false"><use href="#li-plus"/></svg></button></li>`;
       }).join('')}</ul>`
     : `<div class="lay-none">全部视图都在看板上了</div>`}
   <div class="lay-sub">${ed ? '编辑分析视图' : '新建分析视图'} · 多维度 / 多指标 / 多形态</div>
   <div class="cfgf" id="cfForm">
     <div id="cfPanels">${edPanels.map((p, i) => panelFormHTML(p, i)).join('')}</div>
     <div class="cfgf-btns">
-      <button class="btn sm" type="button" id="cfAddPanel">＋ 加面板</button>
+      <button class="btn sm" type="button" id="cfAddPanel"><svg class="li" aria-hidden="true" focusable="false"><use href="#li-plus"/></svg> 加面板</button>
       <span class="lay-note">最多 ${PANEL_MAX} 个面板 · 各自独立口径</span>
     </div>
     <div class="cfgf-btns">
-      <button class="btn sm primary" type="button" id="cfAdd">${ed ? '保存修改' : '＋ 添加到看板'}</button>
+      <button class="btn sm primary" type="button" id="cfAdd">${ed ? '保存修改' : '<svg class="li" aria-hidden="true" focusable="false"><use href="#li-plus"/></svg> 添加到看板'}</button>
       ${ed ? '<button class="btn sm" type="button" id="cfCancel">取消</button>' : ''}
       <span class="lay-note">按当前筛选实时计算</span>
     </div>
@@ -8012,10 +8139,10 @@ function bindDashboard(st){
   $$('#cStMetric button').forEach(x => x.onclick = () => Store.setChart({ statusMetric:x.dataset.sm }));
   $$('#cStType button').forEach(x => x.onclick = () => Store.setChart({ statusType:x.dataset.st }));
   const orders = filteredOrders(st);
-  const basis = st.filters.basis;
+  const basis = 'sign';
   /* v1.0.5：视图可被收起 → 目标节点可能不存在，逐个判空后再画 */
   const mainEl = $('#chartMain');
-  if(mainEl) Chart.render(mainEl, aggBy(st, orders, st.chart.dim, { basis }).slice(0,12), { type:st.chart.type, metric:st.chart.metric, dim:st.chart.dim });
+  if(mainEl) Chart.render(mainEl, aggBy(st, orders, st.chart.dim, { basis:'sign' }).slice(0,12), { type:st.chart.type, metric:st.chart.metric, dim:st.chart.dim });
   paintStatusChart(st);
   paintTrendChart(st);
   /* v0.63 · 订单数量分析（图表自己画，不走 Chart 引擎的金额口径） */
@@ -8056,7 +8183,7 @@ function paintTrendChart(st, root){
   const el = (root || document).querySelector('#chartTrend');
   if(!el) return;
   const orders = filteredOrders(st);
-  Chart.render(el, aggBy(st, orders, 'month', { basis:st.filters.basis }), { type:'area', metric:'both', dim:'month' });
+  Chart.render(el, aggBy(st, orders, 'month', { basis:'sign' }), { type:'area', metric:'both', dim:'month' });
 }
 /* 拖动改尺寸过程中的「实时重画」：只重画这张卡里的图，宽高按当前实测像素。
    手放开还会走 dashSetSize → dashRefresh 走一次完整路径，所以这里不必写盘。 */
@@ -8067,7 +8194,7 @@ function repaintDvCharts(dv, st){
   const mainEl = dv.querySelector('#chartMain');
   if(mainEl){
     const orders = filteredOrders(st);
-    Chart.render(mainEl, aggBy(st, orders, st.chart.dim, { basis:st.filters.basis }).slice(0,12),
+    Chart.render(mainEl, aggBy(st, orders, st.chart.dim, { basis:'sign' }).slice(0,12),
       { type:st.chart.type, metric:st.chart.metric, dim:st.chart.dim });
   }
   paintStatusChart(st, dv);
@@ -8341,7 +8468,7 @@ function sortMenuBtnHTML(id, kind){
       <button class="btn sm" data-sortbtn="1">⇅ 排序</button>
       <div class="pop" style="min-width:150px">${m.fields.map(f => {
         const on = m.cur() === f.k;
-        return `<button class="srow${on ? ' on' : ''}" data-sf="${kind}:${f.k}">${f.t}<i class="sarw">${on ? (m.curDir() === 'desc' ? '▼' : '▲') : ''}</i></button>`;
+        return `<button class="srow${on ? ' on' : ''}" data-sf="${kind}:${f.k}">${f.t}<i class="sarw">${on ? (m.curDir() === 'desc' ? '<svg class="li" aria-hidden="true" focusable="false"><use href="#li-caretdown"/></svg>' : '<svg class="li" aria-hidden="true" focusable="false"><use href="#li-caretup"/></svg>') : ''}</i></button>`;
       }).join('')}</div></div>`;
 }
 /* 通用比较：数字按大小、其余按中文字典序（numeric 让 O2 排在 O10 前面）。 */
@@ -9545,7 +9672,7 @@ function openBatchSheet(){
   BX = { mode:'assign', field:'ownerId', value:'', rfield:'productSummary', find:'', to:'', cs:false, whole:false };
   sheet(`<div class="hd"><h3>批量修改订单</h3>
       <span class="tag solid-primary">已选 ${targets.length} 笔</span>
-      <div class="spacer"></div><button class="close" data-close>×</button></div>
+      <div class="spacer"></div><button class="close" data-close><svg class="li" aria-hidden="true" focusable="false"><use href="#li-close"/></svg></button></div>
     <div class="bd" id="bxBody">
       <div class="fsec">① 选择改值方式</div>
       <div class="seg" id="bxMode">
@@ -10921,7 +11048,7 @@ function openPaySheet(orderId, opts){
   sheet(`<div class="hd"><h3>回款登记</h3>
       <span class="tag t-gray">${esc(o.orderNo || '')}</span>
       <span class="muted" style="font-size:11.5px">${esc(c.shortName || c.name || '')}</span>
-      <div class="spacer"></div><button class="close" data-close>×</button></div>
+      <div class="spacer"></div><button class="close" data-close><svg class="li" aria-hidden="true" focusable="false"><use href="#li-close"/></svg></button></div>
     <div class="bd">
       ${paySummaryHTML(o)}
       <div class="paylist" id="payListBox">${rows}</div>
@@ -10946,7 +11073,7 @@ function openPaySheet(orderId, opts){
         </div>
       </section>
       ${un > 0 ? `<div class="hint" style="margin-top:2px"><label class="switch"><input type="checkbox" id="pySettle" ${isBalSettled(o) ? 'checked' : ''}> 差额已结清（手续费 / 汇损 / 尾差，勾选后不再计入未收）</label></div>` : ''}
-      <div class="ft"><button class="btn primary" id="pyAdd">＋ 登记这笔回款</button>
+      <div class="ft"><button class="btn primary" id="pyAdd"><svg class="li" aria-hidden="true" focusable="false"><use href="#li-plus"/></svg> 登记这笔回款</button>
         <button class="btn" data-close>${back ? '完成 · 返回订单' : '完成'}</button></div>
     </div>`);
   bindClose();
@@ -11143,15 +11270,15 @@ function openCustomerSheet(cid){
       <span class="tag t-gray">占全公司销售额 ${(custShare(st, c)*100).toFixed(1)}%</span>
       <span class="tag ${String(c.active)==='false'?'t-red':'t-green'}">${String(c.active)==='false'?'已停用':'合作中'}</span>
       <div class="spacer"></div>
-      <button class="close" data-close>×</button></div>
+      <button class="close" data-close><svg class="li" aria-hidden="true" focusable="false"><use href="#li-close"/></svg></button></div>
     <div class="bd">
-      <div class="grid kpi" style="margin-bottom:14px">
+      <div class="grid kpi" style="margin-bottom:var(--card-gap)">
         <div class="card"><div class="lb">订单金额</div><div class="vl" style="font-size:19px">${money(s.amount)}</div><div class="sb2">${s.count} 笔订单</div></div>
         <div class="card"><div class="lb">已回款</div><div class="vl good" style="font-size:19px">${money(s.paid)}</div><div class="sb2">收款合计</div></div>
         <div class="card"><div class="lb">未回款</div><div class="vl ${s.unpaid?'bad':''}" style="font-size:19px">${money(s.unpaid)}</div><div class="sb2">${unPays.length} 笔待收</div></div>
         <div class="card"><div class="lb">逾期未交付</div><div class="vl ${s.overdue?'bad':''}" style="font-size:19px">${s.overdue}</div><div class="sb2">已过合同交期</div></div>
       </div>
-      <div class="card" style="margin-bottom:14px"><div class="hd"><h3>档案信息</h3></div><div class="bd">
+      <div class="card" style="margin-bottom:var(--card-gap)"><div class="hd"><h3>档案信息</h3></div><div class="bd">
         <div class="frow">
           <div class="fld"><label>公司全称</label><input readonly value="${esc(c.name||'')}"></div>
           <div class="fld"><label>客户编码</label><input readonly value="${esc(c.code||'')}"></div>
@@ -11167,7 +11294,7 @@ function openCustomerSheet(cid){
         <div class="fld"><label>地址</label><input readonly value="${esc(c.address||'-')}"></div>
         <div class="fld"><label>信用备注</label><textarea readonly rows="2">${esc(c.creditNote||'')}</textarea></div>
       </div></div>
-      <div class="card" style="margin-bottom:14px"><div class="hd"><h3>该客户产品</h3>
+      <div class="card" style="margin-bottom:var(--card-gap)"><div class="hd"><h3>该客户产品</h3>
         <span class="tag t-gray">${custProdCount(st, cid)} 个</span>
         <div class="spacer"></div>
         <button class="btn sm" id="csAddProd">+ 新增产品</button></div>
@@ -11194,7 +11321,7 @@ function openCustomerSheet(cid){
   /* v0.47：客户详情里的产品区块 —— 新增时预填该客户，点行直接进产品详情 */
   const cap = $('#csAddProd');
   if(cap) cap.onclick = () => openProductForm(null, 'cust', { customerId: cid });
-  $$('#sheet [data-cpid]').forEach(tr => tr.onclick = () => { closeSheet(); openProductSheet(tr.dataset.cpid, 'cust'); });
+  $$('#sheet [data-cpid]').forEach(tr => tr.onclick = () => { PN = null; closeSheet(); openProductSheet(tr.dataset.cpid, 'cust'); });
   const db = $('#csDel'); if(db) db.onclick = () => deleteResource('customer', cid);
   $$('#sheet [data-oid]').forEach(tr => tr.onclick = () => { closeSheet(); openOrder(tr.dataset.oid); });
 }
@@ -11346,7 +11473,7 @@ function zoomBox(){
   box.id = 'imgZoom';
   box.setAttribute('role', 'dialog');
   box.setAttribute('aria-label', '产品图预览');
-  box.innerHTML = '<button class="iz-x" type="button" title="关闭（Esc）">×</button>'
+  box.innerHTML = '<button class="iz-x" type="button" title="关闭（Esc）"><svg class="li" aria-hidden="true" focusable="false"><use href="#li-close"/></svg></button>'
     + '<img alt="产品图"><div class="iz-tip">点击任意处或按 Esc 关闭</div>';
   document.body.appendChild(box);
   box.addEventListener('click', () => closeZoom());
@@ -11512,7 +11639,7 @@ function viewProducts(st, kind){
       ${colSetBtnHTML(kind === 'cust' ? 'pColCust' : 'pColSupp', kind === 'cust' ? 'cprod' : 'sprod', false)}
       <div class="spacer"></div>
       ${canWrite ? `<div class="iomenu" id="pIO">
-        <button class="btn" id="pIOBtn" title="导出模版 / 导出当前列表 / 从 CSV 导入">导入导出 ▾</button>
+        <button class="btn" id="pIOBtn" title="导出模版 / 导出当前列表 / 从 CSV 导入">导入导出 <svg class="li" aria-hidden="true" focusable="false"><use href="#li-chevdown"/></svg></button>
         <div class="iomenu-bd" id="pIOMenu" hidden>
           <button data-io="tpl">导出导入模版（表头 + 1 行示例）</button>
           <button data-io="list">导出当前列表（按当前排序与搜索）</button>
@@ -11946,7 +12073,7 @@ function openImportSheet(kind, seed){
 
     sheet(`<div class="hd"><h3>导入${C.label}</h3>
         <span class="tag t-gray">${esc(s.name || (s.paste ? '粘贴导入' : 'CSV'))}</span>
-        <div class="spacer"></div><button class="close" data-close>×</button></div>
+        <div class="spacer"></div><button class="close" data-close><svg class="li" aria-hidden="true" focusable="false"><use href="#li-close"/></svg></button></div>
       <div class="bd">
         <div class="frow">
           <div class="fld"><label>编码</label>
@@ -12153,9 +12280,145 @@ async function downloadFile(meta){
   const a = document.createElement('a');
   a.href = u; a.download = meta.name || 'file'; a.click();
 }
+/* ==========================================================================
+   v1.4.8 · 产品详情「上一条 / 下一条」快速浏览（客户产品库 / 供应商产品库共用）
+
+   顺序的真源只有一个：prodRows(Store.state, kind) —— 与列表同一套页内搜索(PROD_KW)
+   加列头排序(PROD_SORT)。两张产品库都是全量渲染、没有分页（viewProducts 不接 pagerHTML），
+   所以「沿用分页条件」在这两页是空集，不需要页码状态；每次切换现算一次，
+   分屏模式下在列表里改了搜索 / 排序，详情里的上一条下一条立刻跟着变。
+
+   切换动作只做一件事：拿新 id 重开同一个详情面板。
+   **绝不走 Store.set / goto()** —— 那会把整页 render，列表滚动位置、列宽、fitPageH
+   的高度链全部重算，等于把用户刚从列表里点进来的位置丢掉。
+   ========================================================================== */
+let PN = null;         /* { kind, id } —— 当前详情在看哪一条；返回列表时靠它定位 */
+let PN_LOCK = 0;       /* 连点保护：160ms 内只认一次跳转 */
+let PN_EDGE_AT = 0;    /* 边界提示节流：1.2s 内只提示一次 */
+
+function pnavIds(kind){ return prodRows(Store.state, kind).map(p => p.id); }
+
+/* 底部冻结条里的导航三件套；结果集只有一条时不摆（没有可去的地方） */
+function pnavHTML(kind, id){
+  const ids = pnavIds(kind), n = ids.length, i = ids.indexOf(id);
+  if(n < 2) return '';
+  const hasPrev = i > 0, hasNext = i >= 0 && i < n - 1;
+  const idxTxt = i < 0 ? '— / ' + n : (i + 1) + ' / ' + n;
+  const idxTip = i < 0
+    ? '这条不在当前搜索结果里（共 ' + n + ' 条）'
+    : '第 ' + (i + 1) + ' 条，共 ' + n + ' 条 · 顺序＝当前搜索与排序';
+  return `<button class="btn sm" id="psPrev" data-pnav="-1"${hasPrev ? '' : ' disabled'}
+      aria-label="上一条（键盘左方向键）" title="${hasPrev ? '上一条（←）' : '已经是第一条'}">
+      <svg class="li" aria-hidden="true" focusable="false"><use href="#li-chevleft"/></svg><span class="pnav-t">上一条</span></button>
+    <span class="pnav-n${i < 0 ? ' is-off' : ''}" id="psNavN" aria-live="polite" title="${esc(idxTip)}">${idxTxt}</span>
+    <button class="btn sm" id="psNext" data-pnav="1"${hasNext ? '' : ' disabled'}
+      aria-label="下一条（键盘右方向键）" title="${hasNext ? '下一条（→）' : '已经是最后一条'}">
+      <span class="pnav-t">下一条</span><svg class="li flipx" aria-hidden="true" focusable="false"><use href="#li-chevleft"/></svg></button>
+    <div class="spacer"></div>`;
+}
+
+/* 跳转一条：算出目标 id 后直接重开详情面板 */
+function pnavStep(dir){
+  if(!PN) return false;
+  const ids = pnavIds(PN.kind), i = ids.indexOf(PN.id);
+  if(i < 0) return false;
+  const t = i + dir;
+  if(t < 0 || t >= ids.length){
+    const now0 = Date.now();
+    if(now0 - PN_EDGE_AT > 1200){
+      PN_EDGE_AT = now0;
+      toast(dir < 0 ? '已经是第一条了' : '已经是最后一条了');
+    }
+    return false;
+  }
+  const now = Date.now();
+  /* 连点：第一次点击已经把整块面板换掉了，但第二次 click 仍会派发到那个已摘下的按钮上
+     → 不设锁会连跳两条，用户看到的是「点一下跳过头了」。 */
+  if(now - PN_LOCK < 160) return false;
+  PN_LOCK = now;
+  const kind = PN.kind;
+  openProductSheet(ids[t], kind);
+  return true;
+}
+
+/* 返回列表时把「刚才看到的那条」滚进视野并闪一下；不重渲染任何东西 ——
+   closeSheet() 本来就没动 #page，这里只补一次滚动 + 高亮。 */
+function pnavReturn(){
+  if(!PN) return;
+  const kind = PN.kind, id = PN.id;
+  PN = null;
+  const st = Store.state;
+  /* 刚被删除的产品：数据里已经没有了，别去追一个即将消失的行 */
+  if(!(st.data[pk(kind).res] || []).some(p => p.id === id)) return;
+  const tr = $$('#page tr[data-pid]').find(t => t.dataset.pid === id);
+  if(!tr) return;
+  const box = tr.closest('.tw');
+  if(box){
+    const r = tr.getBoundingClientRect(), b = box.getBoundingClientRect();
+    /* 只滚列表自己的滚动容器，不动页面 —— 页面级滚动会把整个工作台顶走 */
+    if(r.top < b.top || r.bottom > b.bottom){
+      box.scrollTop += (r.top - b.top) - (box.clientHeight - tr.offsetHeight) / 2;
+    }
+  }
+  tr.classList.remove('pnav-hl');
+  void tr.offsetWidth;          /* 强制重排，连开同一条也能重新播动画 */
+  tr.classList.add('pnav-hl');
+  setTimeout(() => tr.classList.remove('pnav-hl'), 1400);
+}
+
+/* 详情拿不到（产品刚被删 / 数据刚被同步覆盖）：给一个说得清的失败态，
+   而不是点了没反应、面板还停在旧产品上。 */
+function pnavMissing(kind, id){
+  const C = pk(kind);
+  PN = { kind, id };
+  sheet(`<div class="hd"><h3>${esc(C.label)}已不可用</h3>
+      <span class="tag t-red">未找到</span>
+      <div class="spacer"></div>
+      <button class="close" data-close><svg class="li" aria-hidden="true" focusable="false"><use href="#li-close"/></svg></button></div>
+    <div class="bd"><div class="empty-center">
+      <div class="ec-ttl">这条${esc(C.label)}已经不存在了</div>
+      <div class="ec-sub">可能刚被删除，或数据来源刚同步过。编号：<b>${esc(id)}</b></div>
+      <div class="ec-actions"><button class="btn primary" id="psMissBack">返回列表</button></div>
+    </div></div>`, { wide:true });
+  const b = $('#psMissBack'); if(b) b.onclick = closeSheet;
+}
+
+/* 键盘：← / → 翻上一条下一条。
+   守卫顺序＝先确认「当前面板确实是产品详情」，再看焦点是否落在可输入控件里 ——
+   详情页有一堆只读 input 与备注 textarea，光标在框内时方向键必须留给光标。 */
+function pnavKey(e){
+  if(!PN) return;
+  if(e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+  if(e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return;
+  const sh = $('#sheet');
+  if(!sh || !sh.querySelector('#psNext')) return;
+  const a = document.activeElement;
+  if(a){
+    const tag = (a.tagName || '').toLowerCase();
+    if(tag === 'input' || tag === 'textarea' || tag === 'select' || a.isContentEditable) return;
+  }
+  if(_zoomOn) return;                    /* 看图浮层里方向键归它用 */
+  e.preventDefault();
+  pnavStep(e.key === 'ArrowLeft' ? -1 : 1);
+}
+/* 按钮走事件委托挂在 #sheet 上：面板整块重渲染，绑在按钮上每次都得重挂 */
+function bindProductNav(){
+  const sh = $('#sheet');
+  if(!sh || sh.dataset.pnavBound) return;
+  sh.dataset.pnavBound = '1';
+  sh.addEventListener('click', e => {
+    const b = e.target && e.target.closest ? e.target.closest('[data-pnav]') : null;
+    if(!b || b.disabled) return;
+    pnavStep(b.dataset.pnav === '-1' ? -1 : 1);
+  });
+}
+bindProductNav();
+document.addEventListener('keydown', pnavKey);
+
 function openProductSheet(id, kind){
   const st = Store.state, C = pk(kind);
-  const p = (st.data[C.res] || []).find(x => x.id === id); if(!p) return;
+  const p = (st.data[C.res] || []).find(x => x.id === id);
+  if(!p){ pnavMissing(kind, id); return; }
   const imgs  = (Array.isArray(p.images) ? p.images : []).filter(Boolean);
   const files = Array.isArray(p.packingFiles) ? p.packingFiles : [];
   const own   = prodOwner(st, p, kind);
@@ -12221,17 +12484,17 @@ function openProductSheet(id, kind){
       <span class="tag t-gray">${esc(p.sku || '—')}</span>
       ${p.orderStatus ? `<span class="${osTag(p.orderStatus)}">${esc(p.orderStatus)}</span>` : ''}
       <div class="spacer"></div>
-      <button class="close" data-close>×</button></div>
+      <button class="close" data-close><svg class="li" aria-hidden="true" focusable="false"><use href="#li-close"/></svg></button></div>
     <div class="bd">
       ${gallery}
-      <div class="card" style="margin-bottom:14px"><div class="hd"><h3>基础信息</h3>
+      <div class="card" style="margin-bottom:var(--card-gap)"><div class="hd"><h3>基础信息</h3>
         ${infoI('「订购状态更新时间」由系统维护：状态一变就自动记下当天，不需要手填。')}</div>
         <div class="bd">
           ${basicHTML}
           ${link}
           <div class="fld"><label>备注</label><textarea readonly rows="2">${esc(p.remark || '')}</textarea></div>
         </div></div>
-      <div class="card" style="margin-bottom:14px"><div class="hd"><h3>包装资料</h3>
+      <div class="card" style="margin-bottom:var(--card-gap)"><div class="hd"><h3>包装资料</h3>
         ${infoI('包装资料是产品级的固定规格（不随订单变）；订单层面的箱数 / 毛重差异请在订单备注里记。')}</div>
         <div class="bd">${prodPackingHTML(p)}</div></div>
       <div class="card"><div class="hd"><h3>包装文件</h3><span class="tag t-gray">${files.length} 份</span>
@@ -12242,10 +12505,11 @@ function openProductSheet(id, kind){
             : '<div class="empty">还没有包装文件，点「编辑」上传包装规格单 / 图纸 / 箱唛文件</div>'}
           <div id="psPkPrev" style="margin-top:10px"></div>
         </div></div>
-      <div class="ft"><button class="btn sm" id="psEdit">编辑</button>
+      <div class="ft">${pnavHTML(kind, id)}<button class="btn sm" id="psEdit">编辑</button>
         <button class="btn sm danger" id="psDel">删除</button></div>
     </div>`, { wide:true });
 
+  PN = { kind, id };   /* v1.4.8：记账当前详情，返回列表时用它定位 */
   bindClose();
   hydrateThumbs($('#sheet'));
   const eb = $('#psEdit'); if(eb) eb.onclick = () => openProductForm(id, kind);
@@ -12258,7 +12522,7 @@ function openProductSheet(id, kind){
     }
   });
   const sp = $('#sheet [data-open-sp]');
-  if(sp) sp.onclick = () => { closeSheet(); openProductSheet(sp.dataset.openSp, 'supp'); };
+  if(sp) sp.onclick = () => { PN = null; closeSheet(); openProductSheet(sp.dataset.openSp, 'supp'); };
   const pkBox = $('#psPkBox');
   if(pkBox) pkBox.onclick = e => {
     const t = e.target, i = t.dataset && t.dataset.i;
@@ -12276,11 +12540,11 @@ function pimgHTML(list){
       <img data-img="${esc(f)}" alt="">
       ${i === 0 ? '<span class="pmainbadge">主图</span>'
                 : `<button type="button" class="pimgup" data-up="${esc(f)}" title="设为主图">设主图</button>`}
-      <button type="button" class="pimgx" data-del="${esc(f)}" title="删除这张图">×</button>
+      <button type="button" class="pimgx" data-del="${esc(f)}" title="删除这张图"><svg class="li" aria-hidden="true" focusable="false"><use href="#li-close"/></svg></button>
     </div>`).join('');
   return `<label>产品图<span class="fhint-s">（第一张为主图；可点选、拖入，或直接 Ctrl+V 粘贴截图）</span></label>
     <div class="pimgrid" id="pimgGrid">${items}
-      <button type="button" class="pimgadd" id="pimgAdd">＋<span>上传</span><em>拖入 / 粘贴</em></button>
+      <button type="button" class="pimgadd" id="pimgAdd"><svg class="li" aria-hidden="true" focusable="false"><use href="#li-plus"/></svg><span>上传</span><em>拖入 / 粘贴</em></button>
     </div>
     <input type="file" id="pimgInput" accept=".jpg,.jpeg,.png" multiple style="display:none">
     <div class="fhint"></div>`;
@@ -12839,9 +13103,9 @@ function openSupplierSheet(sid){
       <span class="tag ${s.rating === 'A' ? 't-green' : s.rating === 'B' ? 't-blue' : 't-gray'}">${esc(s.rating || '—')} 级</span>
       <span class="tag ${String(s.active) === 'false' ? 't-red' : 't-green'}">${String(s.active) === 'false' ? '已停用' : '合作中'}</span>
       <div class="spacer"></div>
-      <button class="close" data-close>×</button></div>
+      <button class="close" data-close><svg class="li" aria-hidden="true" focusable="false"><use href="#li-close"/></svg></button></div>
     <div class="bd">
-      <div class="card" style="margin-bottom:14px"><div class="hd"><h3>档案信息</h3></div><div class="bd">
+      <div class="card" style="margin-bottom:var(--card-gap)"><div class="hd"><h3>档案信息</h3></div><div class="bd">
         <div class="frow">
           <div class="fld"><label>公司全称</label><input readonly value="${esc(s.name || '')}"></div>
           <div class="fld"><label>供应商编码</label><input readonly value="${esc(s.code || '—')}"></div></div>
@@ -12879,7 +13143,7 @@ function openSupplierSheet(sid){
   const db = $('#ssDel');  if(db) db.onclick = () => deleteResource('supplier', sid);
   const ap = $('#ssAddProd'); if(ap) ap.onclick = () => openProductForm(null, 'supp', { supplierId: sid });
   $$('#sheet [data-spid]').forEach(tr => tr.onclick = () => {
-    closeSheet(); openProductSheet(tr.dataset.spid, 'supp');
+    PN = null; closeSheet(); openProductSheet(tr.dataset.spid, 'supp');
   });
 }
 
@@ -13043,7 +13307,7 @@ function alertRulesDlgHTML(cfg){
       <div class="hd"><h3>预警规则</h3>
         ${infoI('阈值改后即时重算；点「保存规则」写入本地存储，重启后仍生效。')}
         <div class="spacer"></div>
-        <button class="close" type="button" data-cfgclose="1" title="关闭" aria-label="关闭">×</button></div>
+        <button class="close" type="button" data-cfgclose="1" title="关闭" aria-label="关闭"><svg class="li" aria-hidden="true" focusable="false"><use href="#li-close"/></svg></button></div>
       <div class="bd">
         <div class="frow">
           <div class="fld"><label>第一轮提醒（天）</label><input id="al30" type="number" value="${cfg.lead30}"></div>
@@ -13065,30 +13329,14 @@ function cfgEntryHTML(st, btnId, scope){
   const n = (scopeFilters(st, scope).conds || []).length;
   return `<button class="btn sm cfgentry" id="${btnId}" type="button" title="筛选条件">筛选${n?` <span class="cnt">${n}</span>`:''}</button>`;
 }
-/* 筛选条件的浮层：顶部是快捷筛选（业务员 / 统计口径 / 自定义起止，原顶栏「更多筛选」折叠区），
-   下部是 condPanelHTML（全字段条件行）。两者合为单一高级筛选入口。 */
+/* 筛选条件的浮层：v1.4.4 起只渲染 condPanelHTML（全字段条件行）—— 即「同一筛选集合」。
+   原顶栏「更多筛选」折叠区的三块独立分组已整体退场：
+   · 业务员 → 普通条件行筛选项（ORDER_FIELDS 的 ownerId 枚举，按「是其中之一」选中）；
+   · 统计口径（fBasis）→ 取消「统一口径」设计，时间预设固定按「签订日」；
+   · 自定义起止（fFrom/fTo）→ 移除，时间筛选改走条件行的日期字段 + 「时间范围」运算符。
+   不再有单独展示 / 单独分组 / 独立筛选入口。 */
 function quickFilterHTML(st, scope){
-  const f = scopeFilters(st, scope);
-  const custom = f.preset === 'custom';
-  const disp = custom ? '' : 'none';
-  /* v1.4.2 · 自定义起止与条件行「时间范围」同一套口径：闭区间、倒置不设限并红字提示 */
-  const bad = custom && rangeInvalid(f.from, f.to);
-  return `<div class="qf">
-    <div class="gf"><div class="gf-label">业务员（可多选）</div>
-      ${mselHTML('fOwner', f.ownerId, fOptOwner(st), '全部业务员')}</div>
-    <div class="gf"><div class="gf-label">统计口径</div>
-      <select id="fBasis">
-        <option value="sign" ${f.basis==='sign'?'selected':''}>按签订日</option>
-        <option value="delivery" ${f.basis==='delivery'?'selected':''}>按交期</option>
-        <option value="pay" ${f.basis==='pay'?'selected':''}>按实收</option></select></div>
-    <div class="gf" id="custDates" style="display:${disp};min-width:140px">
-      <div class="gf-label">开始时间</div><input type="date" id="fFrom" value="${f.from||''}" aria-label="开始时间"></div>
-    <div class="gf" id="custDates2" style="display:${disp};min-width:140px">
-      <div class="gf-label">结束时间</div><input type="date" id="fTo" value="${f.to||''}" aria-label="结束时间"></div>
-    <div class="gf" id="custRangeTools" style="display:${disp}"><div class="gf-label">&nbsp;</div>
-      <button class="btn sm" id="fRangeClear" type="button">清空时间</button></div>
-    <div class="c-hint qf-hint" id="custRangeHint" role="alert" style="display:${bad?'':'none'}">开始时间不能晚于结束时间，该范围暂不生效（点「清空时间」或「重置」恢复）</div>
-  </div>`;
+  return '';
 }
 function filterDlgHTML(st, scope, wrapId){
   const quick = quickFilterHTML(st, scope);
@@ -13099,7 +13347,7 @@ function filterDlgHTML(st, scope, wrapId){
       <div class="hd"><h3>筛选条件</h3>
         <span class="muted" style="font-size:11.5px">${scope === 'prod' ? '作用于排产记录 · 本页独立' : '作用于订单 / 看板 / 预警 / 回款'}</span>
         <div class="spacer"></div>
-        <button class="close" type="button" data-cfgclose="1" title="关闭" aria-label="关闭">×</button></div>
+        <button class="close" type="button" data-cfgclose="1" title="关闭" aria-label="关闭"><svg class="li" aria-hidden="true" focusable="false"><use href="#li-close"/></svg></button></div>
       <div class="bd">${quick}${body}</div></div></div>`;
 }
 /* 入口 ↔ 浮层：点入口开 / 再点收起；点遮罩、点「×」都收起（Esc 见全局 keydown） */
@@ -13130,7 +13378,7 @@ function viewAlert(st){
       <div class="chipbar" id="alertTabs">
         ${ALERT_LEVELS.map(l => `<button class="chip ${alertLevel===l[0]?'on':''}" data-at="${l[0]}">${l[1]} <span class="n">${l[0]==='ALL' ? all.length : all.filter(a=>a.lvl===l[0]).length}</span></button>`).join('')}
       </div><div class="spacer"></div>
-      <button class="btn sm cfgentry${cfg.enabled===false?' warn':''}" id="alRuleBtn" type="button" title="预警阈值 / 开关 / 桌面通知">⚙ 预警规则</button>
+      <button class="btn sm cfgentry${cfg.enabled===false?' warn':''}" id="alRuleBtn" type="button" title="预警阈值 / 开关 / 桌面通知"><svg class="li" aria-hidden="true" focusable="false"><use href="#li-settings"/></svg> 预警规则</button>
       ${infoI('点击任一行跳转到订单详情（按严重程度排序，严重的在上）。')}
     </div>`;
   h += alertRulesDlgHTML(cfg);
@@ -13288,7 +13536,7 @@ function wireCarrierManage(){
   const ops = document.createElement('span');
   ops.className = 'carrier-ops';
   ops.style.cssText = 'margin-left:8px;display:inline-flex;gap:4px';
-  ops.innerHTML = `<button type="button" class="btn" style="padding:2px 8px;font-size:11px" data-cop="add">＋承运方</button>`
+  ops.innerHTML = `<button type="button" class="btn" style="padding:2px 8px;font-size:11px" data-cop="add"><svg class="li" aria-hidden="true" focusable="false"><use href="#li-plus"/></svg>承运方</button>`
     + `<button type="button" class="btn" style="padding:2px 8px;font-size:11px" data-cop="del">删除</button>`;
   sel.parentNode.appendChild(ops);
   ops.querySelector('[data-cop="add"]').onclick = () => {
@@ -13439,7 +13687,7 @@ function openProdSheet(prodId){
       + prodStateTagHTML(p, st)
       + '<span class="muted" style="font-size:11.5px">' + esc(o.orderNo || '')
       + (c.shortName ? ' · ' + esc(c.shortName) : '') + '</span>'
-      + '<div class="spacer"></div><button class="close" data-close>×</button></div>'
+      + '<div class="spacer"></div><button class="close" data-close><svg class="li" aria-hidden="true" focusable="false"><use href="#li-close"/></svg></button></div>'
     + '<div class="bd">'
       + '<div class="odetop">'
         + kpi('计划完工', p.planFinish || '—')
@@ -13448,7 +13696,7 @@ function openProdSheet(prodId){
         + '<span class="spacer"></span>'
         + (canEdit && prodDone(p, o) && !orderDelivered(o) && !orderShipped(o)
             ? '<button class="btn sm primary" id="pShip">登记发货</button>' : '')
-        + '<button class="btn sm" data-oidjump="' + esc(o.id) + '">← 返回订单</button>'
+        + '<button class="btn sm" data-oidjump="' + esc(o.id) + '"><svg class="li" aria-hidden="true" focusable="false"><use href="#li-left"/></svg> 返回订单</button>'
       + '</div>'
       + '<div class="pp">' + grp('排产信息', infoRows) + grp('所属订单', orderRows) + '</div>'
       + (canEdit ? '<div class="ft"><button class="btn sm" id="pEdit">编辑</button>'
@@ -14382,8 +14630,8 @@ function viewSync(st){
       <div class="frow">
         <div class="fld full"><label>配置导入 / 导出</label>
           <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-            <button class="btn" id="syncCfgExport">⤓ 导出配置</button>
-            <button class="btn" id="syncCfgImport">⤒ 导入配置</button>
+            <button class="btn" id="syncCfgExport"><svg class="li" aria-hidden="true" focusable="false"><use href="#li-download"/></svg> 导出配置</button>
+            <button class="btn" id="syncCfgImport"><svg class="li" aria-hidden="true" focusable="false"><use href="#li-upload"/></svg> 导入配置</button>
             <input type="file" id="syncCfgFile" accept=".json,application/json" style="display:none">
             <label class="switch sync-chk"><input type="checkbox" id="syncCfgSecret"> 导出时包含 AccessKey 与密钥密文</label>
           </div>
@@ -14545,6 +14793,7 @@ function closeSheet(){
   else { const m = $('#mask'); if(m) m.classList.remove('on'); }
   document.body.style.overflow = '';
   const el = $('#sheet'); if(el) el.classList.remove('wide');
+  pnavReturn();   /* v1.4.8：把刚才看的那条滚进视野并闪一下（不重渲染列表） */
 }
 $('#mask').onclick = e => { if(e.target.id === 'mask') closeSheet(); };
 /* v1.4.0 · iOS 抽屉下滑关闭（HIG：模态必须有可取消手势）。
@@ -15242,7 +15491,7 @@ function moNosFieldHTML(f, vals, err, req, hint, hide, ih){
   const list = splitMoNos(vals[f.key]);
   const chips = list.map(m => '<span class="mo-chip" data-mo="' + esc(m) + '">'
     + '<span>' + esc(m) + '</span>'
-    + '<button type="button" class="mo-x" data-mod="' + esc(m) + '" title="移除该单号">×</button></span>').join('');
+    + '<button type="button" class="mo-x" data-mod="' + esc(m) + '" title="移除该单号"><svg class="li" aria-hidden="true" focusable="false"><use href="#li-close"/></svg></button></span>').join('');
   return '<div class="' + cls + '" data-fld="' + f.key + '">'
     + '<label>' + esc(f.label) + req + ih + '</label>'
     + '<div class="mo-box" id="moBox" data-mokey="' + f.key + '">' + chips
@@ -15261,7 +15510,7 @@ function redrawMoChips(){
     const sp = document.createElement('span');
     sp.className = 'mo-chip'; sp.dataset.mo = m;
     sp.innerHTML = '<span>' + esc(m) + '</span>'
-      + '<button type="button" class="mo-x" data-mod="' + esc(m) + '" title="移除该单号">×</button>';
+      + '<button type="button" class="mo-x" data-mod="' + esc(m) + '" title="移除该单号"><svg class="li" aria-hidden="true" focusable="false"><use href="#li-close"/></svg></button>';
     box.insertBefore(sp, inp);
   });
   if(inp) inp.placeholder = splitMoNos(f.values[key]).length ? '继续添加…' : '输入单号后回车';
@@ -15339,7 +15588,7 @@ function openForm(cfg){
   sheet(`<div class="hd"><h3>${esc(cfg.title)}</h3>${cfg.tip ? infoI(cfg.tip) : ''}
       ${cfg.subtitle ? `<span class="tag t-gray">${esc(cfg.subtitle)}</span>` : ''}
       <div class="spacer"></div>
-      <button class="close" data-close>×</button></div>
+      <button class="close" data-close><svg class="li" aria-hidden="true" focusable="false"><use href="#li-close"/></svg></button></div>
     <div class="bd"><div id="formBody"></div>
       ${cfg.extra || ''}</div>
     <div class="ft"><button class="btn sm primary" id="formSave">保存</button>
@@ -15993,7 +16242,7 @@ function openOrder(id){
       + '<span class="pk"><em>回款率</em><b>' + payPct + '%</b></span>'
       + '<span class="pk"><em>笔数</em><b>' + pays.length + '</b></span>'
       + '<span class="pbar" style="flex:1;min-width:90px"><i class="' + (payPct >= 100 ? 'good' : '') + '" style="width:' + payPct + '%"></i></span>'
-      + (canEdit ? '<button class="btn xs" id="dPayBtn">＋ 登记回款</button>' : '')
+      + (canEdit ? '<button class="btn xs" id="dPayBtn"><svg class="li" aria-hidden="true" focusable="false"><use href="#li-plus"/></svg> 登记回款</button>' : '')
       + '</div>';
 
   const fwRows = fs.length ? fs.map(f => '<div class="pp-rec"><div class="s">' + f.date + ' · ' + esc(f.channel || '') + '</div>'
@@ -16007,7 +16256,7 @@ function openOrder(id){
       + '<span class="muted" style="font-size:11.5px">' + esc(c.name || '') + '</span><div class="spacer"></div>'
       + '<select id="dStatus" style="border:1px solid var(--line);border-radius:7px;padding:3px 7px;font-size:12.5px">'
       + STATUS.map(s => '<option' + (o.status === s ? ' selected' : '') + '>' + String(s).slice(3) + '</option>').join('') + '</select>'
-      + '<button class="close" data-close>×</button></div>'
+      + '<button class="close" data-close><svg class="li" aria-hidden="true" focusable="false"><use href="#li-close"/></svg></button></div>'
     + '<div class="bd">' + basicBar
       + '<div class="pp">'
         + grp('订单信息', infoRows)
@@ -16115,7 +16364,7 @@ function viewHistory(){
     <div class="grid kpi" id="histKpi" style="margin-top:12px"></div>
     <div class="card" style="margin-top:14px"><div class="hd"><h3>快照</h3>${infoI('<b>数据历史</b>存的是<b>整库快照</b>——每次写库前自动存一份（10 分钟内连续改动合并成一份），清空数据 / 导入 / 批量修改 / 云端拉取前再强制存一份。回滚会把整个数据库恢复到那份快照的状态。<br><b>回滚本身也会先存一份</b>，所以即使回滚错了也能再回滚回去。删除的记录不会真的消失，而是进到下面的<b>回收站</b>，可以单独还原某一笔——删订单时它的排产 / 发货 / 跟进会<b>整组</b>一起回来。')}
       <span class="tag t-blue" id="histMode">…</span><div class="spacer"></div>
-      <button class="btn primary" id="histMark">📌 立即打一份快照</button>
+      <button class="btn primary" id="histMark"><svg class="li" aria-hidden="true" focusable="false"><use href="#li-pin"/></svg> 立即打一份快照</button>
       <button class="btn" id="histWipe">清空全部快照</button></div>
       <div class="bd"><div id="histSnaps"><div class="muted">读取中…</div></div></div></div>
     <div class="card" style="margin-top:14px"><div class="hd"><h3>回收站</h3>
@@ -16375,6 +16624,32 @@ function nlCut(text, from, stop, keepDun, nameField){
   if(stop != null && stop > from && stop < end) end = stop;
   return text.slice(from, end);
 }
+/* --------------------------------------------------------------------------
+   v1.4.7 · 排产单号 token 扫描（一个订单可有多个单号）
+   ① 形似单号 = 字母开头 + 含数字 + 长度 ≥4，允许 - / _ 连接（W202611010、MO-2609-331）；
+   ② 关键词段额外允许纯数字单号（123456），全文扫描不允纯数字，免得把金额 / 数量 /
+      年份一起吞进来；
+   ③ 订单号、日期、金额、数量、名字字段等已识别值 + 贸易/币种缩写走 exclude / 停用表；
+   ④ 每次调用内部去重（大小写不敏感），调用方再按文本顺序合并去重。
+   -------------------------------------------------------------------------- */
+const NL_MO_STOP = new Set(('FOB CIF CFR EXW DDP DDU FCA TT LC DP DA OA PRE ' +
+  'USD CNY EUR JPY HKD GBP RMB TR PO MO PCS PI CI BL PDF').split(' '));
+function nlMoTokens(text, exclude, allowNum){
+  const out = [];
+  const re = /[^\s、,，。;；\/\\|()（）「」\[\]【】]+/g;
+  let m;
+  while((m = re.exec(String(text || '')))){
+    const s = nlCode(m[0]);
+    if(!s || s.length < 4) continue;
+    if(!/^[A-Za-z0-9][A-Za-z0-9]*(?:[-_][A-Za-z0-9]+)*$/.test(s)) continue;
+    if(!allowNum && (!/^[A-Za-z]/.test(s) || !/\d/.test(s))) continue;
+    const key = s.toUpperCase();
+    if(NL_MO_STOP.has(key) || (exclude && exclude.has(key))) continue;
+    if(out.some(x => x.key === key)) continue;
+    out.push({ s, key, i:m.index, len:m[0].length });
+  }
+  return out;
+}
 /* 数值：容忍 ¥ / 千分位 / 元 / 万 / k */
 function nlNum(s){
   const t = String(s || '').replace(/[,，\s¥￥$]/g, '');
@@ -16517,10 +16792,16 @@ function nlParseOrder(text){
   const hits = nlHits(t);
   const literal = {}, consumed = [], ambiguous = [], unparsed = [];
   const NAME_FIELDS = { customer:1, owner:1, product:1 };
+  const moSegs = [];   /* v1.4.7：排产单号的原始片段（可能多处命中） */
   hits.forEach((h, i) => {
     const next = hits[i + 1] ? hits[i + 1].start : null;
-    const seg = nlCut(t, h.end, next, h.k === 'moNo', NAME_FIELDS[h.k]);   /* 排产单号允许多个（顿号分隔） */
+    /* v1.4.7：单号段只截到下一个关键词之前，顿号 / 逗号 / 空格 / 斜杠 / 换行都交给
+       nlMoTokens 拆，不再让 nlCut 的分隔符把第二个单号切掉。 */
+    const seg = (h.k === 'moNo')
+      ? t.slice(h.end, next != null && next > h.end ? next : t.length)
+      : nlCut(t, h.end, next, false, NAME_FIELDS[h.k]);
     consumed.push([h.start, h.end + seg.length]);
+    if(h.k === 'moNo'){ moSegs.push(seg); return; }   /* 重复关键词 / 别名不再误判成「歧义」 */
     const v = nlClean(seg);
     if(!v) return;
     if(literal[h.k] != null && literal[h.k] !== v){
@@ -16553,10 +16834,7 @@ function nlParseOrder(text){
   const fields = { status:'01 已签约', signDate:fmt(today()) };
   const note = k => { literal[k] = null; unparsed.push({ k, label:NL_LABEL[k] || k }); };
   if(literal.orderNo)  fields.orderNo = nlCode(literal.orderNo);
-  if(literal.moNo){
-    const ms = String(literal.moNo).split(/[、,，]/).map(nlCode).filter(Boolean);
-    if(ms.length) fields.moNo = ms.join('、');
-  }
+  /* v1.4.7：排产单号统一在下方「多号收口」段处理（多分隔 / 重复关键词 / 全文补捞），此处不再单独定型 */
   if(literal.amount != null){
     const n = nlNum(literal.amount);
     if(isFinite(n) && n > 0) fields.amount = n; else note('amount');
@@ -16634,6 +16912,27 @@ function nlParseOrder(text){
       if(uniq.length > 1) ambiguous.push({ k:'qty', values:uniq.map(String) });
       qs.filter(a => a.v === qs[0].v).forEach(a => extras.push([a.s, a.e]));
     }
+  }
+  /* ------------------------------------------------------------------------
+     v1.4.7 · 排产单号收口：一个订单可以认到多个单号
+     ① 关键词段优先（允纯数字单号），② 全文补捞形似单号的裸号（用户选定口径），
+     ③ 排除订单号 / 日期 / 金额 / 数量 / 名字字段与贸易币种缩写，④ 大小写不敏感去重、保序。
+     ------------------------------------------------------------------------ */
+  {
+    const ex = new Set();
+    const addEx = v => { if(v != null && v !== '') ex.add(String(v).trim().toUpperCase()); };
+    Object.keys(literal).forEach(k => addEx(literal[k]));
+    ['orderNo','contractDelivery','signDate','amount','qty','taxAmount','currency',
+     'status','productSummary','paymentTerm','tradeTerm','ownerId','customerId']
+      .forEach(k => addEx(fields[k]));
+    const all = [];
+    const take = x => { if(!ex.has(x.key) && !all.some(y => y.key === x.key)) all.push(x); };
+    moSegs.forEach(seg => nlMoTokens(seg, ex, true).forEach(take));
+    nlMoTokens(t, ex, false).forEach(take);       /* 全文补捞（含截图里的裸号 W2026110101） */
+    if(all.length) fields.moNo = all.map(x => x.s).join('、');
+    else delete fields.moNo;
+    /* 补捞到的位置从「未识别内容」里扣掉，免得同一个单号既被识别又显示在忽略提示里 */
+    all.forEach(x => { const i = t.indexOf(x.s); if(i >= 0) extras.push([i, i + x.s.length]); });
   }
   /* 真正「没派上用场」的文字才显示成未识别 */
   const rest = [];
@@ -16716,27 +17015,40 @@ function nlRender(){
     body += '<div class="hint" style="margin-bottom:10px;grid-column:1/-1">这些字段读到了内容但<b>认不出格式</b>，已留空待你补：' +
       r.unparsed.map(u => esc(u.label)).join('、') + '</div>';
 
-  /* 客户：候选列表（不自动建档） */
-  let custCtrl;
+  /* v1.4.7 · 客户：库内客户下拉（随时可改选）+ 候选 / 新建仍走独立按钮（显式确认，不自动建档） */
+  const custOpts = (() => {
+    const cs = st.data.customers || [];
+    const ns = cs.map(c => String(c.name || '').trim());
+    const clash = new Set(ns.filter((n, i) => ns.indexOf(n) !== i));
+    /* 与 buildOrderFields 的 customerId 选项同口径：重名带编码，避免两套说法 */
+    return cs.map(c => {
+      const nm = String(c.name || '').trim();
+      const base = c.shortName || nm;
+      const t = clash.has(nm) ? (base + (base !== c.code ? '（' + c.code + '）' : '')) : base;
+      return { v:c.id, t };
+    });
+  })();
+  const isNewCust = String(f.customerId || '').indexOf('__new__') === 0;
+  const custSelVal = isNewCust ? '' : (f.customerId || '');
+  let custCtrl = '<select id="nlF_customerId" aria-label="客户">' + opts(custOpts, custSelVal, '（选择客户）') + '</select>';
   if(f.customerId){
-    const isNew = String(f.customerId).indexOf('__new__') === 0;
-    const nm = isNew ? String(f.customerId).slice(7)
-      : ((st.data.customers.find(c => c.id === f.customerId) || {}).name || '');
-    custCtrl = '<div class="nlpick"><span class="tag ' + (isNew ? 't-amber' : 't-green') + '">' +
-      (isNew ? '将新建' : '已匹配') + '</span><b>' + esc(nm) + '</b>' +
-      '<button class="btn sm" id="nlCustClear">重选</button></div>';
+    const nm = isNewCust ? String(f.customerId).slice(7) : '';
+    custCtrl = '<span class="tag ' + (isNewCust ? 't-amber' : 't-green') + '" id="nlCustTag">' +
+      (isNewCust ? '将新建' : '已匹配') + '</span>' + custCtrl +
+      (isNewCust ? '<span class="nlmini" style="width:auto">「' + esc(nm) + '」</span>' : '') +
+      '<button class="btn sm" id="nlCustClear">重选</button>';
   }else{
     const cands = r.custCand || [];
-    custCtrl = '<input id="nlF_custName" value="' + esc(r.custName) + '" placeholder="客户名称">';
+    custCtrl += '<input id="nlF_custName" value="' + esc(r.custName) + '" placeholder="客户名称">';
     if(cands.length){
       custCtrl += '<div class="nlcand">' + cands.map(c =>
         '<button class="btn sm nlCandPick" data-cid="' + esc(c.id) + '">' + esc(c.name) + '</button>').join('') + '</div>';
-      custCtrl += '<div class="nlmini">是其中一家？点一下即可；都不是就把名称改对。</div>';
+      custCtrl += '<div class="nlmini">是其中一家？点一下即可；也可以直接在上面的下拉里选。</div>';
     }else if(r.custName){
-      custCtrl += '<div class="nlcand"><button class="btn sm primary" id="nlCustNew">＋ 新建客户「' + esc(r.custName) + '」</button></div>' +
-        '<div class="nlmini">库里没有这个名字，确认无误后再建档。</div>';
+      custCtrl += '<div class="nlcand"><button class="btn sm primary" id="nlCustNew"><svg class="li" aria-hidden="true" focusable="false"><use href="#li-plus"/></svg> 新建客户「' + esc(r.custName) + '」</button></div>' +
+        '<div class="nlmini">库里没有这个名字，确认无误后再建档；或直接在下拉里选已有客户。</div>';
     }else{
-      custCtrl += '<div class="nlmini">没读到客户，请填写。</div>';
+      custCtrl += '<div class="nlmini">没读到客户，请在下拉里选，或填写名称后新建。</div>';
     }
   }
   const flagOf = ok => (ok ? '' : 'bad');
@@ -16770,8 +17082,13 @@ function nlRender(){
     '<select id="nlF_ownerId">' + opts((st.data.owners || []).map(u => ({ v:u.id, t:u.name })), f.ownerId || '', '（默认第一位）') + '</select>' + ownerTxt, '');
   body += nlRowHTML('signDate', '签订日期',
     '<input id="nlF_signDate" type="date" value="' + esc(f.signDate || fmt(today())) + '">', '');
+  const moList = String(f.moNo || '').split(/[、,，]/).map(x => x.trim()).filter(Boolean);
+  const moMulti = moList.length > 1;
   body += nlRowHTML('moNo', '排产单号',
-    '<input id="nlF_moNo" value="' + esc(f.moNo || '') + '" placeholder="多个用、分隔">', '');
+    '<input id="nlF_moNo" value="' + esc(f.moNo || '') + '" placeholder="多个用、分隔">' +
+    (moMulti ? '<span class="nlok" id="nlMoCount">已识别 ' + moList.length + ' 个</span>' +
+      '<div class="nlmini">全部单号：' + esc(moList.join(' / ')) + '</div>' : ''),
+    moMulti ? 'multi' : '');
   body += nlRowHTML('productSummary', '产品摘要',
     '<input id="nlF_productSummary" value="' + esc(f.productSummary || '') + '">', '');
   body += nlRowHTML('taxAmount', '税金',
@@ -16803,6 +17120,17 @@ function nlRecomputeMissing(){
     .map(k => ({ k, label:NL_LABEL[k] || k }));
 }
 function nlBindRows(){
+  /* v1.4.7 · 客户下拉：改选即写回，不重建整卡（保留金额 / 交期等已编辑值） */
+  const custSel = $('#nlF_customerId');
+  if(custSel) custSel.onchange = () => {
+    const v = String(custSel.value || '');
+    NL_S.parsed.fields.customerId = v;
+    nlRecomputeMissing();
+    const tag = $('#nlCustTag');
+    if(tag){ tag.textContent = v ? '已匹配' : '未选择'; tag.className = 'tag ' + (v ? 't-green' : 't-amber'); }
+    const row = custSel.closest('.nlrow'); if(row) row.classList.toggle('bad', !v);
+    const btn = $('#nlCommit'); if(btn) btn.disabled = NL_S.parsed.missing.length > 0;
+  };
   /* v1.0.7 · 切币种 → 金额输入框前缀即时跟着换（和订单表单同一套 .curwrap） */
   const curSel = $('#nlF_currency');
   if(curSel) curSel.onchange = () => {
@@ -16837,6 +17165,9 @@ async function nlCommit(){
   if(!src || !src.capabilities.write){ toast('当前数据源只读，请切到「本地手工录入」'); return; }
   const g = k => { const el = document.getElementById('nlF_' + k); return el ? String(el.value || '').trim() : ''; };
   let customerId = r.fields.customerId || '';
+  /* v1.4.7：确认页客户下拉的最终值优先（用户可能改选过）；下拉为空时保留 __new__ 显式新建 */
+  const custEl = document.getElementById('nlF_customerId');
+  if(custEl && custEl.value) customerId = String(custEl.value).trim();
   const newName = customerId.indexOf('__new__') === 0 ? nlClean(customerId.slice(7)) : '';
   const amount = Number(g('amount') || r.fields.amount || 0);
   const delivery = g('contractDelivery') || r.fields.contractDelivery || '';
@@ -17964,6 +18295,7 @@ window.OT = {
   NL_SYNS, NL_LABEL, NL_REQUIRED, NL_S, nlWiden, nlClean, nlHits, nlCut, nlNum, nlDate, nlStatus,
   nlPay, nlTrade, nlCode, nlCustCandidates, nlOwnerCandidates, nlParseOrder,
   nlScanQtys,   /* v0.61 · 「共 1200 件 / 3000pcs」这类没带关键词的数量兜底扫描 */
+  nlMoTokens, NL_MO_STOP,   /* v1.4.7 · 排产单号多值扫描（回归可直接验） */
   viewAssist, bindAssist, nlRender, nlCommit, NL_DEMO,
   /* v0.38 · 图表换肤（iOS 深浅色双色板） */
   PALETTE_LIGHT, PALETTE_DARK, INK_LIGHT, INK_DARK, prefersDark, applyScheme,
@@ -17986,6 +18318,9 @@ window.OT = {
   /* v0.33 · 抽屉卡片宽度（拖把手 + 记忆） */
   sheetW, sheetWClamp, sheetWStored, sheetWSet, applySheetW, sheetHandle, fitPageH,
   SHEET_W_DEF, SHEET_W_MIN, SHEET_NARROW, SHEET_W_LS, SHEET_W_LS_WIDE,
+  /* v1.4.8 · 产品详情「上一条 / 下一条」快速浏览（回归断言用） */
+  pnavIds, pnavHTML, pnavStep, pnavReturn, pnavMissing, pnavKey,
+  get PN(){ return PN; },
   get FORM(){ return FORM; }
 };
 
