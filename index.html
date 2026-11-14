@@ -3,7 +3,7 @@
 <head data-page-node-id="tB8joMdTgw5XU4U8A6S7i2">
 <meta charset="utf-8" data-page-node-id="iTOrAHcHmC5x6FNHHjD886">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" data-page-node-id="Ja1BDKMDLVRzLRExrICqlT">
-<title>订单追踪台 · v1.4.8</title>
+<title>订单追踪台 · v1.4.9</title>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#1677FF">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1179,7 +1179,7 @@ tbody tr.sel,tbody tr.sel:hover{background:var(--primary-soft)}
   #topbar > div:nth-child(2){flex:1 1 96px;min-width:0}
   /* 「重新载入」文字最长、又在窄屏最不常用（关掉重开一样刷新）→ 收成一个 ↻ 图标。
      用 font-size:0 把文字藏掉、靠 ::before 出声，按钮仍是同一个节点（aria/点击不受影响）。 */
-  #topbar #btnRefresh{font-size:0;padding:4px 9px}
+  #topbar #btnRefresh{font-size:0;padding:4px 9px;gap:0}
   #topbar #btnRefresh::before{content:none}
   #topbar .sub{display:none}
 }
@@ -1592,7 +1592,7 @@ body.zooming{cursor:zoom-out}
   #topbar .today .dt-min{display:inline}
   /* 日期胶囊占的位置只能从别处省：智能录入收成图标（与 btnRefresh 同一招，title 已带说明），
      否则 375px 下标题容器会被压到 0 宽、一个字都看不见 */
-  #topbar #btnAssist{font-size:0;padding:4px 9px}
+  #topbar #btnAssist{font-size:0;padding:4px 9px;gap:0}
   #topbar #btnAssist::before{content:none}
   #topbar #btnNew{padding:4px 10px;font-size:12px}
 }
@@ -2157,7 +2157,7 @@ body.dv-rzing .dv-rz{opacity:1;color:var(--primary)}
    把宽度还给标题；≤360px 仍放不下时改成等宽列网格，两行按列对齐，绝不裁切。 */
 @media(max-width:400px){
   #topbar{gap:6px}
-  #topbar #btnNew{font-size:0;padding:0 10px}
+  #topbar #btnNew{font-size:0;padding:0 10px;gap:0}
   #topbar #btnNew::before{content:none}
 }
 @media(max-width:360px){
@@ -2252,6 +2252,31 @@ body.dv-rzing .dv-rz{opacity:1;color:var(--primary)}
 @keyframes pnavhl{from{background:var(--primary-soft)}to{background:transparent}}
 tr.pnav-hl{animation:pnavhl 1.2s ease-out}
 @media(max-width:560px){.pnav-t{display:none}}
+/* ==========================================================================
+   v1.4.9 · 浮层高度与顶栏图标居中（平板 / 手机）
+   ① 预警规则的三段「判定规则」过去只挂在 .ii 悬浮提示里（15px 图标 +
+      visibility:hidden 的 .ii-t）。触屏没有 hover，平板 / 手机点开只剩一个 ⓘ，
+      整段规则等于不存在 —— 卡片也就那么高，看着「高度太窄、显示不全」。
+      改为卡片内可见段落 .alnote，卡片按内容长高，超长时仍由 .bd 滚动兜底。
+   ② 浮层里的筛选面板被 v1.4.6「卡片分区上下 16px」串味：:is(...) 的特异性与
+      .cfgwrap .fpanel 打平、又排在样式表更后面，于是 .fpanel 与 .fp-hd 各多出
+      16+16px —— 卡片上下各留一条空带、条件行被压到中段。这里按同特异性放在
+      最末尾把浮层内上下内距归零（外框留白由 .bd 的 15px 统一提供）。
+   ③ 平板可用高度抬到 92dvh；≤640px 的贴底抽屉仍是 88dvh，不受影响。
+   ④ 顶栏三个按钮在超窄屏用 font-size:0 收成纯图标，文字节点虽为 0 宽却仍吃掉
+      6px gap，图标整体左偏 3px —— 在各自那条规则里补 gap:0 即回正中。
+   ========================================================================== */
+.alnote{margin-top:13px;padding:11px 13px;border:1px solid var(--line);
+  border-radius:var(--radius-ctl);background:var(--fill-2);
+  font-size:11.5px;line-height:1.75;color:var(--muted)}
+.alnote b{color:var(--text)}
+.alnote-t{font-weight:700;color:var(--text);margin-bottom:2px}
+/* ② 浮层内的筛选面板：内距归零（必须排在 v1.4.6 密度块之后才压得住） */
+:is(.cfgwrap .fpanel,.cfgwrap .fp-hd){padding-top:0;padding-bottom:0}
+/* ③ 平板居中浮层：可用高度抬到 92dvh，条件多时一屏多看两行 */
+@media(min-width:641px) and (max-width:920px){
+  .cfgwrap>.cfgd{max-height:min(92dvh,900px)}
+}
 </style>
 </head>
 <body data-page-node-id="iN68ACaq0BuwCUMgsu3KFv">
@@ -2261,7 +2286,7 @@ tr.pnav-hl{animation:pnavhl 1.2s ease-out}
 <aside id="sidebar" data-page-node-id="mOHG7ZovWQTFY89nDh3RpA">
   <div class="sb-logo" data-page-node-id="CItXgwA9E43rFqjh1jkPjK">
     <div class="mark" data-page-node-id="UZtmztULGLZ5gKgPjaSoN0"><svg width="28" height="28" viewBox="0 0 512 512" aria-hidden="true"><defs><linearGradient id="sbMarkBg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5b86d6"/><stop offset="1" stop-color="#3d8f89"/></linearGradient></defs><rect width="512" height="512" rx="116" fill="url(#sbMarkBg)"/><path d="M144 100 H252 L310 158 V322 A26 26 0 0 1 284 348 H144 A26 26 0 0 1 118 322 V126 A26 26 0 0 1 144 100 Z" fill="#ffffff"/><path d="M252 100 L310 158 L252 158 Z" fill="#cfe0f7"/><rect x="146" y="196" width="136" height="18" rx="9" fill="#d7e2f3"/><rect x="146" y="236" width="136" height="18" rx="9" fill="#d7e2f3"/><rect x="146" y="276" width="90" height="18" rx="9" fill="#d7e2f3"/><circle cx="396" cy="390" r="76" fill="#ffffff"/><path d="M362 390 L386 414 L430 362" fill="none" stroke="#3d8a5c" stroke-width="23" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-    <div class="sb-name" data-page-node-id="qJfiMtI7jd53xaMaRs2OfN"><div class="t" data-page-node-id="vxtJJYpJxW7saZcUyfaE3M" title="双击可重命名">订单追踪台</div><div class="s" data-page-node-id="ufakbTeCG3rPiVsiEX5UML">v1.4.8</div></div>
+    <div class="sb-name" data-page-node-id="qJfiMtI7jd53xaMaRs2OfN"><div class="t" data-page-node-id="vxtJJYpJxW7saZcUyfaE3M" title="双击可重命名">订单追踪台</div><div class="s" data-page-node-id="ufakbTeCG3rPiVsiEX5UML">v1.4.9</div></div>
     <button class="sb-ren" id="btnRename" type="button" title="重命名工作台" aria-label="重命名工作台"><svg class="li" aria-hidden="true" focusable="false"><use href="#li-edit"/></svg></button>
   </div>
   <nav class="sb-nav" id="sbNav" data-page-node-id="y58haCHcKQU8HJVk0gDYWN"></nav>
@@ -4888,8 +4913,8 @@ const Chart = (() => {
    —— 单一事实来源：界面标题 / 侧栏 / 「系统版本」页全部取自 APP_VERSION。
    新增一个版本时只需改两处：APP_VERSION / APP_UPDATED，并在 CHANGELOG 头部插一条。
    ========================================================================== */
-const APP_VERSION = 'v1.4.8';
-const APP_UPDATED = '2026-11-13';
+const APP_VERSION = 'v1.4.9';
+const APP_UPDATED = '2026-11-14';
 let   APP_NAME    = '订单追踪台';
 /* v0.54：工作台名支持用户重命名 —— APP_NAME_DEFAULT 是出厂默认，真实名从 localStorage 读。
    ★ 用 let 而不是继续 const：改名后要能被 document.title / 侧栏 / 桌面通知 / 思源库说明
@@ -4916,7 +4941,13 @@ APP_NAME = nameRead();   /* 启动即用记住的名字（没改过 / 读不到 
 const APP_TAG     = '出口业务 · 世界地图（气泡 / 数据柱双形态）';
 
 const CHANGELOG = [
-  { v:'v1.4.8', date:'2026-11-13', cat:'产品详情快速浏览：上一条 / 下一条 + 左右方向键', cur:true, items:[
+  { v:'v1.4.9', date:'2026-11-14', cat:'平板浮层高度与说明可见化 · 手机顶栏图标居中', cur:true, items:[
+    '★ <b>预警规则的判定说明改为卡片内可见</b>：三段判定规则（交期 / 回款 / 无账期兜底）过去只挂在 15px 的 ⓘ 悬浮提示里，触屏没有 hover —— 平板 / 手机上点开「⚙ 预警规则」只看到一个图标，整段规则等于不存在，卡片也就那么高。现在改成卡片内段落，卡片按内容长高，超长时滚动兜底。',
+    '★ <b>筛选浮层的上下空带收掉</b>：v1.4.6 的「卡片分区上下 16px」串进了浮层，`.fpanel` 与 `.fp-hd` 各多出 16+16px，条件行被压到卡片中段、上下各留一条空带。浮层内恢复零内距（外框留白由 `.bd` 统一提供），同样高度能多放近两行条件。',
+    '· <b>平板可用高度</b>：641~920px 的居中浮层 max-height 抬到 min(92dvh, 900px)；≤640px 的贴底抽屉仍是 88dvh，触控尺寸与安全区一行未动。',
+    '· <b>手机顶栏图标回正中</b>：「重新载入 / 智能录入 / 新增订单」在超窄屏收成纯图标时，文字节点虽为 0 宽却仍占 6px gap，图标整体左偏 3px；补 gap:0 后图标居中，按钮尺寸 / 触控目标 / 事件未变。',
+  ]},
+  { v:'v1.4.8', date:'2026-11-13', cat:'产品详情快速浏览：上一条 / 下一条 + 左右方向键', cur:false, items:[
     '★ <b>详情内连续翻看</b>：客户产品库与供应商产品库的详情页底部新增「← 上一条 ｜ N / M ｜ 下一条 →」，按<b>当前列表顺序</b>（页内搜索 + 列头排序后的全部行）连续切换，不必退回列表再点一次。',
     '★ <b>键盘 ← / →</b>：详情打开时左右方向键即上一条 / 下一条；焦点落在输入框、下拉、文本域或可编辑区域时自动让位，光标照常移动；看图浮层打开时方向键仍归浮层。',
     '★ <b>返回列表自动定位</b>：关掉详情后列表不重渲染（筛选 / 排序 / 滚动位置原样保留），并把当前这条滚进视野、闪一下浅底高亮 —— 翻过十几条再关掉也不会找不到刚才那一条。',
@@ -13321,7 +13352,12 @@ function alertRulesDlgHTML(cfg){
           <button class="btn sm" id="alNotify">测试桌面通知</button>
           <button class="btn primary sm" id="alSave">保存规则</button>
         </div>
-        <div style="margin-top:13px">${infoI(`规则：① 交期（只管交货）：距合同交期 ≤${cfg.lead30} 天提醒、≤${cfg.lead15} 天警示、过期即为逾期。<br>② 回款（只管货款，按账期）：每批「出货日 + 账期」= 该批应收日，回款先进先出核销，最早未收清那批的应收日前 ${cfg.payDueSoon} 天 → 待收，已过 → 逾期。账期在<b>客户档案</b>里维护，订单上可单独覆盖；<b>合同交期不参与回款判断</b>。<br>③ 客户和订单都没设账期时兜底：最后发货日超 ${cfg.shipUnpaidDays} 天仍未收齐 → 严重。`)}</div>
+        <div class="alnote">
+          <div class="alnote-t">判定规则</div>
+          ① 交期（只管交货）：距合同交期 ≤${cfg.lead30} 天提醒、≤${cfg.lead15} 天警示、过期即为逾期。<br>
+          ② 回款（只管货款，按账期）：每批「出货日 + 账期」= 该批应收日，回款先进先出核销，最早未收清那批的应收日前 ${cfg.payDueSoon} 天 → 待收，已过 → 逾期。账期在<b>客户档案</b>里维护，订单上可单独覆盖；<b>合同交期不参与回款判断</b>。<br>
+          ③ 客户和订单都没设账期时兜底：最后发货日超 ${cfg.shipUnpaidDays} 天仍未收齐 → 严重。
+        </div>
       </div></div></div>`;
 }
 /* 工具栏上的「筛选」入口：带条件条数徽标 —— 浮层收起后也一眼知道有几条在生效 */
