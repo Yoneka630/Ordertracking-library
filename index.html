@@ -3,7 +3,7 @@
 <head data-page-node-id="tB8joMdTgw5XU4U8A6S7i2">
 <meta charset="utf-8" data-page-node-id="iTOrAHcHmC5x6FNHHjD886">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" data-page-node-id="Ja1BDKMDLVRzLRExrICqlT">
-<title>订单追踪台 · v1.5.0</title>
+<title>订单追踪台 · v1.5.3</title>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#1677FF">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2314,6 +2314,23 @@ tr.pnav-hl{animation:pnavhl 1.2s ease-out}
 .cfgwrap.on>.cfgd>.bd{flex:1 1 auto;min-height:0}
 .fx-sym{display:inline-flex;align-items:center;justify-content:center;
   line-height:1;height:16px}
+
+/* ==========================================================================
+   v1.5.3 · 填写框里的字不再被上下切掉一截
+   症状：表单里几乎每个输入框 / 下拉框的文字，上边和/或下边都被裁掉 1~2px
+        （「外购」「祥福」「不挂起」这类短值看起来缺一笔）。
+   根因：.fld 内的 input / select 锁了 height:--ctl-h(32px)，同时自带上下内距
+        （浅色主题 6px + 1px 边框 → 可用 18px；iOS 卡片主题 8px + 无边框 → 可用 16px），
+        而 line-height 又被写死 20px。可用区装不下 20px 的行盒，浏览器就把溢出部分裁掉，
+        上下各 1~2px —— 字号越小越明显。
+   为什么不能只改 line-height：normal 行盒仍有 ~18.6px，同样大于 16px 的可用区；
+        只把行高调小又会把 x-height 挤变形。唯一根治的是「可用区 ≥ 行盒」。
+   所以：height 与 line-height 一律保持原样（同行控件顶底对齐、跨主题基线一致都不变），
+        仅把垂直内距归零，让控件自己在 32px 里垂直居中；左右内距仍按各主题原值。
+   注意：不要在这里重写 --ctl-h —— 那会压过 ≤920px 媒体块里的 44px 触控档。
+   ========================================================================== */
+.fld input:not([type=checkbox]):not([type=radio]),
+.fld select{height:var(--ctl-h);line-height:20px;padding-top:0;padding-bottom:0}
 </style>
 </head>
 <body data-page-node-id="iN68ACaq0BuwCUMgsu3KFv">
@@ -2323,7 +2340,7 @@ tr.pnav-hl{animation:pnavhl 1.2s ease-out}
 <aside id="sidebar" data-page-node-id="mOHG7ZovWQTFY89nDh3RpA">
   <div class="sb-logo" data-page-node-id="CItXgwA9E43rFqjh1jkPjK">
     <div class="mark" data-page-node-id="UZtmztULGLZ5gKgPjaSoN0"><svg width="28" height="28" viewBox="0 0 512 512" aria-hidden="true"><defs><linearGradient id="sbMarkBg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5b86d6"/><stop offset="1" stop-color="#3d8f89"/></linearGradient></defs><rect width="512" height="512" rx="116" fill="url(#sbMarkBg)"/><path d="M144 100 H252 L310 158 V322 A26 26 0 0 1 284 348 H144 A26 26 0 0 1 118 322 V126 A26 26 0 0 1 144 100 Z" fill="#ffffff"/><path d="M252 100 L310 158 L252 158 Z" fill="#cfe0f7"/><rect x="146" y="196" width="136" height="18" rx="9" fill="#d7e2f3"/><rect x="146" y="236" width="136" height="18" rx="9" fill="#d7e2f3"/><rect x="146" y="276" width="90" height="18" rx="9" fill="#d7e2f3"/><circle cx="396" cy="390" r="76" fill="#ffffff"/><path d="M362 390 L386 414 L430 362" fill="none" stroke="#3d8a5c" stroke-width="23" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-    <div class="sb-name" data-page-node-id="qJfiMtI7jd53xaMaRs2OfN"><div class="t" data-page-node-id="vxtJJYpJxW7saZcUyfaE3M" title="双击可重命名">订单追踪台</div><div class="s" data-page-node-id="ufakbTeCG3rPiVsiEX5UML">v1.5.0</div></div>
+    <div class="sb-name" data-page-node-id="qJfiMtI7jd53xaMaRs2OfN"><div class="t" data-page-node-id="vxtJJYpJxW7saZcUyfaE3M" title="双击可重命名">订单追踪台</div><div class="s" data-page-node-id="ufakbTeCG3rPiVsiEX5UML">v1.5.3</div></div>
     <button class="sb-ren" id="btnRename" type="button" title="重命名工作台" aria-label="重命名工作台"><svg class="li" aria-hidden="true" focusable="false"><use href="#li-edit"/></svg></button>
   </div>
   <nav class="sb-nav" id="sbNav" data-page-node-id="y58haCHcKQU8HJVk0gDYWN"></nav>
@@ -2676,7 +2693,12 @@ const SCHEMA = {
      （待排产 0% / 生产中 30% / 已完工 100%）。两个字段一删，「两份状态打架」在结构上
      就不存在了，v0.62 / v0.64 那套「状态同步 + 起步状态推断」的补丁也一并作废。
      paused 是**布尔挂起标记**，不是状态：挂起时排产照旧显示订单状态，另挂一个「已挂起」标。 */
-  production: ['id','orderId','moNo','paused','workshop','planStart','planFinish','actualStart','actualFinish','qty','doneQty'],
+  /* v1.5.1 · 生产来源与供应商 —— 有些产品不是自己做，而是外购 / 外协。
+     sourceType 只有两个值：'make' 自制、'buy' 外购；缺省或空值一律读成自制（老数据零迁移）。
+     supplierId 指向 suppliers 档案，只在外购时才有意义，自制时由保存逻辑强制清空 ——
+     不留「显示自制、背后却挂着供应商」这种第二套口径。
+     ★ 不存供应商名称快照：档案改名后要跟着变，唯一真源留在 suppliers，读的时候现取。 */
+  production: ['id','orderId','moNo','sourceType','supplierId','paused','workshop','planStart','planFinish','actualStart','actualFinish','qty','doneQty'],
   shipments : ['id','orderId','shipNo','shipDate','qty','amount','logisticsNo','carrier','signDate'],
   /* ---------- v0.55 · 分次回款流水 ----------
      回款从「订单上订金 + 尾款两笔固定字段」升级为**多笔流水**：一笔到账一条记录，
@@ -3849,6 +3871,61 @@ const ORDER_FIELDS = [
   { k:'productSummary',   label:'产品摘要', type:'text',   get:(st,o) => o.productSummary },
   { k:'remark',           label:'备注',     type:'text',   get:(st,o) => o.remark }
 ];
+/* ---------------------------------------------------------------------------
+   v1.5.1 · 排产单的生产来源与供应商
+   ---------------------------------------------------------------------------
+   外购（外协）单要能一眼看出「这单不做，是找谁买的」。
+   · sourceType 缺省 / 空值一律读成「自制」—— 老数据不迁移、也不会被误判成外购；
+   · supplierId 只在外购时有效，自制时保存逻辑清空；
+   · 供应商名称不入排产记录（不做快照），档案改名后列表立刻跟上。
+   --------------------------------------------------------------------------- */
+const PROD_SRC = [['make','自制'], ['buy','外购']];
+const PROD_SRC_MAP = { make:'自制', buy:'外购' };
+function prodSourceOf(p){ return (p && p.sourceType === 'buy') ? 'buy' : 'make'; }
+function prodSrcText(p){ return PROD_SRC_MAP[prodSourceOf(p)] || '自制'; }
+function prodIsBuy(p){ return prodSourceOf(p) === 'buy'; }
+function supplierById(st, id){
+  const k = String(id == null ? '' : id).trim();
+  if(!k) return null;
+  return ((st.data && st.data.suppliers) || []).find(x => x.id === k) || null;
+}
+function supplierName(s){ return s ? String(s.shortName || s.name || s.code || '').trim() : ''; }
+/* 供应商下拉选项：停用的也列出来（历史单仍指向它），但标注清楚 */
+function supplierOpts(st){
+  return (((st.data && st.data.suppliers) || [])).map(x => ({
+    v: x.id,
+    t: supplierName(x) + (String(x.active) === 'false' ? '（已停用）' : '')
+  }));
+}
+/* 列表 / 卡片里的来源标：自制是默认态，不给标签（免得每行都挂一个没有信息量的灰标） */
+function prodSrcBadgeHTML(p, st){
+  if(!prodIsBuy(p)) return '';
+  const sup = supplierById(st, p.supplierId);
+  return '<span class="tag t-orange">外购</span>'
+    + (sup ? ' <span class="muted">' + esc(supplierName(sup)) + '</span>'
+           : ' <span class="muted">未指定供应商</span>');
+}
+/* v1.5.2 · 供应商列只写名称
+   --------------------------------------------------------------------------
+   v1.5.1 是「外购」橙标 + 名称，一列塞两个元素：列宽一收（手机 / 窄屏 /
+   用户把列拖窄）名字就被挤成省略号，而且「外购」这个标在供应商列里是冗余的 ——
+   有供应商名就是外购，写「自制」就是自制，标签不提供额外信息。
+   · 外购 → 供应商简称（档案改名后列表立刻跟上，不做快照）
+   · 自制 → 「自制」灰字
+   · 外购但没填供应商 → 红字「未指定」，这是真异常，得一眼看见
+   --------------------------------------------------------------------------- */
+function prodSupCellHTML(p, st){
+  if(!prodIsBuy(p)) return '<span class="muted">自制</span>';
+  const sup = supplierById(st, p.supplierId);
+  if(!sup) return '<span style="color:var(--red-600)">未指定</span>';
+  return esc(supplierName(sup));
+}
+/* 卡片没有列头，得自己说明这行是「谁做的」，所以保留「外购 ·」前缀 */
+function prodSupCardHTML(p, st){
+  const sup = supplierById(st, p.supplierId);
+  return '外购 · ' + (sup ? esc(supplierName(sup))
+    : '<span style="color:var(--red-600)">未指定供应商</span>');
+}
 /* 排产字段（作用于「排产记录」，不是订单） */
 const PROD_FIELDS = [
   { k:'moNo',         label:'工单号',   type:'text',   get:(st,p) => p.moNo },
@@ -3858,7 +3935,12 @@ const PROD_FIELDS = [
   { k:'cmp',          label:'交期对比', type:'enum',   get:(st,p,ctx) => prodRisk(p, ctx.ord(p.orderId)), opts:() => F_PRISK },
   { k:'progress',     label:'进度',     type:'number', get:(st,p) => prodPct(p, st) },
   { k:'planStart',    label:'计划开工', type:'date',   get:(st,p) => p.planStart },
-  { k:'planFinish',   label:'计划完工', type:'date',   get:(st,p) => p.planFinish }
+  { k:'planFinish',   label:'计划完工', type:'date',   get:(st,p) => p.planFinish },
+  /* v1.5.1：条件行里能直接筛「只看外购」「只看某家供应商」——
+     取值为空的自制单在这些条件下自然落选，不会误判。 */
+  { k:'sourceType',   label:'生产来源', type:'enum',   get:(st,p) => prodSourceOf(p), opts:() => PROD_SRC },
+  { k:'supplierId',   label:'供应商',   type:'enum',   get:(st,p) => p.supplierId || '',
+    opts:st => supplierOpts(st).map(o => [o.v, o.t]) }
 ];
 /* v0.45：排产信息收敛为「单号 / 状态 / 计划开工 / 计划完工 / 进度」，
    车间与「实际完工」不再是筛选维度；「交期对比」保留为查询维度（v0.24 的
@@ -4062,7 +4144,7 @@ function delCond(scope, i){
 }
 function clearConds(scope){
   /* 排产页还留着两个 v0.23 的记录级维度变量（pRow / pRisk，老脚本在用），清空时一并复位 */
-  if(scope === 'prod'){ try{ pRow = []; pRisk = []; }catch(e){} }
+  if(scope === 'prod'){ try{ pRow = []; pRisk = []; pSrc = ''; }catch(e){} }
   Store.setFilter(blankFilter(), scope);
 }
 function bindCondPanel(scope){
@@ -4950,7 +5032,7 @@ const Chart = (() => {
    —— 单一事实来源：界面标题 / 侧栏 / 「系统版本」页全部取自 APP_VERSION。
    新增一个版本时只需改两处：APP_VERSION / APP_UPDATED，并在 CHANGELOG 头部插一条。
    ========================================================================== */
-const APP_VERSION = 'v1.5.0';
+const APP_VERSION = 'v1.5.3';
 const APP_UPDATED = '2026-11-14';
 let   APP_NAME    = '订单追踪台';
 /* v0.54：工作台名支持用户重命名 —— APP_NAME_DEFAULT 是出厂默认，真实名从 localStorage 读。
@@ -4978,7 +5060,28 @@ APP_NAME = nameRead();   /* 启动即用记住的名字（没改过 / 读不到 
 const APP_TAG     = '出口业务 · 世界地图（气泡 / 数据柱双形态）';
 
 const CHANGELOG = [
-  { v:'v1.5.0', date:'2026-11-14', cat:'浮层高度改内容驱动（修 iPad 上只剩标题栏）', cur:true, items:[
+  { v:'v1.5.3', date:'2026-11-14', cat:'填写框文字不再被上下裁切', cur:true, items:[
+    '★ <b>填写框里的字不再缺一截</b>：表单里几乎每个输入框 / 下拉框的文字都整体偏下 4~5px，下边缘贴着框底，短值（「外购」「祥福」「不挂起」）看着像被削掉一笔。根因是控件锁高 32px、上下又各留 8px 内距，可用文字区只剩 16px，而行高写死 20px —— 塞不进去的那 4px 就被裁掉了。',
+    '· <b>修法只动垂直内距</b>：高度、行高、字号、左右内距全部保留，把上下内距归零，让文字在 32px 里自然居中。改完实测同一控件上留白 13px / 下留白 8px 变成上下各 9.5px（差 0.1px），一行里所有控件顶底对齐不变。',
+    '· <b>全站扫过一遍</b>：15 个页面 + 13 个弹层（订单 / 客户 / 业务员 / 产品 / 供应商 / 排产 / 跟进 / 发货 / 回款 / 导入 / 筛选浮层）共 543 个文本控件，改前 244 个存在裁切风险，改后 0 个。',
+    '· <b>textarea 与复选框不受影响</b>：多行输入仍保留上下内距，复选框 / 单选框不在规则范围内。',
+  ]},
+  { v:'v1.5.2', date:'2026-11-14', cat:'供应商列只显名称 · 供应商档案挂外购订单', cur:false, items:[
+    '★ <b>供应商列只写名字了</b>：v1.5.1 的「外购」橙标 + 名称挤在一列，列宽一收（手机、窄屏、自己拖窄）名字就被截成省略号。<b>有名字就是外购、写「自制」就是自制</b>，标签本来不提供额外信息 —— 去掉之后一列只剩一个元素，读起来也快。',
+    '· <b>外购单漏填供应商会红字提示</b>：列表里写「未指定」，比空白更明确 —— 空白分不清是自制还是漏填。',
+    '★ <b>供应商档案新增「外购订单记录」</b>：一页看到这家在给我做哪些单 —— 工单号、订单号、客户、产品、计划完工、合同交期、排产状态，点一行直接进那张排产单催货。口径与客户详情的「订单记录」一致：<b>取全部、不受列表筛选影响</b>。',
+    '★ <b>供应商列表加了「外购单」计数</b>：与「产品数」并排，一眼看出哪家在承接外购、承接了几张；汇总行也带上合计。',
+    '· <b>老数据零迁移</b>：外购单单数只统计真正挂在供应商名下、且来源是外购的排产单；自制单即使有历史脏字段也不会被算进来。'
+  ]},
+  { v:'v1.5.1', date:'2026-11-14', cat:'排产单关联供应商（外购 / 外协）', items:[
+    '★ <b>排产单能认出「外购」了</b>：排产记录新增 <b>生产来源</b>（自制 / 外购）与 <b>供应商</b>。有些产品不是自己车间做、而是外协加工或直接采购成品，过去排产单上只有单号和两个计划日期，「这单不做、该找谁」全靠脑子记；现在外购单直接挂上供应商档案。',
+    '★ <b>外购才问供应商</b>：生产来源选「外购」时，下面立刻多出「供应商」一栏并<span class="t-orange">条件必填</span>；选「自制」则整栏隐藏、保存时把供应商清空。不会出现「显示自制、背后却挂着供应商」的第二套口径。',
+    '★ <b>列表一列看全</b>：排产表在客户后面新增<b>供应商</b>列 —— 外购单原本是「外购」标 + 供应商简称，自制单显示灰色「自制」（v1.5.2 已去掉标签，只留名称）。这一列能在「▤ 列」里关掉，也能点列头排序（自制归一组、外购按供应商名排）。',
+    '★ <b>筛选栏一组快捷标签</b>：排产页「筛选」浮层顶部多了「全部 / 仅外购 / 仅自制」，一点就筛，不必每次加条件；条件行里也新增了「生产来源」和「供应商」两个可筛字段，两者可以叠加。',
+    '· <b>详情摊开催货信息</b>：外购单的排产详情把供应商名称、编码、联系人电话一并写出来 —— 催货不用再跳档案页。',
+    '· <b>老数据零迁移</b>：没有生产来源的历史排产单一律按<b>自制</b>读，不动一行既有数据；删供应商时若还有外购单引用它会被拦下（先改单或停用档案），不留指向空档案的悬空引用。',
+  ]},
+  { v:'v1.5.0', date:'2026-11-14', cat:'浮层高度改内容驱动（修 iPad 上只剩标题栏）', cur:false, items:[
     '★ <b>浮层不再「只剩一条标题栏」</b>：iPad / iOS Safari 打开「筛选条件」或「⚙ 预警规则」，卡片高度被算成标题栏那么高，条件行与规则正文全被压没、连滚动都滚不出来。<b>根因是卡片用 height:fit-content 按内容长高</b> —— 在 flex 列容器里 WebKit 会把它算到接近 0；v1.4.9 调的是 max-height（上限），上限压根没被碰到，所以看着「改了没用」。',
     '★ <b>改法</b>：浮层换成「固定层 + 网格居中」，卡片回到 height:auto 由内容撑开，只有内容超过 max-height 才截断、由内容区自己滚。这条路径不依赖 fit-content / min() / dvh 的解析差异，Chrome / Safari / 鸿蒙浏览器同一口径；vh 仍留作兜底。',
     '· <b>尺寸策略不变</b>：≥921px 与 641~920px 居中浮层上限 84dvh / 92dvh（不变），≤640px 贴底抽屉 88dvh、触控 44px 与四边安全区一行未动。',
@@ -8478,6 +8581,8 @@ const PROD_SORT_FIELDS = [
   { k:'moNo',         t:'工单号',   d:'asc'  },
   { k:'orderNo',      t:'订单号',   d:'asc'  },
   { k:'customer',     t:'客户',     d:'asc'  },
+  /* v1.5.1：供应商列也是真实列头，必须进可排序字段表 —— 45 号套件盯着这条一致性 */
+  { k:'supplier',     t:'供应商',   d:'asc'  },
   { k:'opStatus',     t:'状态',     d:'asc'  },
   { k:'planStart',    t:'计划开工', d:'asc'  },
   { k:'planFinish',   t:'计划完工', d:'asc'  },
@@ -9961,7 +10066,7 @@ function bindCardFields(root){
 const COLSET_DEFAULTS = {
   ord:  ['orderNo','customer','owner','status','delivery','qty','amount','got','unpaid','product'],
   cust: ['level','industry','region','contact','n','amount','paid','unpaid','settleDays'],
-  prod: ['moNo','orderNo','customer','opStatus','planStart','planFinish','progress'],
+  prod: ['moNo','orderNo','customer','supplier','opStatus','planStart','planFinish','progress'],
   cprod:['pic','sku','custModel','factoryModel','owner','price','cost','moq','orderStatus','statusAt'],
   sprod:['pic','sku','custModel','factoryModel','owner','price','moq','orderStatus','statusAt']
 };
@@ -9990,6 +10095,7 @@ const COLSET_DEFS = {
   ],
   prod: [
     { k:'moNo', t:'工单号' }, { k:'orderNo', t:'订单号' }, { k:'customer', t:'客户' },
+    { k:'supplier', t:'供应商' },
     { k:'opStatus', t:'状态' }, { k:'planStart', t:'计划开工' }, { k:'planFinish', t:'计划完工' },
     { k:'progress', t:'进度' },
     { k:'contractDelivery', t:'合同交期' }, { k:'ordStatus', t:'订单状态' }
@@ -10013,10 +10119,50 @@ const COLSET_DEFS = {
 };
 const COLSET_LS = { ord:'ot.cols.ord.v1', cust:'ot.cols.cust.v1', prod:'ot.cols.prod.v1',
   cprod:'ot.cols.cprod.v1', sprod:'ot.cols.sprod.v1' };
+/* v1.5.1 · 新增默认列的一次性补列
+   --------------------------------------------------------------------------
+   可见列在 localStorage 里存的是**显式数组**（存过就以它为准）。所以老用户
+   升级后，新加的默认列不在那个数组里 → 一直看不见，「加了等于没加」。
+   这里做一次性补列：只补 COLSET_SEED 声明过的那几列，补完记进 ot.cols.seed.v1；
+   之后用户在「▤ 列」里主动取消勾选，不会再被恢复（种子已记录，不再重复补）。 */
+const COLSET_SEED_LS = 'ot.cols.seed.v1';
+const COLSET_SEED = { prod: ['supplier'] };      /* 列表 id → 本版新增、需要补进旧数组的列 */
+let _colSeedDone = false;
+function colSeedApply(){
+  let seed = {};
+  try{ seed = JSON.parse(localStorage.getItem(COLSET_SEED_LS) || '{}') || {}; }catch(e){ seed = {}; }
+  let dirty = false;
+  Object.keys(COLSET_SEED).forEach(id => {
+    const fresh = COLSET_SEED[id].filter(k => (seed[id] || []).indexOf(k) < 0);
+    if(!fresh.length) return;
+    let arr = null;
+    try{ arr = JSON.parse(localStorage.getItem(COLSET_LS[id]) || 'null'); }catch(e){ arr = null; }
+    if(Array.isArray(arr)){
+      const defs = COLSET_DEFS[id] || [];
+      const add = fresh.filter(k => defs.some(f => f.k === k) && arr.indexOf(k) < 0);
+      /* 插到「默认顺序里它的前一个已存在列」后面，而不是一律追加到末尾 ——
+         否则供应商列会跑到「进度」右边，和默认列序不一致。 */
+      add.forEach(k => {
+        const idx = defs.findIndex(f => f.k === k);
+        let at = arr.length;
+        for(let i = idx - 1; i >= 0; i--){
+          const p = arr.indexOf(defs[i].k);
+          if(p >= 0){ at = p + 1; break; }
+        }
+        arr.splice(at, 0, k);
+      });
+      if(add.length){ try{ localStorage.setItem(COLSET_LS[id], JSON.stringify(arr)); }catch(e){} }
+    }
+    seed[id] = (seed[id] || []).concat(fresh);
+    dirty = true;
+  });
+  if(dirty){ try{ localStorage.setItem(COLSET_SEED_LS, JSON.stringify(seed)); }catch(e){} }
+}
 /* v1.3.1 · 各列表「默认可见列」= 改动前已在显示的列；详情页新增字段（①标量 + ②派生）
    默认隐藏，用户到「▤ 列」里勾选才显示，绝不改变现有布局。*/
 /* 可见列：没存过 / 存坏了 → 全部显示（默认最全，用户再按需隐藏） */
 function colSetVis(id){
+  if(!_colSeedDone){ _colSeedDone = true; try{ colSeedApply(); }catch(e){} }
   const defs = COLSET_DEFS[id]; if(!defs) return [];
   let arr = null;
   try{ arr = JSON.parse(localStorage.getItem(COLSET_LS[id]) || 'null'); }catch(e){ arr = null; }
@@ -10404,6 +10550,7 @@ function orderCardViewHTML(st, list){
 }
 
 /* ---------- 排产 ---------- */
+let pSrc  = '';               /* v1.5.1 生产来源快捷筛选：'' 全部 / 'buy' 仅外购 / 'make' 仅自制 */
 let pRisk = [];               /* 交期对比（多选，空 = 全部） */
 let pRow  = [];               /* 记录状态（多选，空 = 全部） */
 /* v0.44：排序状态从记忆里恢复（首次无记忆 = 计划完工升序） */
@@ -10448,6 +10595,7 @@ function prodCardHTML(st, p, o){
   return `<div class="mcard" data-oid="${esc(p.orderId)}" data-pid="${esc(p.id)}">
     <div class="mc-hd"><b>${esc(p.moNo || '—')}</b><span class="tag ${cls}">${cmp}</span></div>
     <div class="mc-sub">${esc(o.orderNo || '—')} · ${esc(c.shortName || c.name || '—')}</div>
+    ${prodIsBuy(p) ? '<div class="mc-sub">' + prodSupCardHTML(p, st) + '</div>' : ''}
     <div class="mc-ft"><span class="mc-date">${esc(o.contractDelivery || '—')}</span>
       <span class="mc-cd ${cd.cls}">${cd.txt}</span>
       ${canEdit ? `<button class="btn xs mc-edit" data-pedit="${esc(p.id)}">编辑</button>` : ''}</div>
@@ -10897,6 +11045,8 @@ function prodPanelHTML(st){ return condPanelHTML(st, 'prod'); }
 function prodViewList(st){
   let list = prodBaseList(st);
   const byId = id => st.data.orders.find(x => x.id === id) || {};
+  /* v1.5.1：来源快捷筛选先过一遍 —— 与下面的条件行是「与」的关系，可以叠加。 */
+  if(pSrc) list = list.filter(p => prodSourceOf(p) === pSrc);
   const rk = selList(pRisk), rw = selList(pRow);
   if(rw.length) list = list.filter(p => rw.indexOf(prodStateOf(p, st)) >= 0);
   if(rk.length) list = list.filter(p => rk.indexOf(prodRisk(p, byId(p.orderId))) >= 0);
@@ -10917,6 +11067,8 @@ function prodSortVal(p, k, st){
     case 'moNo':         return p.moNo || '';
     case 'orderNo':      return o.orderNo || '';
     case 'customer':     { const c = st.data.customers.find(x => x.id === o.customerId); return c ? (c.shortName || c.name || '') : ''; }
+    /* v1.5.1：按供应商名排序时，自制单统一归到「自制」这个值上，不会和空白混在一起。 */
+    case 'supplier':     return prodIsBuy(p) ? (supplierName(supplierById(st, p.supplierId)) || '外购') : '自制';
     case 'opStatus':     return prodStateOf(p, st);
     case 'planStart':    return p.planStart || '';
     case 'progress':     return prodPct(p, st);
@@ -10949,7 +11101,7 @@ function viewProd(st){
   if(pView === 'cal')  return h + `<div class="card"><div class="bd np">` + calViewHTML('prod', st, ps) + `</div></div>`;
   h += `<div class="card"><div class="bd np"><div class="tw tscroll"><table id="prodMainTable"><thead><tr>
     ${thSort('prod','moNo','工单号',null,'moNo')}${thSort('prod','orderNo','订单号',null,'orderNo')}
-    ${thSort('prod','customer','客户',null,'customer')}${thSort('prod','opStatus','状态',null,'opStatus')}
+    ${thSort('prod','customer','客户',null,'customer')}${thSort('prod','supplier','供应商',null,'supplier')}${thSort('prod','opStatus','状态',null,'opStatus')}
     ${thSort('prod','planStart','计划开工',null,'planStart')}${thSort('prod','planFinish','计划完工',null,'planFinish')}
     ${thSort('prod','progress','进度','num','progress')}<th data-col="contractDelivery">合同交期</th><th data-col="ordStatus">订单状态</th>${canEdit?'<th>操作</th>':''}</tr></thead><tbody>`;
   const pv = pgSlice('prod', ps);
@@ -10958,6 +11110,7 @@ function viewProd(st){
     const c = st.data.customers.find(x => x.id === o.customerId) || {};
     const pct = prodPct(p, st);
     h += `<tr data-oid="${esc(p.orderId)}" data-pid="${esc(p.id)}"><td data-col="moNo"><b>${esc(p.moNo)}</b></td><td data-col="orderNo">${esc(o.orderNo||'')}</td><td data-col="customer">${esc(c.shortName||'')}</td>
+      <td data-col="supplier">${prodSupCellHTML(p, st)}</td>
       <td data-col="opStatus">${prodStateTagHTML(p, st)}</td>
       <td class="muted" data-col="planStart">${p.planStart||'-'}</td><td class="muted" data-col="planFinish">${p.planFinish||'-'}</td>
       <td class="num" data-col="progress"><div class="pbar" style="width:56px;display:inline-block;vertical-align:middle"><i class="${pct>=100?'good':''}" style="width:${pct}%"></i></div> ${pct}%</td>
@@ -10965,10 +11118,16 @@ function viewProd(st){
       <td data-col="ordStatus"><span class="${stTag(o.status)}">${String(o.status).slice(3)}</span></td>
       ${canEdit?`<td class="ops">${prodDone(p, o) && !orderDelivered(o) && !orderShipped(o) ? `<button class='btn xs' data-pship='${esc(p.orderId)}'>发货</button>` : ''}<button class='btn xs' data-pedit='${p.id}'>编辑</button></td>`:''}</tr>`;
   });
-  if(!pv.length) h += `<tr><td colspan="${canEdit?10:9}" class="empty">当前筛选条件下没有排产记录</td></tr>`;
+  if(!pv.length) h += `<tr><td colspan="${canEdit?11:10}" class="empty">当前筛选条件下没有排产记录</td></tr>`;
   return h + '</tbody></table></div></div>' + pagerHTML('prod', ps.length) + '</div>';
 }
 function bindProd(){
+  $$('#pSrcBar [data-psrc]').forEach(b => b.onclick = e => {
+    e.stopPropagation();
+    const v = b.dataset.psrc || '';
+    if(pSrc === v && v === '') return;
+    pSrc = v; Store.set({});
+  });
   bindCondPanel('prod');
   bindCfgWrap('fMoreBtn', 'f:prod', 'pFilterWrap');
   $$('#pView button').forEach(x => x.onclick = () => { pView = x.dataset.v; Store.set({}); });
@@ -13009,10 +13168,50 @@ function openProductForm(id, kind, preset){
    ========================================================================== */
 let SUPP_KW = '';
 const SUPP_RATING = [{ v:'A', t:'A · 主力' }, { v:'B', t:'B · 备选' }, { v:'C', t:'C · 观察' }];
+/* ==========================================================================
+   v1.5.2 · 供应商档案里的外购订单记录
+   --------------------------------------------------------------------------
+   排产单挂上供应商之后，档案页必须能看到「这家在给我做哪些单」——
+   否则要催货还是得去排产页一列一列筛。口径与客户详情的「订单记录」一致：
+   取该供应商的**全部**外购单，不受列表页筛选影响；缺合同交期的沉到最后。
+   ========================================================================== */
+function supplierBuyList(st, sid){
+  const byId = {};
+  (st.data.orders || []).forEach(o => { byId[o.id] = o; });
+  return (st.data.production || [])
+    .filter(p => p.supplierId === sid && prodIsBuy(p))
+    .map(p => ({ p, o: byId[p.orderId] || {} }))
+    .sort((a, b) => String(a.o.contractDelivery || '9999-99-99')
+      .localeCompare(String(b.o.contractDelivery || '9999-99-99'))
+      || String(a.p.planFinish || '9999-99-99').localeCompare(String(b.p.planFinish || '9999-99-99')));
+}
+/* 列表「外购单」计数：只算真正挂在它名下、且确实是外购的排产单 */
+function supplierBuyCount(st, sid){
+  return (st.data.production || []).filter(p => p.supplierId === sid && prodIsBuy(p)).length;
+}
+function supplierBuyRowsHTML(st, sid){
+  const rows = supplierBuyList(st, sid);
+  if(!rows.length) return '<tr><td colspan="7"><div class="empty">该供应商还没有外购单</div></td></tr>';
+  return rows.map(({ p, o }) => {
+    const c = (st.data.customers || []).find(x => x.id === o.customerId) || {};
+    const sum = String(o.productSummary || '').trim();
+    return '<tr data-pid="' + esc(p.id) + '">'
+      + '<td><b>' + esc(p.moNo || '—') + '</b></td>'
+      + '<td>' + esc(o.orderNo || '—') + '</td>'
+      + '<td>' + esc(c.shortName || c.name || '—') + '</td>'
+      + '<td class="muted">' + esc(sum.length > 26 ? sum.slice(0, 26) + '…' : (sum || '—')) + '</td>'
+      + '<td class="muted">' + esc(p.planFinish || '—') + '</td>'
+      + '<td>' + esc(o.contractDelivery || '—') + '</td>'
+      + '<td>' + prodStateTagHTML(p, st) + '</td></tr>';
+  }).join('');
+}
+
 function suppQuery(st){
   const kw = (SUPP_KW || '').trim().toLowerCase();
   let list = (st.data.suppliers || []).map(s => ({
-    s, n: (st.data.supplierProducts || []).filter(p => p.supplierId === s.id).length
+    s, n: (st.data.supplierProducts || []).filter(p => p.supplierId === s.id).length,
+    /* v1.5.2：外购单数（排产单挂在该供应商名下且来源 = 外购） */
+    po: supplierBuyCount(st, s.id)
   }));
   if(kw){
     list = list.filter(x => [x.s.name, x.s.shortName, x.s.code, x.s.category, x.s.contact, x.s.phone]
@@ -13025,7 +13224,7 @@ function suppQuery(st){
   return list;
 }
 function suppRowsHTML(list){
-  if(!list.length) return `<tr><td colspan="8"><div class="empty">没有供应商，点「+ 新增供应商」建立档案</div></td></tr>`;
+  if(!list.length) return `<tr><td colspan="9"><div class="empty">没有供应商，点「+ 新增供应商」建立档案</div></td></tr>`;
   return list.map(x => {
     const s = x.s, off = String(s.active) === 'false';
     return `<tr data-sid="${esc(s.id)}">
@@ -13034,6 +13233,7 @@ function suppRowsHTML(list){
       <td>${esc(s.category || '—')}</td>
       <td>${esc(s.contact || '—')}<div class="muted" style="font-size:11px">${esc(s.phone || '')}</div></td>
       <td class="num">${x.n}</td>
+      <td class="num">${x.po}</td>
       <td class="num">${s.settleDays || '—'} 天</td>
       <td class="num">${s.leadTime || '—'} 天</td>
       <td><span class="tag ${s.rating === 'A' ? 't-green' : s.rating === 'B' ? 't-blue' : 't-gray'}">${esc(s.rating || '—')}</span>
@@ -13046,8 +13246,9 @@ function suppRowsHTML(list){
 }
 function suppSumHTML(list){
   const n = list.reduce((a, b) => a + b.n, 0);
+  const po = list.reduce((a, b) => a + (b.po || 0), 0);
   const off = list.filter(x => String(x.s.active) === 'false').length;
-  return `共 ${list.length} 家供应商 ｜ 名下产品 ${n} 个` + (off ? ` ｜ 停用 ${off}` : '');
+  return `共 ${list.length} 家供应商 ｜ 名下产品 ${n} 个 ｜ 外购单 ${po} 张` + (off ? ` ｜ 停用 ${off}` : '');
 }
 function viewSuppliers(st){
   const list = suppQuery(st);
@@ -13063,7 +13264,7 @@ function viewSuppliers(st){
     </div>`;
   if(!canWrite) h += infoI('当前数据源<b>只读</b>，无法新增 / 编辑 / 删除供应商。请到「数据源」页切换到「本地手工录入」。', 'warn');
   h += `<div class="card"><div class="bd np"><div class="tw tscroll"><table>
-    <thead><tr><th>供应商</th><th>主营类别</th><th>联系人</th><th class="num">产品数</th>
+    <thead><tr><th>供应商</th><th>主营类别</th><th>联系人</th><th class="num">产品数</th><th class="num">外购单</th>
       <th class="num">付款账期</th><th class="num">常规交期</th><th>评级</th><th>操作</th></tr></thead>
     <tbody id="supBody">${suppRowsHTML(list)}</tbody></table></div></div></div>`;
   return h;
@@ -13171,6 +13372,7 @@ function openSupplierSheet(sid){
   const s = (st.data.suppliers || []).find(x => x.id === sid); if(!s) return;
   const ps = (st.data.supplierProducts || []).filter(p => p.supplierId === sid)
     .sort((a, b) => String(b.statusAt || '').localeCompare(String(a.statusAt || '')));
+  const buys = supplierBuyList(st, sid);      /* v1.5.2：该供应商承接的外购单 */
   const canWrite = st.source && st.source.capabilities.write;
   sheet(`<div class="hd"><h3>${esc(s.shortName || s.name)}</h3>
       <span class="tag t-gray">${esc(s.code || '—')}</span>
@@ -13195,7 +13397,7 @@ function openSupplierSheet(sid){
         <div class="fld"><label>地址</label><input readonly value="${esc(s.address || '—')}"></div>
         <div class="fld"><label>备注</label><textarea readonly rows="2">${esc(s.remark || '')}</textarea></div>
       </div></div>
-      <div class="card"><div class="hd"><h3>供应商产品</h3><span class="tag t-gray">${ps.length} 个</span>
+      <div class="card" style="margin-bottom:var(--card-gap)"><div class="hd"><h3>供应商产品</h3><span class="tag t-gray">${ps.length} 个</span>
         ${canWrite ? '<div class="spacer"></div><button class="btn sm" id="ssAddProd">+ 新增产品</button>' : ''}</div>
         <div class="bd np"><div class="tw"><table><thead><tr>
           <th>SKU</th><th>品名</th><th>工厂型号</th><th class="num">价格</th><th class="num">MOQ</th><th>订购状态</th><th>更新时间</th>
@@ -13209,6 +13411,11 @@ function openSupplierSheet(sid){
             <td class="muted">${esc(p.statusAt || '—')}</td></tr>`).join('')
           : '<tr><td colspan="7"><div class="empty">该供应商还没有产品</div></td></tr>'}
         </tbody></table></div></div></div>
+      <div class="card"><div class="hd"><h3>外购订单记录</h3><span class="tag t-gray">${buys.length} 张</span>
+        ${infoI('这里列出该供应商承接的<b>全部外购排产单</b>，与排产页「供应商」列同口径，<b>不受列表筛选影响</b>。<br>点任意一行进入那张排产单的详情。')}</div>
+        <div class="bd np"><div class="tw"><table><thead><tr>
+          <th>工单号</th><th>订单号</th><th>客户</th><th>产品</th><th>计划完工</th><th>合同交期</th><th>排产状态</th>
+        </tr></thead><tbody>${supplierBuyRowsHTML(st, sid)}</tbody></table></div></div></div>
       <div class="ft"><button class="btn sm" id="ssEdit">编辑</button>
         <button class="btn sm danger" id="ssDel">删除</button></div>
     </div>`, { wide:true });
@@ -13219,6 +13426,8 @@ function openSupplierSheet(sid){
   $$('#sheet [data-spid]').forEach(tr => tr.onclick = () => {
     PN = null; closeSheet(); openProductSheet(tr.dataset.spid, 'supp');
   });
+  /* v1.5.2：外购单行 → 直接进那张排产单的详情（催货少跳一步） */
+  $$('#sheet [data-pid]').forEach(tr => tr.onclick = () => { closeSheet(); openProdSheet(tr.dataset.pid); });
 }
 
 /* ---------- 示例数据（可选，不自动注入）----------
@@ -13415,7 +13624,12 @@ function cfgEntryHTML(st, btnId, scope){
    · 自定义起止（fFrom/fTo）→ 移除，时间筛选改走条件行的日期字段 + 「时间范围」运算符。
    不再有单独展示 / 单独分组 / 独立筛选入口。 */
 function quickFilterHTML(st, scope){
-  return '';
+  /* v1.5.1：排产页顶部一组来源快捷筛选 —— 外购单要催货，不该每次开浮层加条件。
+     与条件行叠加（都满足才显示）；切页 / 刷新不保留，属于「临时看一眼」的口径。 */
+  if(scope !== 'prod') return '';
+  const chip = (v, t) => `<button type="button" class="chip${pSrc === v ? ' on' : ''}" data-psrc="${v}">${t}</button>`;
+  return `<div class="chipbar" id="pSrcBar">${chip('', '全部')}${chip('buy', '仅外购')}${chip('make', '仅自制')}
+    <span class="muted" style="font-size:11.5px;margin-left:8px">按「生产来源」快速过滤，可与下方条件叠加</span></div>`;
 }
 function filterDlgHTML(st, scope, wrapId){
   const quick = quickFilterHTML(st, scope);
@@ -13657,9 +13871,20 @@ function openProdForm(orderId, prodId, backTo){
   const def = editing || {};
   openForm({
     kind:'production', orderId, title: editing ? '编辑排产记录' : '新增排产记录', subtitle: o.orderNo || '',
-    tip: `一条排产记录只有 <b>排产单号 / 计划开工 / 计划完工</b> 三项，外加一个「挂起」开关。<br><b>状态与进度不在这里填</b> —— 它们直接跟随订单状态：已签约→待排产 0%、已排产→生产中 30%、已完工待发货及以后→已完工 100%。要改状态请到订单详情改，排产会立刻跟上。<br>「挂起」只是个标记（不是第四种状态）：挂起后这条排产会打上「已挂起」角标，状态照旧显示订单所处的阶段。<br>排产单号<b>全局唯一</b>（跨订单也不许重复），留空会自动生成一个。`,
+    tip: `一条排产记录只有 <b>排产单号 / 生产来源 / 计划开工 / 计划完工</b> 四项，外加一个「挂起」开关。<br>
+        <b>生产来源</b>填「外购」时下面会多出<b>供应商</b>一栏（必填）—— 外协加工、直接采购成品的单子靠它认出「这单不是自己做、该去找谁」。供应商选项取自「供应商」档案。<br><b>状态与进度不在这里填</b> —— 它们直接跟随订单状态：已签约→待排产 0%、已排产→生产中 30%、已完工待发货及以后→已完工 100%。要改状态请到订单详情改，排产会立刻跟上。<br>「挂起」只是个标记（不是第四种状态）：挂起后这条排产会打上「已挂起」角标，状态照旧显示订单所处的阶段。<br>排产单号<b>全局唯一</b>（跨订单也不许重复），留空会自动生成一个。`,
     fields: [
       { key:'moNo', label:'排产单号（工单号）', ph:'留空自动生成', rule:'code' },
+      /* v1.5.1：生产来源 + 供应商。供应商随来源显隐（showWhen）、外购时条件必填
+         （requiredWhen）—— 建了一张外购单却不知道找谁，等于没记。 */
+      { key:'sourceType', label:'生产来源', type:'select',
+        opts: PROD_SRC.map(([v, t]) => ({ v, t })),
+        help:'自制 = 自己车间生产；外购 = 外协加工或直接采购成品' },
+      { key:'supplierId', label:'供应商', type:'select',
+        opts: [{ v:'', t:'（未指定）' }].concat(supplierOpts(st)),
+        showWhen: v => String(v.sourceType || '') === 'buy',
+        requiredWhen: v => String(v.sourceType || '') === 'buy',
+        help:'外购单必填，选项取自「供应商」档案' },
       { key:'paused', label:'挂起', type:'select', opts: [{ v:'0', t:'不挂起' }, { v:'1', t:'已挂起' }],
         help:'只给这条排产打个标记，不改订单状态、也不改进度' },
       { key:'planStart', label:'计划开工', type:'date' },
@@ -13669,6 +13894,8 @@ function openProdForm(orderId, prodId, backTo){
       /* v0.43：新增时**不**预填订单上的单号 —— 单号全局唯一，
          预填会造成第二条记录与第一条撞号而被拦下。留空即自动生成。 */
       moNo: def.moNo || '',
+      sourceType: prodSourceOf(def),
+      supplierId: def.supplierId || '',
       paused: def.paused ? '1' : '0',
       planStart: def.planStart || '', planFinish: def.planFinish || o.contractDelivery || ''
     },
@@ -13682,8 +13909,19 @@ function openProdForm(orderId, prodId, backTo){
         toast('排产单号「' + moNo + '」已被订单 ' + (co.orderNo || clash.orderId) + ' 占用，请换一个');
         return false;   /* 不关表单，光标留给用户改单号 */
       }
+      /* v1.5.1：外购与供应商成对写入 —— 自制时 supplierId 一律清空。 */
+      const sourceType = String(v.sourceType) === 'buy' ? 'buy' : 'make';
+      const supplierId = sourceType === 'buy' ? String(v.supplierId || '').trim() : '';
+      if(sourceType === 'buy'){
+        if(!((st.data.suppliers || []).length)){
+          toast('还没有供应商档案，请先到「供应商」页新增一条再登记外购单');
+          return false;
+        }
+        if(!supplierId){ toast('外购单要指定供应商'); return false; }
+      }
       const payload = {
         moNo,
+        sourceType, supplierId,
         paused: String(v.paused) === '1',
         planStart: v.planStart || '', planFinish: v.planFinish || '',
         /* v0.45 起「车间 / 实际开工 / 实际完工 / 生产数量 / 已完成数量」不在界面出现；
@@ -13746,7 +13984,21 @@ function openProdSheet(prodId){
     : '<span class="muted">本单仅此一个排产单号</span>';
 
   /* v0.45：排产信息只保留「排产单号 / 状态 / 计划开工 / 计划完工 / 进度」五项。 */
+  /* v1.5.1：外购单把供应商摊开写 —— 名称 + 编码 + 联系人电话，催货时不用再跳档案页。 */
+  const sup = prodIsBuy(p) ? supplierById(st, p.supplierId) : null;
+  const supHTML = !prodIsBuy(p) ? ''
+    : (sup
+        ? '<b>' + esc(supplierName(sup)) + '</b>'
+          + (sup.code ? ' <span class="muted">' + esc(sup.code) + '</span>' : '')
+          + ([sup.contact, sup.phone].filter(Boolean).length
+              ? ' <span class="muted">' + esc([sup.contact, sup.phone].filter(Boolean).join(' · ')) + '</span>' : '')
+        : '<span class="t-red">未指定供应商</span>');
+
   const infoRows = row('排产单号', ros('<b>' + esc(p.moNo || '—') + '</b>'))
+    + row('生产来源', ros(prodIsBuy(p)
+        ? '<span class="tag t-orange">外购</span>'
+        : '<span class="muted">自制</span>'))
+    + (prodIsBuy(p) ? row('供应商', ros(supHTML)) : '')
     + row('状态', ros(prodStateTagHTML(p, st) + ' <span class="muted">跟随订单</span>'))
     + row('计划开工', ros(p.planStart || '—'))
     + row('计划完工', ros(p.planFinish || '—'))
@@ -15846,6 +16098,14 @@ async function deleteResource(kind, id){
     toast(LAB + ' ' + nm + ' 下还有 ' + nProd + ' 个' + (kind === 'customer' ? '客户产品' : '供应商产品')
       + '，不能删除。请先移除这些产品，或停用该档案。');
     return;
+  }
+  /* v1.5.1：外购排产单引用着这家供应商时不许删 —— 否则单子上会留下一个指向空档案的供应商。 */
+  if(kind === 'supplier'){
+    const used = (st.data.production || []).filter(p => String(p.supplierId || '') === id).length;
+    if(used > 0){
+      toast(LAB + ' ' + nm + ' 已被 ' + used + ' 张排产单标为外购供应商，不能删除。请先改这些排产单的供应商，或停用该档案。');
+      return;
+    }
   }
   if(!confirm('确定删除' + LAB + '「' + nm + '」？\n该档案无关联订单与产品，删除后会移入「回收站」，可在「数据历史」页还原。')) return;
   await st.source.remove(res, id);
@@ -18250,6 +18510,11 @@ window.OT = {
   /* v0.45 · 单号重复提示的忽略记忆；v0.65 · 进度由订单状态映射（三档 0/30/100） */
   MOIGN_KEY, moIgnCfg, moIgnKey, moIgnoredSet, moIgnored, moIgnoreAdd, moIgnoreDel, moIgnoreClear,
   PROD_STATUS_PCT, prodStatusOf, prodStateOf,
+  /* v1.5.1 · 排产单的生产来源与供应商关联 —— 回归断言直接调这几个 */
+  PROD_SRC, PROD_SRC_MAP, prodSourceOf, prodSrcText, prodIsBuy, prodSrcBadgeHTML,
+  supplierById, supplierName, supplierOpts, COLSET_SEED, COLSET_SEED_LS, colSeedApply,
+  /* v1.5.2 · 供应商列纯名称 + 档案里的外购订单记录 */
+  prodSupCellHTML, prodSupCardHTML, supplierBuyList, supplierBuyCount, supplierBuyRowsHTML,
   openCustomerSheet, PAGES, depositOf, balanceOf, syncPlanBar, sheetMode, sheetOpen, sheetEl, mountSheet, remountSheet,
   isFullyPaid, paidTotalOf, unpaidOf, computeInsertSortKey, ATT_KINDS, attKindLabel,
   receivedOf, writeOffOf, balReceivedOf, isBalSettled, depReceivedOf,
